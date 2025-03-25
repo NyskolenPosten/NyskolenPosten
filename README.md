@@ -82,15 +82,6 @@ Denne applikasjonen bruker nettleserens localStorage for å lagre data. Dette be
 - Data vil være tilgjengelig selv etter at du lukker nettleseren, men kun på samme enhet
 - Hvis du tømmer nettleserdata eller bruker privat/inkognito-modus, vil dataene forsvinne
 
-## Første gangs oppsett
-
-Når du starter applikasjonen for første gang, vil en administratorkonto automatisk bli opprettet:
-
-- E-post: admin@nyskolen.no
-- Passord: admin123
-
-**Viktig:** Endre passordet til administratorkontoen etter første innlogging for å sikre applikasjonen.
-
 ## Utvikling
 
 Prosjektet er strukturert som følger:
