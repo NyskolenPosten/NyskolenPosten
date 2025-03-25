@@ -1,0 +1,389 @@
+/* App.css - Hovedstilark for hele applikasjonen */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Playfair+Display:wght@400;700&display=swap');
+
+:root {
+  --primary-color: #1a73e8;
+  --secondary-color: #ff6b00;
+  --background-color: #f5f7fa;
+  --text-color: #333;
+  --light-gray: #f0f2f5;
+  --medium-gray: #757575;
+  --border-color: #e0e0e0;
+  --success-color: #34a853;
+  --warning-color: #fbbc05;
+  --error-color: #ea4335;
+  --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --hover-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--background-color);
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+}
+
+.logo-container {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.logo-container h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  margin-bottom: 0.25rem;
+}
+
+.slogan {
+  font-size: 0.9rem;
+  color: var(--medium-gray);
+}
+
+.navigation {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.navigation a {
+  color: var(--text-color);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  font-weight: 500;
+}
+
+.navigation a:hover {
+  background-color: var(--light-gray);
+}
+
+.login-button, .logout-button, .register-button {
+  background-color: var(--primary-color);
+  color: white !important;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  text-decoration: none;
+}
+
+.register-button {
+  background-color: var(--secondary-color);
+}
+
+.login-button:hover, .logout-button:hover {
+  background-color: #0055aa;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Hjem-komponent */
+.hjem {
+  margin-bottom: 2rem;
+}
+
+.hovedoppslag {
+  margin-bottom: 3rem;
+}
+
+.hovedoppslag h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.hovedoppslag-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.hovedoppslag-artikkel {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.hovedoppslag-artikkel:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.hovedoppslag-artikkel img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.hovedoppslag-artikkel h3 {
+  padding: 1rem 1rem 0.5rem;
+  font-size: 1.25rem;
+}
+
+.hovedoppslag-artikkel .forfatter {
+  padding: 0 1rem;
+  font-size: 0.8rem;
+  color: var(--medium-gray);
+}
+
+.hovedoppslag-artikkel .ingress {
+  padding: 0.5rem 1rem 1rem;
+  font-size: 0.9rem;
+}
+
+.les-mer {
+  display: inline-block;
+  margin: 0 1rem 1rem;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.kategori-seksjon {
+  margin-bottom: 2rem;
+}
+
+.kategori-seksjon h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.artikkel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.artikkel-kort {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.artikkel-kort h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.artikkel-kort .dato {
+  display: block;
+  margin-bottom: 1rem;
+  font-size: 0.8rem;
+  color: var(--medium-gray);
+}
+
+.artikkel-kort a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.ingen-artikler {
+  text-align: center;
+  padding: 3rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ingen-artikler h2 {
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.ingen-artikler p {
+  margin-bottom: 1.5rem;
+  color: var(--medium-gray);
+}
+
+.ny-artikkel-knapp {
+  display: inline-block;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.ny-artikkel-knapp:hover {
+  background-color: #0055aa;
+}
+
+/* Footer */
+.footer {
+  background-color: #333;
+  color: white;
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Responsivt design */
+@media (max-width: 768px) {
+  .hovedoppslag-grid, .artikkel-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header {
+    padding: 1rem 0.5rem;
+  }
+  
+  .navigation {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .main-content {
+    padding: 1rem;
+  }
+}
+
+/* Generelle stiler */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+  line-height: 1.3;
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--secondary-color);
+}
+
+button {
+  cursor: pointer;
+  font-family: 'Roboto', sans-serif;
+}
+
+input, textarea, select {
+  font-family: 'Roboto', sans-serif;
+  font-size: 1rem;
+}
+
+.knapp {
+  display: inline-block;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  border: none;
+  font-weight: 500;
+  text-align: center;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.knapp:hover {
+  background-color: #0d5bba;
+  transform: translateY(-1px);
+}
+
+.knapp:active {
+  transform: translateY(0);
+}
+
+.knapp-sekundær {
+  background-color: var(--secondary-color);
+}
+
+.knapp-sekundær:hover {
+  background-color: #e55c00;
+}
+
+.melding {
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.suksess {
+  background-color: rgba(52, 168, 83, 0.1);
+  color: var(--success-color);
+  border-left: 4px solid var(--success-color);
+}
+
+.advarsel {
+  background-color: rgba(251, 188, 5, 0.1);
+  color: var(--warning-color);
+  border-left: 4px solid var(--warning-color);
+}
+
+.feil {
+  background-color: rgba(234, 67, 53, 0.1);
+  color: var(--error-color);
+  border-left: 4px solid var(--error-color);
+}
+
+/* Responsiv styling */
+@media (max-width: 768px) {
+  .innhold {
+    padding: 1rem;
+  }
+  
+  h1 {
+    font-size: 1.8rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .innhold {
+    padding: 0.75rem;
+  }
+  
+  .knapp {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+} 

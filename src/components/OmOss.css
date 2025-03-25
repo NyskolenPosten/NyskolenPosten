@@ -1,0 +1,64 @@
+.om-oss {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.om-oss h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem;
+  margin-bottom: 30px;
+  color: var(--text-color);
+  text-align: center;
+}
+
+.om-oss-seksjon {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  line-height: 1.6;
+}
+
+.om-oss-seksjon h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  margin-top: 25px;
+  margin-bottom: 15px;
+  color: var(--primary-color);
+}
+
+.om-oss-seksjon h3:first-child {
+  margin-top: 0;
+}
+
+.om-oss-seksjon p {
+  margin-bottom: 20px;
+  font-size: 1.05rem;
+  color: #333;
+}
+
+.om-oss-seksjon ul {
+  margin-bottom: 25px;
+  padding-left: 20px;
+}
+
+.om-oss-seksjon li {
+  margin-bottom: 10px;
+  font-size: 1.05rem;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .om-oss h2 {
+    font-size: 1.8rem;
+  }
+  
+  .om-oss-seksjon {
+    padding: 20px;
+  }
+  
+  .om-oss-seksjon h3 {
+    font-size: 1.3rem;
+  }
+} 

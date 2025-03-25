@@ -1,0 +1,50 @@
+/* Footer.css - Styling for bunnteksten */
+
+.footer {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1.5rem 0;
+  margin-top: 2rem;
+}
+
+.footer-innhold {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.footer-info {
+  margin-bottom: 1rem;
+}
+
+.footer-lenker {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footer-lenker a {
+  color: white;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.footer-lenker a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .footer-innhold {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .footer-lenker {
+    margin-top: 1rem;
+    justify-content: center;
+  }
+} 
