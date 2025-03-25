@@ -1,156 +1,224 @@
 import React, { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { sendVerificationCode } from '../utils/emailUtil';
+import { verifyCode, checkPrivilegedEmail } from '../utils/verificationUtil';
 import './Registrering.css';
 
 function Registrering({ onRegistrer }) {
-  const [navn, setNavn] = useState('');
-  const [epost, setEpost] = useState('');
-  const [passord, setPassord] = useState('');
-  const [bekreftPassord, setBekreftPassord] = useState('');
-  const [klasse, setKlasse] = useState('');
+  const [steg, setSteg] = useState(1); // 1: Skjema, 2: Verifisering
+  const [formData, setFormData] = useState({
+    navn: '',
+    epost: '',
+    passord: '',
+    bekreftPassord: '',
+    klasse: ''
+  });
+  const [verifiseringskode, setVerifiseringskode] = useState('');
   const [feilmelding, setFeilmelding] = useState('');
-  const [suksessmelding, setSuksessmelding] = useState('');
-  const [redirect, setRedirect] = useState(false);
+  const [melding, setMelding] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+    setFeilmelding('');
+  };
+
+  const validateForm = () => {
+    if (!formData.navn || !formData.epost || !formData.passord || !formData.klasse) {
+      setFeilmelding('Alle felt må fylles ut');
+      return false;
+    }
+    
+    if (formData.passord !== formData.bekreftPassord) {
+      setFeilmelding('Passordene må være like');
+      return false;
+    }
+    
+    if (!formData.epost.includes('@')) {
+      setFeilmelding('Vennligst oppgi en gyldig e-postadresse');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validering
-    if (!navn.trim() || !epost.trim() || !passord.trim() || !bekreftPassord.trim()) {
-      setFeilmelding('Vennligst fyll ut alle påkrevde felt');
-      return;
-    }
+    if (!validateForm()) return;
     
-    if (passord !== bekreftPassord) {
-      setFeilmelding('Passordene må være like');
-      return;
-    }
+    setMelding('Sender verifiseringskode...');
     
-    if (passord.length < 6) {
-      setFeilmelding('Passordet må være minst 6 tegn');
-      return;
-    }
-    
-    // Opprett bruker-objekt
-    const nyBruker = {
-      navn,
-      epost,
-      passord,
-      klasse
-    };
-    
-    // Send til App-komponenten for registrering
-    const resultat = onRegistrer(nyBruker);
-    
-    if (resultat.success) {
-      // Sjekk om e-posten er i admin-listen
-      const erAdmin = epost === 'mattis.tollefsen@nionett.no' || epost === 'admin@nyskolen.no';
+    try {
+      // Send verifiseringskode til brukerens e-post
+      const result = await sendVerificationCode(formData.epost, formData.navn, 'registration');
       
-      setSuksessmelding(
-        'Registrering vellykket! ' + 
-        (erAdmin 
-          ? 'Du er automatisk registrert som redaktør.' 
-          : 'Du kan nå logge inn med din konto.')
-      );
-      
-      // Tøm skjema
-      setNavn('');
-      setEpost('');
-      setPassord('');
-      setBekreftPassord('');
-      setKlasse('');
-      
-      // Redirect etter 3 sekunder
-      setTimeout(() => {
-        setRedirect(true);
-      }, 3000);
-    } else {
-      setFeilmelding(resultat.message || 'Noe gikk galt ved registrering');
+      if (result.success) {
+        setMelding('En verifiseringskode er sendt til din e-post. Vennligst sjekk innboksen din.');
+        setSteg(2);
+      } else {
+        setFeilmelding('Kunne ikke sende verifiseringskode. Vennligst prøv igjen senere.');
+      }
+    } catch (error) {
+      console.error('Feil ved sending av verifiseringskode:', error);
+      setFeilmelding('En feil oppstod. Vennligst prøv igjen senere.');
     }
   };
-  
-  // Redirect til innlogging etter vellykket registrering
-  if (redirect) {
-    return <Navigate to="/innlogging" replace />;
-  }
 
-  return (
-    <div className="registrering">
-      <h2>Registrer ny bruker</h2>
+  const handleVerification = (e) => {
+    e.preventDefault();
+    
+    if (!verifiseringskode) {
+      setFeilmelding('Vennligst oppgi verifiseringskoden');
+      return;
+    }
+    
+    if (verifyCode(formData.epost, verifiseringskode)) {
+      // Sjekk om e-posten er for privilegert bruker
+      const rolle = checkPrivilegedEmail(formData.epost);
       
-      {feilmelding && <div className="feilmelding">{feilmelding}</div>}
-      {suksessmelding && <div className="suksessmelding">{suksessmelding}</div>}
+      // Forbered brukerdata for registrering
+      const brukerData = {
+        navn: formData.navn,
+        epost: formData.epost,
+        passord: formData.passord,
+        klasse: formData.klasse,
+        rolle: rolle || 'journalist', // Standard rolle er journalist
+        dato: new Date().toISOString()
+      };
       
-      <form onSubmit={handleSubmit}>
-        <div className="form-gruppe">
-          <label htmlFor="navn">Navn:</label>
-          <input 
-            type="text" 
-            id="navn" 
-            value={navn} 
-            onChange={(e) => setNavn(e.target.value)} 
-            required 
-          />
-        </div>
-        
-        <div className="form-gruppe">
-          <label htmlFor="epost">E-post:</label>
-          <input 
-            type="email" 
-            id="epost" 
-            value={epost} 
-            onChange={(e) => setEpost(e.target.value)} 
-            required 
-          />
-          <small>Visse e-postadresser får automatisk redaktør-rettigheter</small>
-        </div>
-        
-        <div className="form-gruppe">
-          <label htmlFor="klasse">Klasse:</label>
-          <input 
-            type="text" 
-            id="klasse" 
-            value={klasse} 
-            onChange={(e) => setKlasse(e.target.value)} 
-            placeholder="Valgfritt" 
-          />
-        </div>
-        
-        <div className="form-gruppe">
-          <label htmlFor="passord">Passord:</label>
-          <input 
-            type="password" 
-            id="passord" 
-            value={passord} 
-            onChange={(e) => setPassord(e.target.value)} 
-            required 
-            minLength="6"
-          />
-        </div>
-        
-        <div className="form-gruppe">
-          <label htmlFor="bekreft-passord">Bekreft passord:</label>
-          <input 
-            type="password" 
-            id="bekreft-passord" 
-            value={bekreftPassord} 
-            onChange={(e) => setBekreftPassord(e.target.value)} 
-            required 
-          />
-        </div>
-        
-        <button type="submit" className="registrer-knapp">
-          Registrer deg
-        </button>
-      </form>
+      // Fullfør registreringsprosessen
+      const registreringsResultat = onRegistrer(brukerData);
       
-      <div className="registrering-lenker">
-        <p>
-          Har du allerede en konto? <Link to="/innlogging">Logg inn</Link>
-        </p>
+      if (registreringsResultat.success) {
+        setMelding('Registrering fullført! Du kan nå logge inn.');
+        setSteg(3); // Ferdig
+      } else {
+        setFeilmelding(registreringsResultat.message || 'Registrering feilet. Vennligst prøv igjen.');
+        setSteg(1); // Tilbake til registreringsskjema
+      }
+    } else {
+      setFeilmelding('Ugyldig eller utløpt verifiseringskode. Vennligst prøv igjen.');
+    }
+  };
+
+  // Vis skjema basert på hvilket steg vi er på
+  if (steg === 1) {
+    return (
+      <div className="registrering-container">
+        <h2>Registrer deg</h2>
+        {feilmelding && <div className="feilmelding">{feilmelding}</div>}
+        {melding && <div className="melding">{melding}</div>}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="navn">Navn:</label>
+            <input
+              type="text"
+              id="navn"
+              name="navn"
+              value={formData.navn}
+              onChange={handleChange}
+              placeholder="Skriv inn fullt navn"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="epost">E-post:</label>
+            <input
+              type="email"
+              id="epost"
+              name="epost"
+              value={formData.epost}
+              onChange={handleChange}
+              placeholder="Din e-postadresse"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="passord">Passord:</label>
+            <input
+              type="password"
+              id="passord"
+              name="passord"
+              value={formData.passord}
+              onChange={handleChange}
+              placeholder="Velg et passord"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="bekreftPassord">Bekreft passord:</label>
+            <input
+              type="password"
+              id="bekreftPassord"
+              name="bekreftPassord"
+              value={formData.bekreftPassord}
+              onChange={handleChange}
+              placeholder="Skriv passordet på nytt"
+            />
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="klasse">Klasse:</label>
+            <input
+              type="text"
+              id="klasse"
+              name="klasse"
+              value={formData.klasse}
+              onChange={handleChange}
+              placeholder="Hvilken klasse går du i?"
+            />
+          </div>
+          
+          <button type="submit" className="registrer-knapp">Registrer deg</button>
+        </form>
       </div>
-    </div>
-  );
+    );
+  } else if (steg === 2) {
+    return (
+      <div className="registrering-container">
+        <h2>Verifiser e-post</h2>
+        {feilmelding && <div className="feilmelding">{feilmelding}</div>}
+        {melding && <div className="melding">{melding}</div>}
+        
+        <form onSubmit={handleVerification}>
+          <div className="form-group">
+            <label htmlFor="verifiseringskode">Verifiseringskode:</label>
+            <input
+              type="text"
+              id="verifiseringskode"
+              value={verifiseringskode}
+              onChange={(e) => setVerifiseringskode(e.target.value)}
+              placeholder="Skriv inn 6-sifret kode"
+            />
+          </div>
+          
+          <button type="submit" className="verifiser-knapp">Verifiser</button>
+          <button 
+            type="button" 
+            className="tilbake-knapp"
+            onClick={() => setSteg(1)}>
+            Tilbake
+          </button>
+        </form>
+      </div>
+    );
+  } else {
+    return (
+      <div className="registrering-container">
+        <h2>Registrering fullført</h2>
+        <div className="melding">{melding}</div>
+        <button 
+          onClick={() => window.location.href = '/innlogging'} 
+          className="innlogging-knapp">
+          Gå til innlogging
+        </button>
+      </div>
+    );
+  }
 }
 
 export default Registrering; 

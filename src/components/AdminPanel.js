@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import './AdminPanel.css';
+import { sendWelcomeEmail } from '../utils/emailUtil';
 
 function AdminPanel({ 
   innloggetBruker, 
@@ -103,6 +104,28 @@ function AdminPanel({
       onEndreRolleBruker(jobbId, nyRolle);
       setMelding(`Rollen er endret til ${nyRolle}`);
       setTimeout(() => setMelding(''), 3000);
+    }
+  };
+  
+  const handleApproveUser = async (userId) => {
+    // Oppdater bruker til godkjent
+    const oppdaterteBrukere = brukere.map(bruker => 
+      bruker.id === userId ? {...bruker, godkjent: true} : bruker
+    );
+    
+    // Finn brukeren som ble godkjent
+    const godkjentBruker = oppdaterteBrukere.find(b => b.id === userId);
+    
+    // Lagre oppdaterte brukere
+    onUpdateUser(oppdaterteBrukere);
+    
+    // Send velkomste-post
+    if (godkjentBruker) {
+      await sendWelcomeEmail(
+        godkjentBruker.epost, 
+        godkjentBruker.navn, 
+        godkjentBruker.rolle
+      );
     }
   };
   
