@@ -102,4 +102,28 @@ Prosjektet er strukturert som følger:
 
 ## Lisens
 
-Dette prosjektet er laget for utdanningsformål ved Nyskolen i Oslo. 
+Dette prosjektet er laget for utdanningsformål ved Nyskolen i Oslo.
+
+## Hvordan commite endringer
+
+For å commite endringer til prosjektet:
+
+1. Sjekk status for å se hvilke filer som er endret:
+   ```bash
+   git status
+   ```
+
+2. Legg til endringene dine til staging:
+   ```bash
+   git add .
+   ```
+
+3. Commit endringene med en beskrivende melding:
+   ```bash
+   git commit -m "Beskrivelse av endringene"
+   ```
+
+4. Push endringene til GitHub:
+   ```bash
+   git push origin main
+   ``` 
