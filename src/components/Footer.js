@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Footer.css';
 
 function Footer() {
@@ -13,9 +14,9 @@ function Footer() {
         </div>
         
         <div className="footer-lenker">
-          <a href="/om-oss">Om oss</a>
-          <a href="/innlogging">Logg inn</a>
-          <a href="/registrering">Bli journalist</a>
+          <Link to="/om-oss">Om oss</Link>
+          <Link to="/innlogging">Logg inn</Link>
+          <Link to="/registrering">Bli journalist</Link>
         </div>
       </div>
     </footer>

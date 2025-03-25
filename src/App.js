@@ -218,15 +218,18 @@ function App() {
   
   // Funksjon for å legge til ny artikkel
   const leggTilArtikkel = (nyArtikkel) => {
+    // Sjekk om brukeren er admin eller redaktør for automatisk godkjenning
+    const erAdminEllerRedaktør = 
+      innloggetBruker.rolle === 'admin' || 
+      jobbliste.some(jobb => jobb.navn === innloggetBruker.navn && jobb.rolle === 'Redaktør');
+    
     const artikkelObjekt = {
       ...nyArtikkel,
       artikkelID: 'artikkel-' + Date.now(),
       forfatter: innloggetBruker.navn,
       forfatterID: innloggetBruker.id,
       dato: new Date().toISOString(),
-      godkjent: innloggetBruker.rolle === 'admin' || jobbliste.some(jobb => 
-        jobb.navn === innloggetBruker.navn && jobb.rolle === 'Redaktør'
-      ) // Automatisk godkjent hvis admin eller redaktør
+      godkjent: erAdminEllerRedaktør // Automatisk godkjent bare hvis admin eller redaktør
     };
     
     const oppdatertArtikler = [...artikler, artikkelObjekt];
@@ -322,15 +325,16 @@ function App() {
                 kategoriliste={kategoriliste}
                 onDeleteArticle={slettArtikkel} 
                 onUpdateArticle={oppdaterArtikkel} 
-                onUpdateUser={oppdaterBruker} 
                 onDeleteUser={slettBruker}
                 onApproveArticle={godkjennArtikkel}
                 onUpdateJobbliste={oppdaterJobbliste}
                 onUpdateKategoriliste={oppdaterKategoriliste}
                 onEndreRolleBruker={endreRolleBruker}
+                onUpdateUser={oppdaterBruker}
               />
             } />
             <Route path="/om-oss" element={<OmOss jobbliste={jobbliste} />} />
+            <Route path="/mine-artikler" element={<MineArtikler innloggetBruker={innloggetBruker} artikler={artikler} onUpdateArticle={oppdaterArtikkel} onDeleteArticle={slettArtikkel} />} />
           </Routes>
         </main>
         

@@ -45,4 +45,22 @@ export function verifyCode(email, code) {
   }
   
   return false;
+}
+
+/**
+ * Sjekker om en e-postadresse tilhører en admin/redaktør
+ * @param {string} email E-postadressen som skal sjekkes
+ * @returns {string|null} Brukerrolle (admin/redaktør) eller null
+ */
+export function checkPrivilegedEmail(email) {
+  const adminEmails = ['mattis.tollefsen@nionett.no', 'admin@nyskolen.no', 'redaksjonenyskolenposten@nionett.no'];
+  const redaktorEmails = ['redaktor@nyskolen.no'];
+
+  if (adminEmails.includes(email.toLowerCase())) {
+    return 'admin';
+  } else if (redaktorEmails.includes(email.toLowerCase())) {
+    return 'redaktør';
+  }
+  
+  return null;
 } 
