@@ -126,4 +126,31 @@ For å commite endringer til prosjektet:
 4. Push endringene til GitHub:
    ```bash
    git push origin main
-   ``` 
+   ```
+
+## Prosjektstatus
+
+Denne seksjonen blir oppdatert regelmessig for å informere om prosjektets status.
+
+### Nåværende status (oppdatert 14. oktober 2023)
+- ✅ Grunnfunksjonalitet for visning av artikler
+- ✅ Brukerregistrering og innlogging
+- ✅ Skriving og publisering av artikler
+- ✅ Godkjenningssystem for artikler
+- ✅ Admin-panel for administrering av brukere og artikler
+- ✅ E-postverifisering ved registrering
+- ✅ Responsivt design for mobil og desktop
+- ✅ GitHub Pages integrasjon for enkel publisering
+
+### Pågående arbeid
+- 🔄 Feilsøking av navigasjon på GitHub Pages
+- 🔄 Forbedring av markdown-formatering i artikler
+- 🔄 Oppdatering av brukergrensesnitt med nye farger og ikoner
+
+### Kommende funksjoner
+- 📅 Kommentarsystem for artikler
+- 📅 Avansert søkefunksjonalitet
+- 📅 Mulighet for å legge til kategorier
+- 📅 Støtte for opplasting av bilder direkte i artikler
+
+Sist oppdatert: 14.10.2023 
