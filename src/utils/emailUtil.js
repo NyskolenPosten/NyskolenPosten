@@ -17,7 +17,7 @@ export const EMAIL_CONFIG = {
 };
 
 /**
- * Sender en e-post
+ * Simulerer sending av e-post, men viser innholdet direkte i et alert
  * @param {string} to Mottakerens e-postadresse
  * @param {string} subject E-postens emne
  * @param {string} body E-postens innhold
@@ -25,18 +25,26 @@ export const EMAIL_CONFIG = {
  */
 export async function sendEmail(to, subject, body) {
   try {
-    const sender = `${EMAIL_CONFIG.fromName} <${EMAIL_CONFIG.fromEmail}>`;
+    // Vis meldingen direkte til brukeren i stedet for å sende e-post
+    // For testformål - i en virkelig app ville dette sendt en faktisk e-post
     
-    // I en ekte implementasjon ville vi brukt en server eller tjeneste som EmailJS
-    // For demonstrasjonsformål åpner vi bare brukerens e-postklient
-    const mailtoLink = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}&from=${encodeURIComponent(sender)}`;
-    window.open(mailtoLink, '_blank');
+    // Formater meldingen mer lesbart
+    const formattedMessage = `
+📧 E-post til: ${to}
+📝 Emne: ${subject}
+
+${body}
+
+(Dette er en simulert e-post for lokal testing)
+`;
+
+    alert(formattedMessage);
     
-    console.log(`E-post sendt fra ${EMAIL_CONFIG.fromEmail} til ${to}`);
-    return { success: true, message: 'E-postvindu åpnet' };
+    console.log(`Simulert e-post til ${to}:`, { subject, body });
+    return { success: true, message: 'Simulert e-post vist' };
   } catch (error) {
-    console.error('Feil ved sending av e-post:', error);
-    return { success: false, message: 'Kunne ikke sende e-post' };
+    console.error('Feil ved simulering av e-post:', error);
+    return { success: false, message: 'Kunne ikke vise simulert e-post' };
   }
 }
 
