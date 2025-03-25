@@ -82,6 +82,7 @@ Denne applikasjonen bruker nettleserens localStorage for å lagre data. Dette be
 - Data vil være tilgjengelig selv etter at du lukker nettleseren, men kun på samme enhet
 - Hvis du tømmer nettleserdata eller bruker privat/inkognito-modus, vil dataene forsvinne
 
+
 ## Utvikling
 
 Prosjektet er strukturert som følger:
