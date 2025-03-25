@@ -99,7 +99,7 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="epost">E-post:</label>
+            <label htmlFor="epost">E-post</label>
             <input
               type="email"
               id="epost"
@@ -107,11 +107,12 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
               value={formData.epost}
               onChange={handleChange}
               placeholder="Din e-postadresse"
+              autoComplete="email"
             />
           </div>
           
           <div className="form-group">
-            <label htmlFor="passord">Passord:</label>
+            <label htmlFor="passord">Passord</label>
             <input
               type="password"
               id="passord"
@@ -119,6 +120,7 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
               value={formData.passord}
               onChange={handleChange}
               placeholder="Ditt passord"
+              autoComplete="current-password"
             />
           </div>
           
@@ -138,13 +140,15 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
         
         <form onSubmit={handleVerification}>
           <div className="form-group">
-            <label htmlFor="verifiseringskode">Verifiseringskode:</label>
+            <label htmlFor="verifiseringskode">Verifiseringskode</label>
             <input
               type="text"
               id="verifiseringskode"
               value={verifiseringskode}
               onChange={(e) => setVerifiseringskode(e.target.value)}
               placeholder="Skriv inn 6-sifret kode"
+              autoComplete="one-time-code"
+              maxLength="6"
             />
           </div>
           

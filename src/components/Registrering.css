@@ -1,103 +1,226 @@
-/* Registrering.css - Styling for registreringssiden */
+/* Registrering.css - Moderne stil for registreringssiden */
 
-.registrering {
+.registrering-container {
   max-width: 500px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin: 3rem auto;
+  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.registrering h2 {
+.registrering-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.registrering-container h2 {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   color: var(--primary-color);
+  font-size: 2rem;
+  position: relative;
+  padding-bottom: 0.75rem;
+}
+
+.registrering-container h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  border-radius: 3px;
 }
 
 .feilmelding {
-  background-color: #ffebee;
-  color: #c62828;
-  padding: 0.75rem;
-  border-radius: 4px;
+  background-color: rgba(234, 67, 53, 0.1);
+  color: var(--error-color);
+  padding: 1rem;
+  border-radius: 8px;
   margin-bottom: 1.5rem;
-  border-left: 4px solid #c62828;
+  border-left: 4px solid var(--error-color);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
 }
 
-.suksessmelding {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1.5rem;
-  border-left: 4px solid #2e7d32;
+.feilmelding::before {
+  content: "⚠️";
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
 }
 
-.form-gruppe {
+.melding {
+  background-color: rgba(52, 168, 83, 0.1);
+  color: var(--success-color);
+  padding: 1rem;
+  border-radius: 8px;
   margin-bottom: 1.5rem;
+  border-left: 4px solid var(--success-color);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
 }
 
-.form-gruppe label {
+.melding::before {
+  content: "✅";
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: bold;
+  font-weight: 500;
+  color: #555;
+  transition: color 0.3s;
 }
 
-.form-gruppe input {
+.form-group input {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 0.9rem 1rem;
+  border: 2px solid #eaeaea;
+  border-radius: 8px;
   font-size: 1rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s;
 }
 
-.form-gruppe input:focus {
-  border-color: var(--primary-color);
+.form-group input:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
+  background-color: white;
 }
 
-.registrer-knapp {
+.form-group:focus-within label {
+  color: var(--primary-color);
+}
+
+.registrer-knapp, .verifiser-knapp, .innlogging-knapp {
   width: 100%;
-  padding: 0.75rem;
-  background-color: var(--primary-color);
+  padding: 1rem;
+  background: linear-gradient(45deg, var(--secondary-color), #ff8c39);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.25);
+  margin-bottom: 1rem;
 }
 
-.registrer-knapp:hover {
-  background-color: var(--primary-dark);
+.registrer-knapp:hover, .verifiser-knapp:hover, .innlogging-knapp:hover {
+  background: linear-gradient(45deg, #e55c00, var(--secondary-color));
+  box-shadow: 0 6px 20px rgba(255, 107, 0, 0.35);
+  transform: translateY(-2px);
 }
 
-.registrering-lenker {
-  margin-top: 1.5rem;
+.registrer-knapp:active, .verifiser-knapp:active, .innlogging-knapp:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(255, 107, 0, 0.2);
+}
+
+.tilbake-knapp {
+  width: 100%;
+  padding: 0.9rem;
+  background-color: transparent;
+  color: var(--secondary-color);
+  border: 2px solid var(--secondary-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.tilbake-knapp:hover {
+  background-color: rgba(255, 107, 0, 0.05);
+  color: #e55c00;
+}
+
+.innlogging-link {
+  margin-top: 2rem;
   text-align: center;
-}
-
-.registrering-lenker a {
-  color: var(--primary-color);
-  text-decoration: none;
-}
-
-.registrering-lenker a:hover {
-  text-decoration: underline;
-}
-
-.info-tekst {
-  margin-top: 1.5rem;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #666;
-  text-align: center;
 }
 
+.innlogging-link a {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s;
+  padding-bottom: 2px;
+  border-bottom: 1px solid transparent;
+}
+
+.innlogging-link a:hover {
+  color: var(--secondary-color);
+  border-bottom-color: var(--secondary-color);
+}
+
+.registrering-steg {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.steg-indikator {
+  display: flex;
+  gap: 8px;
+}
+
+.steg-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ddd;
+  transition: all 0.3s;
+}
+
+.steg-dot.aktiv {
+  background-color: var(--secondary-color);
+  transform: scale(1.2);
+}
+
+/* Animasjon for knapper */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 107, 0, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 107, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 107, 0, 0); }
+}
+
+/* Responsive design justeringer */
 @media (max-width: 600px) {
-  .registrering {
+  .registrering-container {
+    margin: 1.5rem;
     padding: 1.5rem;
-    margin: 1rem;
+  }
+  
+  .registrering-container h2 {
+    font-size: 1.7rem;
+  }
+  
+  .form-group input {
+    padding: 0.8rem;
+  }
+  
+  .registrer-knapp, .verifiser-knapp, .tilbake-knapp, .innlogging-knapp {
+    padding: 0.9rem;
   }
 } 

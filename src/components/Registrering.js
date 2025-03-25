@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { sendVerificationCode } from '../utils/emailUtil';
 import { verifyCode, checkPrivilegedEmail } from '../utils/verificationUtil';
 import './Registrering.css';
 
 function Registrering({ onRegistrer }) {
-  const [steg, setSteg] = useState(1); // 1: Skjema, 2: Verifisering
+  const [steg, setSteg] = useState(1); // 1: Skjema, 2: Verifisering, 3: Fullført
   const [formData, setFormData] = useState({
     navn: '',
     epost: '',
@@ -104,17 +105,30 @@ function Registrering({ onRegistrer }) {
     }
   };
 
+  // Steg-indikator komponent
+  const StegIndikator = () => (
+    <div className="registrering-steg">
+      <div className="steg-indikator">
+        <div className={`steg-dot ${steg >= 1 ? 'aktiv' : ''}`}></div>
+        <div className={`steg-dot ${steg >= 2 ? 'aktiv' : ''}`}></div>
+        <div className={`steg-dot ${steg >= 3 ? 'aktiv' : ''}`}></div>
+      </div>
+    </div>
+  );
+
   // Vis skjema basert på hvilket steg vi er på
   if (steg === 1) {
     return (
       <div className="registrering-container">
         <h2>Registrer deg</h2>
+        <StegIndikator />
+        
         {feilmelding && <div className="feilmelding">{feilmelding}</div>}
         {melding && <div className="melding">{melding}</div>}
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="navn">Navn:</label>
+            <label htmlFor="navn">Navn</label>
             <input
               type="text"
               id="navn"
@@ -122,11 +136,12 @@ function Registrering({ onRegistrer }) {
               value={formData.navn}
               onChange={handleChange}
               placeholder="Skriv inn fullt navn"
+              autoComplete="name"
             />
           </div>
           
           <div className="form-group">
-            <label htmlFor="epost">E-post:</label>
+            <label htmlFor="epost">E-post</label>
             <input
               type="email"
               id="epost"
@@ -134,11 +149,12 @@ function Registrering({ onRegistrer }) {
               value={formData.epost}
               onChange={handleChange}
               placeholder="Din e-postadresse"
+              autoComplete="email"
             />
           </div>
           
           <div className="form-group">
-            <label htmlFor="passord">Passord:</label>
+            <label htmlFor="passord">Passord</label>
             <input
               type="password"
               id="passord"
@@ -146,11 +162,12 @@ function Registrering({ onRegistrer }) {
               value={formData.passord}
               onChange={handleChange}
               placeholder="Velg et passord"
+              autoComplete="new-password"
             />
           </div>
           
           <div className="form-group">
-            <label htmlFor="bekreftPassord">Bekreft passord:</label>
+            <label htmlFor="bekreftPassord">Bekreft passord</label>
             <input
               type="password"
               id="bekreftPassord"
@@ -158,11 +175,12 @@ function Registrering({ onRegistrer }) {
               value={formData.bekreftPassord}
               onChange={handleChange}
               placeholder="Skriv passordet på nytt"
+              autoComplete="new-password"
             />
           </div>
           
           <div className="form-group">
-            <label htmlFor="klasse">Klasse:</label>
+            <label htmlFor="klasse">Klasse</label>
             <input
               type="text"
               id="klasse"
@@ -175,24 +193,32 @@ function Registrering({ onRegistrer }) {
           
           <button type="submit" className="registrer-knapp">Registrer deg</button>
         </form>
+        
+        <div className="innlogging-link">
+          <p>Har du allerede en konto? <Link to="/innlogging">Logg inn her</Link></p>
+        </div>
       </div>
     );
   } else if (steg === 2) {
     return (
       <div className="registrering-container">
         <h2>Verifiser e-post</h2>
+        <StegIndikator />
+        
         {feilmelding && <div className="feilmelding">{feilmelding}</div>}
         {melding && <div className="melding">{melding}</div>}
         
         <form onSubmit={handleVerification}>
           <div className="form-group">
-            <label htmlFor="verifiseringskode">Verifiseringskode:</label>
+            <label htmlFor="verifiseringskode">Verifiseringskode</label>
             <input
               type="text"
               id="verifiseringskode"
               value={verifiseringskode}
               onChange={(e) => setVerifiseringskode(e.target.value)}
               placeholder="Skriv inn 6-sifret kode"
+              autoComplete="one-time-code"
+              maxLength="6"
             />
           </div>
           
@@ -210,12 +236,15 @@ function Registrering({ onRegistrer }) {
     return (
       <div className="registrering-container">
         <h2>Registrering fullført</h2>
+        <StegIndikator />
+        
         <div className="melding">{melding}</div>
-        <button 
-          onClick={() => window.location.href = '/innlogging'} 
-          className="innlogging-knapp">
-          Gå til innlogging
-        </button>
+        
+        <Link to="/innlogging">
+          <button className="innlogging-knapp">
+            Gå til innlogging
+          </button>
+        </Link>
       </div>
     );
   }
