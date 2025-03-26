@@ -10,7 +10,7 @@ function Footer() {
       <div className="footer-innhold">
         <div className="footer-info">
           <p>&copy; {år} Nyskolen Posten - Elevdrevet avis for Nyskolen i Oslo</p>
-          <p>Kontakt: <a href="mailto:redaksjonenyskolenposten@nionett.no">redaksjonenyskolenposten@nionett.no</a></p>
+          <p><strong>Kontakt oss:</strong> <a href="mailto:redaksjonenyskolenposten@nionett.no" aria-label="Send e-post til redaksjonen">redaksjonenyskolenposten@nionett.no</a></p>
         </div>
         
         <div className="footer-lenker">
