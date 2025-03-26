@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { sendVerificationCode } from '../utils/emailUtil';
 import { verifyCode } from '../utils/verificationUtil';
+import { useLanguage } from '../utils/LanguageContext';
 import './Innlogging.css';
 
 function Innlogging({ onLogin, brukere = [], melding = '' }) {
+  const { translations } = useLanguage();
   const [steg, setSteg] = useState(1); // 1: Innloggingsform, 2: Verifisering
   const [formData, setFormData] = useState({
     epost: '',
@@ -28,7 +30,7 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
     e.preventDefault();
     
     if (!formData.epost || !formData.passord) {
-      setFeilmelding('Vennligst fyll ut både e-post og passord');
+      setFeilmelding(translations.login.fillBothFields);
       return;
     }
     
@@ -36,13 +38,13 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
     const bruker = brukere.find(b => b.epost === formData.epost);
     
     if (!bruker) {
-      setFeilmelding('Ingen bruker med denne e-postadressen');
+      setFeilmelding(translations.login.noUserFound);
       return;
     }
     
     // Sjekk passord
     if (bruker.passord !== formData.passord) {
-      setFeilmelding('Feil passord');
+      setFeilmelding(translations.login.wrongPassword);
       return;
     }
     
@@ -50,20 +52,20 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
     setCurrentBruker(bruker);
     
     // Send verifiseringskode
-    setFeilmelding('Sender verifiseringskode...');
+    setFeilmelding(translations.login.sendingCode);
     
     try {
       const result = await sendVerificationCode(bruker.epost, bruker.navn, 'login');
       
       if (result.success) {
-        setFeilmelding('En verifiseringskode er sendt til din e-post. Vennligst sjekk innboksen din.');
+        setFeilmelding(translations.login.codeSent);
         setSteg(2);
       } else {
-        setFeilmelding('Kunne ikke sende verifiseringskode. Vennligst prøv igjen senere.');
+        setFeilmelding(translations.login.couldNotSendCode);
       }
     } catch (error) {
       console.error('Feil ved sending av verifiseringskode:', error);
-      setFeilmelding('En feil oppstod. Vennligst prøv igjen senere.');
+      setFeilmelding(translations.login.errorOccurred);
     }
   };
 
@@ -71,7 +73,7 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
     e.preventDefault();
     
     if (!verifiseringskode) {
-      setFeilmelding('Vennligst oppgi verifiseringskoden');
+      setFeilmelding(translations.login.enterCode);
       return;
     }
     
@@ -82,7 +84,7 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
       // Redirect til hjemmesiden eller dashboard
       setRedirect(true);
     } else {
-      setFeilmelding('Ugyldig eller utløpt verifiseringskode. Vennligst prøv igjen.');
+      setFeilmelding(translations.login.invalidCode);
     }
   };
 
@@ -94,70 +96,70 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
   if (steg === 1) {
     return (
       <div className="innlogging-container">
-        <h2>Logg inn</h2>
+        <h2>{translations.login.title}</h2>
         {feilmelding && <div className="feilmelding">{feilmelding}</div>}
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="epost">E-post</label>
+            <label htmlFor="epost">{translations.login.email}</label>
             <input
               type="email"
               id="epost"
               name="epost"
               value={formData.epost}
               onChange={handleChange}
-              placeholder="Din e-postadresse"
+              placeholder={translations.login.emailPlaceholder}
               autoComplete="email"
             />
           </div>
           
           <div className="form-group">
-            <label htmlFor="passord">Passord</label>
+            <label htmlFor="passord">{translations.login.password}</label>
             <input
               type="password"
               id="passord"
               name="passord"
               value={formData.passord}
               onChange={handleChange}
-              placeholder="Ditt passord"
+              placeholder={translations.login.passwordPlaceholder}
               autoComplete="current-password"
             />
           </div>
           
-          <button type="submit" className="innlogging-knapp">Logg inn</button>
+          <button type="submit" className="innlogging-knapp">{translations.login.loginButton}</button>
         </form>
         
         <div className="registrer-link">
-          <p>Har du ikke en konto? <Link to="/registrering">Registrer deg her</Link></p>
+          <p>{translations.login.noAccount} <Link to="/registrering">{translations.login.registerHere}</Link></p>
         </div>
       </div>
     );
   } else if (steg === 2) {
     return (
       <div className="innlogging-container">
-        <h2>Verifiser innlogging</h2>
+        <h2>{translations.login.verifyTitle}</h2>
         {feilmelding && <div className="feilmelding">{feilmelding}</div>}
         
         <form onSubmit={handleVerification}>
           <div className="form-group">
-            <label htmlFor="verifiseringskode">Verifiseringskode</label>
+            <label htmlFor="verifiseringskode">{translations.login.verificationCode}</label>
             <input
               type="text"
               id="verifiseringskode"
               value={verifiseringskode}
               onChange={(e) => setVerifiseringskode(e.target.value)}
-              placeholder="Skriv inn 6-sifret kode"
+              placeholder={translations.login.verificationPlaceholder}
               autoComplete="one-time-code"
               maxLength="6"
             />
           </div>
           
-          <button type="submit" className="verifiser-knapp">Verifiser</button>
+          <button type="submit" className="verifiser-knapp">{translations.login.verifyButton}</button>
           <button 
             type="button" 
             className="tilbake-knapp"
             onClick={() => setSteg(1)}>
-            Tilbake
+            {translations.login.backButton}
           </button>
         </form>
       </div>

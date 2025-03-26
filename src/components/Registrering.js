@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { sendVerificationCode } from '../utils/emailUtil';
 import { verifyCode, checkPrivilegedEmail } from '../utils/verificationUtil';
+import { useLanguage } from '../utils/LanguageContext';
 import './Registrering.css';
 
 function Registrering({ onRegistrer }) {
+  const { translations } = useLanguage();
   const [steg, setSteg] = useState(1); // 1: Skjema, 2: Verifisering, 3: Fullført
   const [formData, setFormData] = useState({
     navn: '',
@@ -28,17 +30,17 @@ function Registrering({ onRegistrer }) {
 
   const validateForm = () => {
     if (!formData.navn || !formData.epost || !formData.passord || !formData.klasse) {
-      setFeilmelding('Alle felt må fylles ut');
+      setFeilmelding(translations.registration.allFieldsRequired);
       return false;
     }
     
     if (formData.passord !== formData.bekreftPassord) {
-      setFeilmelding('Passordene må være like');
+      setFeilmelding(translations.registration.passwordsMustMatch);
       return false;
     }
     
     if (!formData.epost.includes('@')) {
-      setFeilmelding('Vennligst oppgi en gyldig e-postadresse');
+      setFeilmelding(translations.registration.invalidEmail);
       return false;
     }
     
@@ -50,21 +52,21 @@ function Registrering({ onRegistrer }) {
     
     if (!validateForm()) return;
     
-    setMelding('Sender verifiseringskode...');
+    setMelding(translations.login.sendingCode);
     
     try {
       // Send verifiseringskode til brukerens e-post
       const result = await sendVerificationCode(formData.epost, formData.navn, 'registration');
       
       if (result.success) {
-        setMelding('En verifiseringskode er sendt til din e-post. Vennligst sjekk innboksen din.');
+        setMelding(translations.login.codeSent);
         setSteg(2);
       } else {
-        setFeilmelding('Kunne ikke sende verifiseringskode. Vennligst prøv igjen senere.');
+        setFeilmelding(translations.login.couldNotSendCode);
       }
     } catch (error) {
       console.error('Feil ved sending av verifiseringskode:', error);
-      setFeilmelding('En feil oppstod. Vennligst prøv igjen senere.');
+      setFeilmelding(translations.login.errorOccurred);
     }
   };
 
@@ -72,7 +74,7 @@ function Registrering({ onRegistrer }) {
     e.preventDefault();
     
     if (!verifiseringskode) {
-      setFeilmelding('Vennligst oppgi verifiseringskoden');
+      setFeilmelding(translations.login.enterCode);
       return;
     }
     
@@ -94,14 +96,14 @@ function Registrering({ onRegistrer }) {
       const registreringsResultat = onRegistrer(brukerData);
       
       if (registreringsResultat.success) {
-        setMelding('Registrering fullført! Du kan nå logge inn.');
+        setMelding(translations.registration.registrationSuccess);
         setSteg(3); // Ferdig
       } else {
-        setFeilmelding(registreringsResultat.message || 'Registrering feilet. Vennligst prøv igjen.');
+        setFeilmelding(registreringsResultat.message || translations.registration.registrationFailed);
         setSteg(1); // Tilbake til registreringsskjema
       }
     } else {
-      setFeilmelding('Ugyldig eller utløpt verifiseringskode. Vennligst prøv igjen.');
+      setFeilmelding(translations.login.invalidCode);
     }
   };
 
@@ -120,7 +122,7 @@ function Registrering({ onRegistrer }) {
   if (steg === 1) {
     return (
       <div className="registrering-container">
-        <h2>Registrer deg</h2>
+        <h2>{translations.registration.title}</h2>
         <StegIndikator />
         
         {feilmelding && <div className="feilmelding" role="alert">{feilmelding}</div>}
@@ -128,28 +130,28 @@ function Registrering({ onRegistrer }) {
         
         <form onSubmit={handleSubmit} autoComplete="on">
           <div className="form-group">
-            <label htmlFor="navn">Navn</label>
+            <label htmlFor="navn">{translations.registration.name}</label>
             <input
               type="text"
               id="navn"
               name="navn"
               value={formData.navn}
               onChange={handleChange}
-              placeholder="Skriv inn fullt navn"
+              placeholder={translations.registration.namePlaceholder}
               autoComplete="name"
               required
             />
           </div>
           
           <div className="form-group">
-            <label htmlFor="epost">E-post</label>
+            <label htmlFor="epost">{translations.registration.email}</label>
             <input
               type="email"
               id="epost"
               name="epost"
               value={formData.epost}
               onChange={handleChange}
-              placeholder="Din e-postadresse"
+              placeholder={translations.registration.emailPlaceholder}
               autoComplete="email"
               inputMode="email"
               required
@@ -157,14 +159,14 @@ function Registrering({ onRegistrer }) {
           </div>
           
           <div className="form-group">
-            <label htmlFor="passord">Passord</label>
+            <label htmlFor="passord">{translations.registration.password}</label>
             <input
               type="password"
               id="passord"
               name="passord"
               value={formData.passord}
               onChange={handleChange}
-              placeholder="Velg et passord"
+              placeholder={translations.registration.passwordPlaceholder}
               autoComplete="new-password"
               minLength="6"
               required
@@ -172,14 +174,14 @@ function Registrering({ onRegistrer }) {
           </div>
           
           <div className="form-group">
-            <label htmlFor="bekreftPassord">Bekreft passord</label>
+            <label htmlFor="bekreftPassord">{translations.registration.confirmPassword}</label>
             <input
               type="password"
               id="bekreftPassord"
               name="bekreftPassord"
               value={formData.bekreftPassord}
               onChange={handleChange}
-              placeholder="Skriv passordet på nytt"
+              placeholder={translations.registration.confirmPasswordPlaceholder}
               autoComplete="new-password"
               minLength="6"
               required
@@ -187,31 +189,31 @@ function Registrering({ onRegistrer }) {
           </div>
           
           <div className="form-group">
-            <label htmlFor="klasse">Klasse</label>
+            <label htmlFor="klasse">{translations.registration.class}</label>
             <input
               type="text"
               id="klasse"
               name="klasse"
               value={formData.klasse}
               onChange={handleChange}
-              placeholder="Hvilken klasse går du i?"
+              placeholder={translations.registration.classPlaceholder}
               autoComplete="organization-title"
               required
             />
           </div>
           
-          <button type="submit" className="registrer-knapp">Registrer deg</button>
+          <button type="submit" className="registrer-knapp">{translations.registration.registerButton}</button>
         </form>
         
         <div className="innlogging-link">
-          <p>Har du allerede en konto? <Link to="/innlogging">Logg inn her</Link></p>
+          <p>{translations.registration.haveAccount} <Link to="/innlogging">{translations.registration.loginHere}</Link></p>
         </div>
       </div>
     );
   } else if (steg === 2) {
     return (
       <div className="registrering-container">
-        <h2>Verifiser e-post</h2>
+        <h2>{translations.login.verifyEmail}</h2>
         <StegIndikator />
         
         {feilmelding && <div className="feilmelding" role="alert">{feilmelding}</div>}
@@ -219,13 +221,13 @@ function Registrering({ onRegistrer }) {
         
         <form onSubmit={handleVerification}>
           <div className="form-group">
-            <label htmlFor="verifiseringskode">Verifiseringskode</label>
+            <label htmlFor="verifiseringskode">{translations.login.verificationCode}</label>
             <input
               type="text"
               id="verifiseringskode"
               value={verifiseringskode}
               onChange={(e) => setVerifiseringskode(e.target.value)}
-              placeholder="Skriv inn 6-sifret kode"
+              placeholder={translations.login.verificationPlaceholder}
               autoComplete="one-time-code"
               inputMode="numeric"
               pattern="[0-9]*"
@@ -234,12 +236,12 @@ function Registrering({ onRegistrer }) {
             />
           </div>
           
-          <button type="submit" className="verifiser-knapp">Verifiser</button>
+          <button type="submit" className="verifiser-knapp">{translations.login.verifyButton}</button>
           <button 
             type="button" 
             className="tilbake-knapp"
             onClick={() => setSteg(1)}>
-            Tilbake
+            {translations.login.backButton}
           </button>
         </form>
       </div>
@@ -247,14 +249,14 @@ function Registrering({ onRegistrer }) {
   } else {
     return (
       <div className="registrering-container">
-        <h2>Registrering fullført</h2>
+        <h2>{translations.registration.registrationComplete}</h2>
         <StegIndikator />
         
         <div className="melding" role="status">{melding}</div>
         
         <Link to="/innlogging">
           <button className="innlogging-knapp">
-            Gå til innlogging
+            {translations.registration.goToLogin}
           </button>
         </Link>
       </div>
