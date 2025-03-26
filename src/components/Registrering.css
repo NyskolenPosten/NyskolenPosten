@@ -13,7 +13,7 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.registrering-container:hover {
+.registrering-container:hover, .registrering-container:focus-within {
   transform: translateY(-5px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
@@ -86,6 +86,7 @@
   font-weight: 500;
   color: #555;
   transition: color 0.3s;
+  font-size: 1.05rem; /* Litt større for berøringsskjerm */
 }
 
 .form-group input {
@@ -122,9 +123,12 @@
   transition: all 0.3s;
   box-shadow: 0 4px 15px rgba(255, 107, 0, 0.25);
   margin-bottom: 1rem;
+  min-height: 44px; /* Minimums høyde for touchscreen */
+  touch-action: manipulation; /* Forbedrer touch-respons */
 }
 
-.registrer-knapp:hover, .verifiser-knapp:hover, .innlogging-knapp:hover {
+.registrer-knapp:hover, .verifiser-knapp:hover, .innlogging-knapp:hover,
+.registrer-knapp:focus, .verifiser-knapp:focus, .innlogging-knapp:focus {
   background: linear-gradient(45deg, #e55c00, var(--secondary-color));
   box-shadow: 0 6px 20px rgba(255, 107, 0, 0.35);
   transform: translateY(-2px);
@@ -146,9 +150,10 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  min-height: 44px; /* Minimums høyde for touchscreen */
 }
 
-.tilbake-knapp:hover {
+.tilbake-knapp:hover, .tilbake-knapp:focus {
   background-color: rgba(255, 107, 0, 0.05);
   color: #e55c00;
 }
@@ -167,9 +172,11 @@
   transition: color 0.3s;
   padding-bottom: 2px;
   border-bottom: 1px solid transparent;
+  padding: 0.4rem 0.5rem; /* Større berøringspunkt */
+  display: inline-block;
 }
 
-.innlogging-link a:hover {
+.innlogging-link a:hover, .innlogging-link a:focus {
   color: var(--secondary-color);
   border-bottom-color: var(--secondary-color);
 }
@@ -191,11 +198,45 @@
   border-radius: 50%;
   background-color: #ddd;
   transition: all 0.3s;
+  cursor: default;
+  /* Gjør punktene større for berøringsskjerm */
+  padding: 2px;
+  margin: 0 3px;
 }
 
 .steg-dot.aktiv {
   background-color: var(--secondary-color);
   transform: scale(1.2);
+}
+
+/* Forbedret fokus for touchscreen */
+input:focus, button:focus, a:focus {
+  outline: 3px solid rgba(255, 107, 0, 0.3);
+  outline-offset: 2px;
+}
+
+/* Touch-spesifikke justeringer */
+@media (pointer: coarse) {
+  .form-group input {
+    padding: 1rem 1.2rem;
+    font-size: 16px; /* Forhindrer automatisk zoom på mobil */
+  }
+  
+  .registrer-knapp, .verifiser-knapp, .innlogging-knapp, .tilbake-knapp {
+    padding: 1.1rem;
+    margin-bottom: 1.25rem;
+    min-height: 48px;
+  }
+  
+  .innlogging-link a {
+    padding: 0.6rem 0.8rem;
+  }
+  
+  .steg-dot {
+    width: 12px;
+    height: 12px;
+    margin: 0 4px;
+  }
 }
 
 /* Animasjon for knapper */
@@ -217,10 +258,10 @@
   }
   
   .form-group input {
-    padding: 0.8rem;
+    padding: 0.9rem;
   }
   
   .registrer-knapp, .verifiser-knapp, .tilbake-knapp, .innlogging-knapp {
-    padding: 0.9rem;
+    padding: 1rem;
   }
 } 

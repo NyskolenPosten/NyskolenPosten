@@ -109,9 +109,9 @@ function Registrering({ onRegistrer }) {
   const StegIndikator = () => (
     <div className="registrering-steg">
       <div className="steg-indikator">
-        <div className={`steg-dot ${steg >= 1 ? 'aktiv' : ''}`}></div>
-        <div className={`steg-dot ${steg >= 2 ? 'aktiv' : ''}`}></div>
-        <div className={`steg-dot ${steg >= 3 ? 'aktiv' : ''}`}></div>
+        <div className={`steg-dot ${steg >= 1 ? 'aktiv' : ''}`} role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="3"></div>
+        <div className={`steg-dot ${steg >= 2 ? 'aktiv' : ''}`} role="progressbar" aria-valuenow="2" aria-valuemin="1" aria-valuemax="3"></div>
+        <div className={`steg-dot ${steg >= 3 ? 'aktiv' : ''}`} role="progressbar" aria-valuenow="3" aria-valuemin="1" aria-valuemax="3"></div>
       </div>
     </div>
   );
@@ -123,10 +123,10 @@ function Registrering({ onRegistrer }) {
         <h2>Registrer deg</h2>
         <StegIndikator />
         
-        {feilmelding && <div className="feilmelding">{feilmelding}</div>}
-        {melding && <div className="melding">{melding}</div>}
+        {feilmelding && <div className="feilmelding" role="alert">{feilmelding}</div>}
+        {melding && <div className="melding" role="status">{melding}</div>}
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="on">
           <div className="form-group">
             <label htmlFor="navn">Navn</label>
             <input
@@ -137,6 +137,7 @@ function Registrering({ onRegistrer }) {
               onChange={handleChange}
               placeholder="Skriv inn fullt navn"
               autoComplete="name"
+              required
             />
           </div>
           
@@ -150,6 +151,8 @@ function Registrering({ onRegistrer }) {
               onChange={handleChange}
               placeholder="Din e-postadresse"
               autoComplete="email"
+              inputMode="email"
+              required
             />
           </div>
           
@@ -163,6 +166,8 @@ function Registrering({ onRegistrer }) {
               onChange={handleChange}
               placeholder="Velg et passord"
               autoComplete="new-password"
+              minLength="6"
+              required
             />
           </div>
           
@@ -176,6 +181,8 @@ function Registrering({ onRegistrer }) {
               onChange={handleChange}
               placeholder="Skriv passordet på nytt"
               autoComplete="new-password"
+              minLength="6"
+              required
             />
           </div>
           
@@ -188,6 +195,8 @@ function Registrering({ onRegistrer }) {
               value={formData.klasse}
               onChange={handleChange}
               placeholder="Hvilken klasse går du i?"
+              autoComplete="organization-title"
+              required
             />
           </div>
           
@@ -205,8 +214,8 @@ function Registrering({ onRegistrer }) {
         <h2>Verifiser e-post</h2>
         <StegIndikator />
         
-        {feilmelding && <div className="feilmelding">{feilmelding}</div>}
-        {melding && <div className="melding">{melding}</div>}
+        {feilmelding && <div className="feilmelding" role="alert">{feilmelding}</div>}
+        {melding && <div className="melding" role="status">{melding}</div>}
         
         <form onSubmit={handleVerification}>
           <div className="form-group">
@@ -218,7 +227,10 @@ function Registrering({ onRegistrer }) {
               onChange={(e) => setVerifiseringskode(e.target.value)}
               placeholder="Skriv inn 6-sifret kode"
               autoComplete="one-time-code"
+              inputMode="numeric"
+              pattern="[0-9]*"
               maxLength="6"
+              required
             />
           </div>
           
@@ -238,7 +250,7 @@ function Registrering({ onRegistrer }) {
         <h2>Registrering fullført</h2>
         <StegIndikator />
         
-        <div className="melding">{melding}</div>
+        <div className="melding" role="status">{melding}</div>
         
         <Link to="/innlogging">
           <button className="innlogging-knapp">
