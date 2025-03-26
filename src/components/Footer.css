@@ -1,11 +1,11 @@
 /* Footer.css - Styling for bunnteksten */
 
 .footer {
-  background-color: var(--primary-color);
-  color: white;
+  background-color: #f5f5f5;
+  color: #555555;
   padding: 2.5rem 0;
   margin-top: 3rem;
-  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .footer-innhold {
@@ -26,12 +26,14 @@
   margin: 0.5rem 0;
   font-size: 1.05rem;
   line-height: 1.6;
+  color: #555555;
 }
 
 .footer-info p:first-child {
   font-weight: 600;
   letter-spacing: 0.02em;
   font-size: 1.1rem;
+  color: #444444;
 }
 
 .footer-info a {
@@ -59,7 +61,7 @@
 }
 
 .footer-lenker a {
-  color: white;
+  color: #666666;
   text-decoration: none;
   transition: all 0.3s ease;
   padding: 0.4rem 0.8rem;
@@ -68,8 +70,9 @@
 }
 
 .footer-lenker a:hover, .footer-lenker a:focus {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(0, 0, 0, 0.05);
   transform: translateY(-2px);
+  color: var(--primary-color);
 }
 
 @media (max-width: 768px) {
