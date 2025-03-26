@@ -14,6 +14,7 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
   });
   const [verifiseringskode, setVerifiseringskode] = useState('');
   const [feilmelding, setFeilmelding] = useState(melding);
+  const [suksessmelding, setSuksessmelding] = useState('');
   const [redirect, setRedirect] = useState(false);
   const [currentBruker, setCurrentBruker] = useState(null);
 
@@ -24,6 +25,7 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
       [name]: value
     });
     setFeilmelding('');
+    setSuksessmelding('');
   };
 
   const handleSubmit = async (e) => {
@@ -52,13 +54,14 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
     setCurrentBruker(bruker);
     
     // Send verifiseringskode
-    setFeilmelding(translations.login.sendingCode);
+    setFeilmelding('');
+    setSuksessmelding(translations.login.sendingCode);
     
     try {
       const result = await sendVerificationCode(bruker.epost, bruker.navn, 'login');
       
       if (result.success) {
-        setFeilmelding(translations.login.codeSent);
+        setSuksessmelding(translations.login.codeSent);
         setSteg(2);
       } else {
         setFeilmelding(translations.login.couldNotSendCode);
@@ -98,6 +101,7 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
       <div className="innlogging-container">
         <h2>{translations.login.title}</h2>
         {feilmelding && <div className="feilmelding">{feilmelding}</div>}
+        {suksessmelding && <div className="suksessmelding">{suksessmelding}</div>}
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -139,6 +143,8 @@ function Innlogging({ onLogin, brukere = [], melding = '' }) {
       <div className="innlogging-container">
         <h2>{translations.login.verifyTitle}</h2>
         {feilmelding && <div className="feilmelding">{feilmelding}</div>}
+        {suksessmelding && <div className="suksessmelding">{suksessmelding}</div>}
+        <p className="info-melding">{translations.login.checkEmailForCode}</p>
         
         <form onSubmit={handleVerification}>
           <div className="form-group">

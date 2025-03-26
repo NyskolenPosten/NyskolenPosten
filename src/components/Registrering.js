@@ -17,7 +17,7 @@ function Registrering({ onRegistrer }) {
   });
   const [verifiseringskode, setVerifiseringskode] = useState('');
   const [feilmelding, setFeilmelding] = useState('');
-  const [melding, setMelding] = useState('');
+  const [suksessmelding, setSuksessmelding] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,6 +26,7 @@ function Registrering({ onRegistrer }) {
       [name]: value
     });
     setFeilmelding('');
+    setSuksessmelding('');
   };
 
   const validateForm = () => {
@@ -52,14 +53,15 @@ function Registrering({ onRegistrer }) {
     
     if (!validateForm()) return;
     
-    setMelding(translations.login.sendingCode);
+    setFeilmelding('');
+    setSuksessmelding(translations.login.sendingCode);
     
     try {
       // Send verifiseringskode til brukerens e-post
       const result = await sendVerificationCode(formData.epost, formData.navn, 'registration');
       
       if (result.success) {
-        setMelding(translations.login.codeSent);
+        setSuksessmelding(translations.login.codeSent);
         setSteg(2);
       } else {
         setFeilmelding(translations.login.couldNotSendCode);
@@ -96,7 +98,7 @@ function Registrering({ onRegistrer }) {
       const registreringsResultat = onRegistrer(brukerData);
       
       if (registreringsResultat.success) {
-        setMelding(translations.registration.registrationSuccess);
+        setSuksessmelding(translations.registration.registrationSuccess);
         setSteg(3); // Ferdig
       } else {
         setFeilmelding(registreringsResultat.message || translations.registration.registrationFailed);
@@ -126,7 +128,7 @@ function Registrering({ onRegistrer }) {
         <StegIndikator />
         
         {feilmelding && <div className="feilmelding" role="alert">{feilmelding}</div>}
-        {melding && <div className="melding" role="status">{melding}</div>}
+        {suksessmelding && <div className="suksessmelding" role="status">{suksessmelding}</div>}
         
         <form onSubmit={handleSubmit} autoComplete="on">
           <div className="form-group">
@@ -217,7 +219,8 @@ function Registrering({ onRegistrer }) {
         <StegIndikator />
         
         {feilmelding && <div className="feilmelding" role="alert">{feilmelding}</div>}
-        {melding && <div className="melding" role="status">{melding}</div>}
+        {suksessmelding && <div className="suksessmelding" role="status">{suksessmelding}</div>}
+        <p className="info-melding">{translations.login.checkEmailForCode}</p>
         
         <form onSubmit={handleVerification}>
           <div className="form-group">
@@ -252,7 +255,7 @@ function Registrering({ onRegistrer }) {
         <h2>{translations.registration.registrationComplete}</h2>
         <StegIndikator />
         
-        <div className="melding" role="status">{melding}</div>
+        <div className="suksessmelding" role="status">{suksessmelding}</div>
         
         <Link to="/innlogging">
           <button className="innlogging-knapp">

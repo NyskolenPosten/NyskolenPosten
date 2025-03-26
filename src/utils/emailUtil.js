@@ -17,7 +17,7 @@ export const EMAIL_CONFIG = {
 };
 
 /**
- * Simulerer sending av e-post, men viser innholdet direkte i et alert
+ * Simulerer sending av e-post via backend
  * @param {string} to Mottakerens e-postadresse
  * @param {string} subject E-postens emne
  * @param {string} body E-postens innhold
@@ -25,26 +25,21 @@ export const EMAIL_CONFIG = {
  */
 export async function sendEmail(to, subject, body) {
   try {
-    // Vis meldingen direkte til brukeren i stedet for å sende e-post
-    // For testformål - i en virkelig app ville dette sendt en faktisk e-post
+    // Simpler logging av e-post-informasjon for testing
+    // I en produksjonsversjon ville dette vært en faktisk API-forespørsel til en backend
+    console.log('------ E-POST SENDT ------');
+    console.log(`Til: ${to}`);
+    console.log(`Emne: ${subject}`);
+    console.log(`Innhold: ${body}`);
+    console.log('-------------------------');
     
-    // Formater meldingen mer lesbart
-    const formattedMessage = `
-📧 E-post til: ${to}
-📝 Emne: ${subject}
-
-${body}
-
-(Dette er en simulert e-post for lokal testing)
-`;
-
-    alert(formattedMessage);
+    // Simuler en liten forsinkelse som en faktisk e-posttjeneste ville hatt
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    console.log(`Simulert e-post til ${to}:`, { subject, body });
-    return { success: true, message: 'Simulert e-post vist' };
+    return { success: true, message: 'E-post sendt (simulert)' };
   } catch (error) {
-    console.error('Feil ved simulering av e-post:', error);
-    return { success: false, message: 'Kunne ikke vise simulert e-post' };
+    console.error('Feil ved sending av e-post:', error);
+    return { success: false, message: 'Kunne ikke sende e-post' };
   }
 }
 
@@ -62,16 +57,33 @@ export async function sendVerificationCode(email, name, purpose) {
   
   const verifiseringsTekst = purpose === 'login' ? 'innlogging' : 'registrering';
   
+  // Emne og innhold for e-posten
+  const subject = `Verifiseringskode for ${verifiseringsTekst} - Nyskolen Posten`;
+  const body = `
+Hei ${name || ''}!
+
+Din verifiseringskode for ${verifiseringsTekst} på Nyskolen Posten er:
+
+${code}
+
+Skriv inn denne koden i verifiseringsfeltet for å fullføre prosessen.
+
+Med vennlig hilsen,
+Redaksjonen i Nyskolen Posten
+`;
+
   try {
-    // Vis koden direkte i et alert
-    alert(`VERIFISERINGSKODE: ${code}`);
+    // For en ekte e-posttjeneste, ville vi sendt e-posten via en backend API
+    // Men for testformål, viser vi koden i konsollen og simulerer sendingen
+    console.log(`Verifiseringskode til ${email}: ${code}`);
     
-    console.log(`Verifiseringskode for ${email}: ${code}`);
-    return { success: true, message: 'Verifiseringskode vist', code };
+    // Simpler sending av e-post (kun for testing)
+    await sendEmail(email, subject, body);
     
+    return { success: true, message: 'Verifiseringskode sendt', code };
   } catch (error) {
-    console.error('Feil ved visning av verifiseringskode:', error);
-    return { success: false, message: 'Kunne ikke vise verifiseringskode', error };
+    console.error('Feil ved sending av verifiseringskode:', error);
+    return { success: false, message: 'Kunne ikke sende verifiseringskode', error };
   }
 }
 
@@ -87,13 +99,24 @@ export async function sendWelcomeEmail(email, name, role) {
   if (role === 'redaktør') roleTitle = 'redaktør';
   if (role === 'admin') roleTitle = 'administrator';
   
+  const subject = `Velkommen til Nyskolen Posten, ${name}!`;
+  const body = `Hei ${name}!\n\n`
+    + `Vi er glade for å ønske deg velkommen til Nyskolen Posten som ${roleTitle}. `
+    + `Din konto er nå aktivert og du kan logge inn på nettsiden vår.\n\n`
+    + `Som ${roleTitle} hos oss kan du ${role === 'journalist' 
+      ? 'skrive og publisere artikler som vil bli gjennomgått av våre redaktører.' 
+      : 'godkjenne artikler og administrere nettsiden.'}\n\n`
+    + `Hvis du har spørsmål, ikke nøl med å kontakte oss ved å svare på denne e-posten.\n\n`
+    + `Med vennlig hilsen,\n`
+    + `Redaksjonen i Nyskolen Posten\n`
+    + `E-post: ${EMAIL_CONFIG.fromEmail}`;
+  
   try {
-    // Vis velkommen-melding direkte i et alert
-    alert(`Velkommen til Nyskolen Posten!\n\nHei ${name},\n\nDin konto som ${roleTitle} er nå aktivert.`);
-    
-    return { success: true, message: 'Velkomstmelding vist' };
+    // Simulerer sending av velkomst-epost
+    await sendEmail(email, subject, body);
+    return { success: true, message: 'Velkomst-epost sendt' };
   } catch (error) {
-    console.error('Feil ved visning av velkomstmelding:', error);
-    return { success: false, message: 'Kunne ikke vise velkomstmelding', error };
+    console.error('Feil ved sending av velkomst-epost:', error);
+    return { success: false, message: 'Kunne ikke sende velkomst-epost', error };
   }
 } 

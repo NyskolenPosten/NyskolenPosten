@@ -57,6 +57,18 @@
   font-size: 1.2rem;
 }
 
+.suksessmelding {
+  background-color: rgba(46, 125, 50, 0.1);
+  color: #2e7d32;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #2e7d32;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+}
+
 .melding {
   background-color: rgba(52, 168, 83, 0.1);
   color: var(--success-color);
@@ -73,6 +85,18 @@
   content: "✅";
   margin-right: 0.75rem;
   font-size: 1.2rem;
+}
+
+.info-melding {
+  background-color: rgba(21, 101, 192, 0.1);
+  color: #1565c0;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #1565c0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  text-align: left;
 }
 
 .form-group {
