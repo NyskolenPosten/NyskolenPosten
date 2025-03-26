@@ -14,6 +14,7 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import Innlogging from './components/Innlogging';
 import Registrering from './components/Registrering';
+import { LanguageProvider } from './utils/LanguageContext';
 
 function App() {
   const [innloggetBruker, setInnloggetBruker] = useState(null);
@@ -216,132 +217,138 @@ function App() {
     }
   };
   
-  // Funksjon for å legge til ny artikkel
-  const leggTilArtikkel = (nyArtikkel) => {
-    // Sjekk om brukeren er admin eller redaktør for automatisk godkjenning
-    const erAdminEllerRedaktør = 
-      innloggetBruker.rolle === 'admin' || 
-      jobbliste.some(jobb => jobb.navn === innloggetBruker.navn && jobb.rolle === 'Redaktør');
-    
-    const artikkelObjekt = {
-      ...nyArtikkel,
-      artikkelID: 'artikkel-' + Date.now(),
-      forfatter: innloggetBruker.navn,
-      forfatterID: innloggetBruker.id,
-      dato: new Date().toISOString(),
-      godkjent: erAdminEllerRedaktør // Automatisk godkjent bare hvis admin eller redaktør
-    };
-    
-    const oppdatertArtikler = [...artikler, artikkelObjekt];
-    setArtikler(oppdatertArtikler);
-    localStorage.setItem('artikler', JSON.stringify(oppdatertArtikler));
-    
-    return artikkelObjekt.artikkelID;
-  };
-  
-  // Funksjon for å godkjenne artikkel
-  const godkjennArtikkel = (artikkelID) => {
-    const oppdatertArtikler = artikler.map(artikkel => {
-      if (artikkel.artikkelID === artikkelID) {
-        return { ...artikkel, godkjent: true };
+  // Funksjon for å godkjenne bruker
+  const godkjennBruker = (brukerId) => {
+    const oppdatertBrukere = brukere.map(bruker => {
+      if (bruker.id === brukerId) {
+        return { ...bruker, godkjent: true };
       }
-      return artikkel;
+      return bruker;
     });
     
+    setBrukere(oppdatertBrukere);
+    localStorage.setItem('brukere', JSON.stringify(oppdatertBrukere));
+  };
+  
+  // Funksjon for å legge til ny artikkel
+  const handleNyArtikkel = (nyArtikkel) => {
+    const oppdatertArtikler = [...artikler, nyArtikkel];
     setArtikler(oppdatertArtikler);
     localStorage.setItem('artikler', JSON.stringify(oppdatertArtikler));
   };
   
   // Funksjon for å slette artikkel
-  const slettArtikkel = (artikkelID) => {
-    const oppdatertArtikler = artikler.filter(artikkel => artikkel.artikkelID !== artikkelID);
+  const handleSlettArtikkel = (artikkelId) => {
+    const oppdatertArtikler = artikler.filter(artikkel => artikkel.id !== artikkelId);
     setArtikler(oppdatertArtikler);
     localStorage.setItem('artikler', JSON.stringify(oppdatertArtikler));
   };
   
-  // Funksjon for å oppdatere artikkel
-  const oppdaterArtikkel = (oppdatertArtikkel) => {
+  // Funksjon for å redigere artikkel
+  const handleRedigerArtikkel = (artikkelId, oppdatertArtikkel) => {
     const oppdatertArtikler = artikler.map(artikkel => 
-      artikkel.artikkelID === oppdatertArtikkel.artikkelID ? oppdatertArtikkel : artikkel
+      artikkel.id === artikkelId ? { ...artikkel, ...oppdatertArtikkel } : artikkel
     );
     setArtikler(oppdatertArtikler);
     localStorage.setItem('artikler', JSON.stringify(oppdatertArtikler));
   };
   
-  // Funksjon for å oppdatere jobbliste
-  const oppdaterJobbliste = (nyJobbliste) => {
-    setJobbliste(nyJobbliste);
-    localStorage.setItem('jobbliste', JSON.stringify(nyJobbliste));
-  };
-  
-  // Funksjon for å oppdatere kategoriliste
-  const oppdaterKategoriliste = (nyKategoriliste) => {
-    setKategoriliste(nyKategoriliste);
-    localStorage.setItem('kategoriliste', JSON.stringify(nyKategoriliste));
-  };
-  
-  // Funksjon for å endre rolle på en bruker i jobblisten
-  const endreRolleBruker = (jobbId, nyRolle) => {
-    const oppdatertJobbliste = jobbliste.map(jobb => {
-      if (jobb.id === jobbId) {
-        return { ...jobb, rolle: nyRolle };
-      }
-      return jobb;
-    });
-    
-    setJobbliste(oppdatertJobbliste);
-    localStorage.setItem('jobbliste', JSON.stringify(oppdatertJobbliste));
-    
-    // Oppdater også brukerens rolle i brukerlisten
-    const jobb = jobbliste.find(j => j.id === jobbId);
-    if (jobb) {
-      const bruker = brukere.find(b => b.navn === jobb.navn);
-      if (bruker) {
-        const nyBrukerRolle = nyRolle === 'Redaktør' ? 'admin' : 'journalist';
-        const oppdatertBruker = { ...bruker, rolle: nyBrukerRolle };
-        oppdaterBruker(oppdatertBruker);
-      }
-    }
+  // Funksjon for å oppdatere artikkel
+  const handleOppdaterArtikkel = (oppdatertArtikkel) => {
+    const oppdatertArtikler = artikler.map(artikkel => 
+      artikkel.id === oppdatertArtikkel.id ? oppdatertArtikkel : artikkel
+    );
+    setArtikler(oppdatertArtikler);
+    localStorage.setItem('artikler', JSON.stringify(oppdatertArtikler));
   };
   
   return (
-    <Router>
-      <div className="app">
-        <Header innloggetBruker={innloggetBruker} onLogout={handleLogout} />
-        
-        <main className="innhold">
-          <Routes>
-            <Route path="/" element={<Hjem artikler={artikler} />} />
-            <Route path="/innlogging" element={<Innlogging onLogin={handleLogin} brukere={brukere} />} />
-            <Route path="/registrering" element={<Registrering onRegistrer={registrerBruker} />} />
-            <Route path="/ny-artikkel" element={<NyArtikkel innloggetBruker={innloggetBruker} onLeggTilArtikkel={leggTilArtikkel} kategoriliste={kategoriliste} />} />
-            <Route path="/artikkel/:artikkelID" element={<ArtikkelVisning artikler={artikler} innloggetBruker={innloggetBruker} />} />
-            <Route path="/admin" element={
-              <AdminPanel 
-                innloggetBruker={innloggetBruker} 
-                artikler={artikler} 
-                brukere={brukere} 
-                jobbliste={jobbliste}
-                kategoriliste={kategoriliste}
-                onDeleteArticle={slettArtikkel} 
-                onUpdateArticle={oppdaterArtikkel} 
-                onDeleteUser={slettBruker}
-                onApproveArticle={godkjennArtikkel}
-                onUpdateJobbliste={oppdaterJobbliste}
-                onUpdateKategoriliste={oppdaterKategoriliste}
-                onEndreRolleBruker={endreRolleBruker}
-                onUpdateUser={oppdaterBruker}
+    <LanguageProvider>
+      <Router>
+        <div className="app">
+          <Header innloggetBruker={innloggetBruker} onLogout={handleLogout} />
+          
+          <main className="container">
+            <Routes>
+              <Route path="/" element={<Hjem artikler={artikler} />} />
+              <Route path="/om-oss" element={<OmOss jobbliste={jobbliste} />} />
+              <Route 
+                path="/artikkel/:id" 
+                element={<ArtikkelVisning artikler={artikler} />} 
               />
-            } />
-            <Route path="/om-oss" element={<OmOss jobbliste={jobbliste} />} />
-            <Route path="/mine-artikler" element={<MineArtikler innloggetBruker={innloggetBruker} artikler={artikler} onUpdateArticle={oppdaterArtikkel} onDeleteArticle={slettArtikkel} />} />
-          </Routes>
-        </main>
-        
-        <Footer />
-      </div>
-    </Router>
+              
+              <Route 
+                path="/innlogging" 
+                element={
+                  <Innlogging 
+                    onLogin={handleLogin} 
+                    brukere={brukere}
+                  />
+                } 
+              />
+              
+              <Route 
+                path="/registrering" 
+                element={
+                  <Registrering 
+                    onRegistrer={registrerBruker}
+                  />
+                } 
+              />
+              
+              {/* Beskyttede ruter som krever innlogging */}
+              {innloggetBruker && (
+                <>
+                  <Route 
+                    path="/ny-artikkel" 
+                    element={
+                      <NyArtikkel 
+                        bruker={innloggetBruker}
+                        onArtikkelOpprettet={handleNyArtikkel}
+                        kategoriliste={kategoriliste}
+                      />
+                    } 
+                  />
+                  
+                  <Route 
+                    path="/mine-artikler" 
+                    element={
+                      <MineArtikler 
+                        bruker={innloggetBruker}
+                        artikler={artikler.filter(a => a.forfatterEpost === innloggetBruker.epost)}
+                        onSlettArtikkel={handleSlettArtikkel}
+                        onRedigerArtikkel={handleRedigerArtikkel}
+                      />
+                    } 
+                  />
+                </>
+              )}
+              
+              {/* Admin-rute som krever admin-tilgang */}
+              {innloggetBruker && innloggetBruker.rolle === 'admin' && (
+                <Route 
+                  path="/admin" 
+                  element={
+                    <AdminPanel 
+                      brukere={brukere}
+                      artikler={artikler}
+                      onGodkjennBruker={godkjennBruker}
+                      onSlettBruker={slettBruker}
+                      onOppdaterBruker={oppdaterBruker}
+                      onOppdaterArtikkel={handleOppdaterArtikkel}
+                      onSlettArtikkel={handleSlettArtikkel}
+                    />
+                  } 
+                />
+              )}
+            </Routes>
+          </main>
+          
+          <Footer />
+        </div>
+      </Router>
+    </LanguageProvider>
   );
 }
 
-export default App; 
+export default App;
