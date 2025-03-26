@@ -17,7 +17,7 @@ export const EMAIL_CONFIG = {
 };
 
 /**
- * Simulerer sending av e-post via backend
+ * Simulerer sending av e-post via konsollen
  * @param {string} to Mottakerens e-postadresse
  * @param {string} subject E-postens emne
  * @param {string} body E-postens innhold
@@ -25,26 +25,29 @@ export const EMAIL_CONFIG = {
  */
 export async function sendEmail(to, subject, body) {
   try {
-    // Simpler logging av e-post-informasjon for testing
-    // I en produksjonsversjon ville dette vært en faktisk API-forespørsel til en backend
-    console.log('------ E-POST SENDT ------');
-    console.log(`Til: ${to}`);
-    console.log(`Emne: ${subject}`);
-    console.log(`Innhold: ${body}`);
-    console.log('-------------------------');
+    // Vis e-post i konsollen med tydelig formatering
+    console.log('\n%c📧 E-POST SIMULERING 📧', 'font-size: 14px; font-weight: bold; color: #4285f4; background-color: #e8f0fe; padding: 5px; border-radius: 3px;');
+    console.log('%cTil: ' + to, 'color: #333; font-weight: bold;');
+    console.log('%cEmne: ' + subject, 'color: #333; font-weight: bold;');
+    console.log('%cInnhold:\n' + body, 'color: #444;');
+    console.log('%c🔚 SLUTT PÅ E-POST 🔚', 'font-size: 12px; color: #4285f4; border-top: 1px solid #ccc; padding-top: 5px;');
     
-    // Simuler en liten forsinkelse som en faktisk e-posttjeneste ville hatt
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Simuler en liten forsinkelse
+    await new Promise(resolve => setTimeout(resolve, 300));
     
-    return { success: true, message: 'E-post sendt (simulert)' };
+    return { 
+      success: true, 
+      message: 'E-post simulert i konsollen',
+      emailData: { to, subject, body }
+    };
   } catch (error) {
-    console.error('Feil ved sending av e-post:', error);
-    return { success: false, message: 'Kunne ikke sende e-post' };
+    console.error('Feil ved simulering av e-post:', error);
+    return { success: false, message: 'Kunne ikke simulere e-post' };
   }
 }
 
 /**
- * Sender en verifiseringskode via e-post
+ * Sender en verifiseringskode via e-post (simulert)
  * @param {string} email Brukerens e-postadresse
  * @param {string} name Brukerens navn
  * @param {string} purpose Formålet med verifiseringen (login/registration)
@@ -73,22 +76,33 @@ Redaksjonen i Nyskolen Posten
 `;
 
   try {
-    // For en ekte e-posttjeneste, ville vi sendt e-posten via en backend API
-    // Men for testformål, viser vi koden i konsollen og simulerer sendingen
-    console.log(`Verifiseringskode til ${email}: ${code}`);
+    // Log verifiseringskoden VELDIG tydelig i konsollen
+    console.log('\n%c🔑 VERIFISERINGSKODE: %c' + code + ' %c🔑', 
+      'background-color: #1a73e8; color: white; font-size: 16px; font-weight: bold; padding: 5px; border-radius: 3px;', 
+      'background-color: #e8f0fe; color: #1a73e8; font-size: 24px; font-weight: bold; padding: 5px 10px; border-radius: 3px;',
+      'background-color: #1a73e8; color: white; font-size: 16px; font-weight: bold; padding: 5px; border-radius: 3px;'
+    );
+    console.log('%cE-post: ' + email, 'color: #333;');
+    console.log('%cFormål: ' + verifiseringsTekst, 'color: #333;');
+    console.log('%c(Denne koden er for lokal testing)', 'font-style: italic; color: #666;');
     
-    // Simpler sending av e-post (kun for testing)
+    // Simuler e-postsending via konsollen
     await sendEmail(email, subject, body);
     
-    return { success: true, message: 'Verifiseringskode sendt', code };
+    // Returner resultatet sammen med koden for testing
+    return { 
+      success: true, 
+      message: 'Verifiseringskode sendt (simulert i konsollen)',
+      kode: code // Returnerer koden direkte for utviklingsformål
+    };
   } catch (error) {
     console.error('Feil ved sending av verifiseringskode:', error);
-    return { success: false, message: 'Kunne ikke sende verifiseringskode', error };
+    return { success: false, message: 'Kunne ikke sende verifiseringskode' };
   }
 }
 
 /**
- * Sender en velkomste-post til nyregistrert bruker
+ * Sender en velkomst-e-post til nyregistrert bruker (simulert)
  * @param {string} email Brukerens e-postadresse
  * @param {string} name Brukerens navn
  * @param {string} role Brukerens rolle (journalist/redaktør/admin)
@@ -112,11 +126,16 @@ export async function sendWelcomeEmail(email, name, role) {
     + `E-post: ${EMAIL_CONFIG.fromEmail}`;
   
   try {
-    // Simulerer sending av velkomst-epost
+    // Simuler e-postsending via konsollen
     await sendEmail(email, subject, body);
-    return { success: true, message: 'Velkomst-epost sendt' };
+    
+    return { 
+      success: true, 
+      message: 'Velkomst-e-post sendt (simulert i konsollen)',
+      emailData: { to: email, subject, body }
+    };
   } catch (error) {
-    console.error('Feil ved sending av velkomst-epost:', error);
-    return { success: false, message: 'Kunne ikke sende velkomst-epost', error };
+    console.error('Feil ved sending av velkomst-e-post:', error);
+    return { success: false, message: 'Kunne ikke sende velkomst-e-post' };
   }
 } 
