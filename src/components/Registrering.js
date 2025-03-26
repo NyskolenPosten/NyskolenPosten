@@ -18,6 +18,7 @@ function Registrering({ onRegistrer }) {
   const [verifiseringskode, setVerifiseringskode] = useState('');
   const [feilmelding, setFeilmelding] = useState('');
   const [suksessmelding, setSuksessmelding] = useState('');
+  const [visKode, setVisKode] = useState(''); // Vis generert kode for lokal testing
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,6 +56,7 @@ function Registrering({ onRegistrer }) {
     
     setFeilmelding('');
     setSuksessmelding(translations.login.sendingCode);
+    setVisKode('');
     
     try {
       // Send verifiseringskode til brukerens e-post
@@ -62,6 +64,12 @@ function Registrering({ onRegistrer }) {
       
       if (result.success) {
         setSuksessmelding(translations.login.codeSent);
+        // Vis koden for lokal testing
+        if (result.kode) {
+          setVisKode(result.kode);
+          // Sett koden automatisk i input-feltet for enklere testing
+          setVerifiseringskode(result.kode);
+        }
         setSteg(2);
       } else {
         setFeilmelding(translations.login.couldNotSendCode);
@@ -221,6 +229,14 @@ function Registrering({ onRegistrer }) {
         {feilmelding && <div className="feilmelding" role="alert">{feilmelding}</div>}
         {suksessmelding && <div className="suksessmelding" role="status">{suksessmelding}</div>}
         <p className="info-melding">{translations.login.checkEmailForCode}</p>
+        
+        {/* Vis koden lokalt for enklere testing */}
+        {visKode && (
+          <div className="kode-visning">
+            <p>{translations.login.localTestingCode}</p>
+            <p className="kode-display">{visKode}</p>
+          </div>
+        )}
         
         <form onSubmit={handleVerification}>
           <div className="form-group">

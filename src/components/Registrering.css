@@ -288,4 +288,24 @@ input:focus, button:focus, a:focus {
   .registrer-knapp, .verifiser-knapp, .tilbake-knapp, .innlogging-knapp {
     padding: 1rem;
   }
+}
+
+.kode-visning {
+  background-color: rgba(97, 97, 97, 0.1);
+  color: #424242;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #424242;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.kode-display {
+  font-family: monospace;
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  margin-top: 0.5rem;
+  color: #d81b60;
 } 
