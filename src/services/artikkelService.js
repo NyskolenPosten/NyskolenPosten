@@ -1,5 +1,13 @@
 // services/artikkelService.js - Håndter artikler med lokal lagring
 
+import cacheManager, { invalidateArtikkelCache } from '../utils/cacheUtil';
+
+// Cache-TTL-konstanter (i millisekunder)
+const CACHE_TTL = {
+  ARTICLES_LIST: 5 * 60 * 1000, // 5 minutter for artikkel-lister
+  ARTICLE_DETAIL: 10 * 60 * 1000 // 10 minutter for artikkeldetaljer
+};
+
 // Hjelpefunksjon for å generere en unik ID
 const genererID = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
@@ -25,56 +33,72 @@ const base64ToBlob = (base64, mimeType) => {
 
 // Hent alle godkjente artikler
 export const hentGodkjenteArtikler = async () => {
-  try {
-    const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
-    const godkjenteArtikler = artikler.filter(artikkel => artikkel.godkjent === true)
-      .sort((a, b) => new Date(b.dato) - new Date(a.dato));
-    
-    return { success: true, artikler: godkjenteArtikler };
-  } catch (error) {
-    return { success: false, error: error.message || 'Kunne ikke hente artikler' };
-  }
+  // Bruk cachen hvis tilgjengelig
+  const cacheKey = 'artikkel:godkjente';
+  return cacheManager.getOrFetch(cacheKey, async () => {
+    try {
+      const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
+      const godkjenteArtikler = artikler.filter(artikkel => artikkel.godkjent === true)
+        .sort((a, b) => new Date(b.dato) - new Date(a.dato));
+      
+      return { success: true, artikler: godkjenteArtikler };
+    } catch (error) {
+      return { success: false, error: error.message || 'Kunne ikke hente artikler' };
+    }
+  }, CACHE_TTL.ARTICLES_LIST);
 };
 
 // Hent alle artikler (for admin/redaktør)
 export const hentAlleArtikler = async () => {
-  try {
-    const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
-    const sorterteArtikler = artikler.sort((a, b) => new Date(b.dato) - new Date(a.dato));
-    
-    return { success: true, artikler: sorterteArtikler };
-  } catch (error) {
-    return { success: false, error: error.message || 'Kunne ikke hente artikler' };
-  }
+  // Bruk cachen hvis tilgjengelig
+  const cacheKey = 'artikkel:alle';
+  return cacheManager.getOrFetch(cacheKey, async () => {
+    try {
+      const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
+      const sorterteArtikler = artikler.sort((a, b) => new Date(b.dato) - new Date(a.dato));
+      
+      return { success: true, artikler: sorterteArtikler };
+    } catch (error) {
+      return { success: false, error: error.message || 'Kunne ikke hente artikler' };
+    }
+  }, CACHE_TTL.ARTICLES_LIST);
 };
 
 // Hent artikler for en bestemt bruker
 export const hentBrukersArtikler = async (brukerId) => {
-  try {
-    const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
-    const brukersArtikler = artikler.filter(artikkel => artikkel.forfatterID === brukerId)
-      .sort((a, b) => new Date(b.dato) - new Date(a.dato));
-    
-    return { success: true, artikler: brukersArtikler };
-  } catch (error) {
-    return { success: false, error: error.message || 'Kunne ikke hente brukerens artikler' };
-  }
+  // Bruk cachen hvis tilgjengelig
+  const cacheKey = `artikkel:bruker:${brukerId}`;
+  return cacheManager.getOrFetch(cacheKey, async () => {
+    try {
+      const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
+      const brukersArtikler = artikler.filter(artikkel => artikkel.forfatterID === brukerId)
+        .sort((a, b) => new Date(b.dato) - new Date(a.dato));
+      
+      return { success: true, artikler: brukersArtikler };
+    } catch (error) {
+      return { success: false, error: error.message || 'Kunne ikke hente brukerens artikler' };
+    }
+  }, CACHE_TTL.ARTICLES_LIST);
 };
 
 // Hent en enkelt artikkel basert på ID
 export const hentArtikkel = async (artikkelID) => {
-  try {
-    const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
-    const artikkel = artikler.find(a => a.artikkelID === artikkelID);
-    
-    if (!artikkel) {
-      return { success: false, error: 'Artikkelen ble ikke funnet' };
+  // Bruk cachen hvis tilgjengelig
+  const cacheKey = `artikkel:detalj:${artikkelID}`;
+  return cacheManager.getOrFetch(cacheKey, async () => {
+    try {
+      const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
+      const artikkel = artikler.find(a => a.artikkelID === artikkelID);
+      
+      if (!artikkel) {
+        return { success: false, error: 'Artikkelen ble ikke funnet' };
+      }
+      
+      return { success: true, artikkel };
+    } catch (error) {
+      return { success: false, error: error.message || 'Kunne ikke hente artikkelen' };
     }
-    
-    return { success: true, artikkel };
-  } catch (error) {
-    return { success: false, error: error.message || 'Kunne ikke hente artikkelen' };
-  }
+  }, CACHE_TTL.ARTICLE_DETAIL);
 };
 
 // Legg til ny artikkel
@@ -101,6 +125,9 @@ export const leggTilArtikkel = async (artikkelData, bilde) => {
     
     artikler.push(nyArtikkel);
     localStorage.setItem('artikler', JSON.stringify(artikler));
+    
+    // Invalider cache for artikler
+    invalidateArtikkelCache();
     
     return { success: true, artikkelID };
   } catch (error) {
@@ -135,6 +162,10 @@ export const oppdaterArtikkel = async (artikkelID, oppdatertData, nyttBilde) => 
     
     localStorage.setItem('artikler', JSON.stringify(artikler));
     
+    // Invalider cache for denne artikkelen og relevante lister
+    cacheManager.remove(`artikkel:detalj:${artikkelID}`);
+    invalidateArtikkelCache();
+    
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message || 'Kunne ikke oppdatere artikkelen' };
@@ -148,6 +179,10 @@ export const slettArtikkel = async (artikkelID) => {
     const oppdaterteArtikler = artikler.filter(a => a.artikkelID !== artikkelID);
     
     localStorage.setItem('artikler', JSON.stringify(oppdaterteArtikler));
+    
+    // Invalider cache for denne artikkelen og relevante lister
+    cacheManager.remove(`artikkel:detalj:${artikkelID}`);
+    invalidateArtikkelCache();
     
     return { success: true };
   } catch (error) {
@@ -168,6 +203,10 @@ export const godkjennArtikkel = async (artikkelID) => {
     artikler[artikkelIndex].godkjent = true;
     localStorage.setItem('artikler', JSON.stringify(artikler));
     
+    // Invalider cache for denne artikkelen og relevante lister
+    cacheManager.remove(`artikkel:detalj:${artikkelID}`);
+    invalidateArtikkelCache();
+    
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message || 'Kunne ikke godkjenne artikkelen' };
@@ -186,6 +225,10 @@ export const avvisArtikkel = async (artikkelID) => {
     
     artikler[artikkelIndex].godkjent = false;
     localStorage.setItem('artikler', JSON.stringify(artikler));
+    
+    // Invalider cache for denne artikkelen og relevante lister
+    cacheManager.remove(`artikkel:detalj:${artikkelID}`);
+    invalidateArtikkelCache();
     
     return { success: true };
   } catch (error) {

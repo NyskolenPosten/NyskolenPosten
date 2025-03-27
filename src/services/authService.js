@@ -1,6 +1,13 @@
 // services/authService.js - Håndter autentisering med lokal lagring
 
 import { auth } from './firebaseConfig';
+import cacheManager, { invalidateBrukerCache } from '../utils/cacheUtil';
+
+// Cache-TTL-konstanter (i millisekunder)
+const CACHE_TTL = {
+  USER_INFO: 10 * 60 * 1000, // 10 minutter for brukerinformasjon
+  USER_LIST: 5 * 60 * 1000, // 5 minutter for brukerlister
+};
 
 // Hjelpefunksjon for å generere en unik ID
 const genererID = () => {
@@ -10,6 +17,36 @@ const genererID = () => {
 // Hjelpefunksjon for å få nåværende tidsstempel
 const serverTimestamp = () => {
   return new Date().toISOString();
+};
+
+// Hent alle brukere (ikke-cachet for admin-bruk - alltid ferske data)
+export const hentAlleBrukere = async () => {
+  try {
+    const brukere = JSON.parse(localStorage.getItem('brukere')) || [];
+    return { success: true, brukere };
+  } catch (error) {
+    return { success: false, error: error.message || 'Kunne ikke hente brukere' };
+  }
+};
+
+// Hent brukerinformasjon med caching
+export const hentBrukerInfo = async (userId) => {
+  // Bruk cachen hvis tilgjengelig
+  const cacheKey = `bruker:info:${userId}`;
+  return cacheManager.getOrFetch(cacheKey, async () => {
+    try {
+      const brukere = JSON.parse(localStorage.getItem('brukere')) || [];
+      const bruker = brukere.find(b => b.id === userId);
+      
+      if (!bruker) {
+        return { success: false, error: 'Brukeren finnes ikke' };
+      }
+      
+      return { success: true, bruker };
+    } catch (error) {
+      return { success: false, error: error.message || 'Kunne ikke hente brukerinformasjon' };
+    }
+  }, CACHE_TTL.USER_INFO);
 };
 
 // Registrer ny bruker
@@ -50,6 +87,9 @@ export const registrerBruker = async (email, password, navn, klasse) => {
     brukere.push(brukerInfo);
     localStorage.setItem('brukere', JSON.stringify(brukere));
     
+    // Invalider brukercache
+    invalidateBrukerCache();
+    
     return { success: true, userId: userId };
   } catch (error) {
     return { success: false, error: error.message || 'Registrering feilet' };
@@ -85,6 +125,20 @@ export const loggInn = async (email, password) => {
     auth.currentUser = user;
     localStorage.setItem('currentUser', JSON.stringify(user));
     
+    // Cache brukerinformasjon
+    const cacheKey = `bruker:info:${bruker.id}`;
+    cacheManager.set(cacheKey, { 
+      success: true, 
+      bruker: {
+        id: bruker.id,
+        navn: bruker.navn,
+        email: bruker.email,
+        rolle: bruker.rolle,
+        godkjent: bruker.godkjent,
+        klasse: bruker.klasse
+      }
+    }, CACHE_TTL.USER_INFO);
+    
     return { 
       success: true, 
       bruker: {
@@ -106,6 +160,10 @@ export const loggUt = async () => {
   try {
     auth.currentUser = null;
     localStorage.removeItem('currentUser');
+    
+    // Tøm bruker-relatert cache
+    invalidateBrukerCache();
+    
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message || 'Utlogging feilet' };
@@ -125,6 +183,10 @@ export const oppdaterBruker = async (userId, oppdatertInfo) => {
     // Oppdater bruker
     brukere[brukerIndex] = { ...brukere[brukerIndex], ...oppdatertInfo };
     localStorage.setItem('brukere', JSON.stringify(brukere));
+    
+    // Invalider cache for denne brukeren
+    cacheManager.remove(`bruker:info:${userId}`);
+    invalidateBrukerCache();
     
     return { success: true };
   } catch (error) {

@@ -14,6 +14,7 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import Innlogging from './components/Innlogging';
 import Registrering from './components/Registrering';
+import CacheMonitor from './components/CacheMonitor';
 import { LanguageProvider } from './utils/LanguageContext';
 
 function App() {
@@ -265,28 +266,27 @@ function App() {
   return (
     <LanguageProvider>
       <Router>
-        <div className="app">
-          <Header innloggetBruker={innloggetBruker} onLogout={handleLogout} />
+        <div className="app-container">
+          <Header 
+            isAuthenticated={innloggetBruker !== null} 
+            currentUser={innloggetBruker} 
+            onLogout={handleLogout}
+          />
           
-          <main className="container">
+          <main className="main-content">
             <Routes>
-              <Route path="/" element={<Hjem artikler={artikler} />} />
+              <Route path="/" element={<Hjem artikler={artikler.filter(a => a.godkjent)} />} />
               <Route path="/om-oss" element={<OmOss jobbliste={jobbliste} />} />
-              <Route 
-                path="/artikkel/:id" 
-                element={<ArtikkelVisning artikler={artikler} />} 
-              />
-              
               <Route 
                 path="/innlogging" 
                 element={
                   <Innlogging 
                     onLogin={handleLogin} 
+                    userIsAuthenticated={innloggetBruker !== null}
                     brukere={brukere}
                   />
                 } 
               />
-              
               <Route 
                 path="/registrering" 
                 element={
@@ -295,56 +295,74 @@ function App() {
                   />
                 } 
               />
-              
-              {/* Beskyttede ruter som krever innlogging */}
-              {innloggetBruker && (
-                <>
-                  <Route 
-                    path="/ny-artikkel" 
-                    element={
-                      <NyArtikkel 
-                        bruker={innloggetBruker}
-                        onArtikkelOpprettet={handleNyArtikkel}
-                        kategoriliste={kategoriliste}
-                      />
-                    } 
-                  />
-                  
-                  <Route 
-                    path="/mine-artikler" 
-                    element={
-                      <MineArtikler 
-                        bruker={innloggetBruker}
-                        artikler={artikler.filter(a => a.forfatterEpost === innloggetBruker.epost)}
-                        onSlettArtikkel={handleSlettArtikkel}
-                        onRedigerArtikkel={handleRedigerArtikkel}
-                      />
-                    } 
-                  />
-                </>
-              )}
-              
-              {/* Admin-rute som krever admin-tilgang */}
-              {innloggetBruker && innloggetBruker.rolle === 'admin' && (
-                <Route 
-                  path="/admin" 
-                  element={
+              <Route 
+                path="/ny-artikkel" 
+                element={
+                  innloggetBruker ? 
+                    <NyArtikkel 
+                      onSubmit={handleNyArtikkel} 
+                      currentUser={innloggetBruker}
+                      kategoriliste={kategoriliste}
+                    /> : 
+                    <Innlogging 
+                      onLogin={handleLogin} 
+                      userIsAuthenticated={innloggetBruker !== null}
+                      brukere={brukere}
+                    />
+                } 
+              />
+              <Route 
+                path="/mine-artikler" 
+                element={
+                  innloggetBruker ? 
+                    <MineArtikler 
+                      artikler={artikler} 
+                      currentUser={innloggetBruker}
+                      onDelete={handleSlettArtikkel}
+                      onEdit={handleRedigerArtikkel}
+                      kategoriliste={kategoriliste}
+                    /> : 
+                    <Innlogging 
+                      onLogin={handleLogin} 
+                      userIsAuthenticated={innloggetBruker !== null}
+                      brukere={brukere}
+                    />
+                }
+              />
+              <Route 
+                path="/admin" 
+                element={
+                  innloggetBruker && innloggetBruker.rolle === 'admin' ? 
                     <AdminPanel 
                       brukere={brukere}
                       artikler={artikler}
-                      onGodkjennBruker={godkjennBruker}
-                      onSlettBruker={slettBruker}
-                      onOppdaterBruker={oppdaterBruker}
                       onOppdaterArtikkel={handleOppdaterArtikkel}
-                      onSlettArtikkel={handleSlettArtikkel}
+                      onGodkjennBruker={godkjennBruker}
+                      onOppdaterBruker={oppdaterBruker}
+                      onSlettBruker={slettBruker}
+                      kategoriliste={kategoriliste}
+                      setKategoriliste={setKategoriliste}
+                      jobbliste={jobbliste}
+                      setJobbliste={setJobbliste}
+                    /> : 
+                    <Innlogging 
+                      onLogin={handleLogin} 
+                      userIsAuthenticated={innloggetBruker !== null}
+                      brukere={brukere}
                     />
-                  } 
-                />
-              )}
+                }
+              />
+              <Route 
+                path="/artikkel/:id" 
+                element={<ArtikkelVisning artikler={artikler} />} 
+              />
             </Routes>
           </main>
           
           <Footer />
+          
+          {/* Vis CacheMonitor kun i utviklermodus */}
+          {process.env.NODE_ENV === 'development' && <CacheMonitor />}
         </div>
       </Router>
     </LanguageProvider>
