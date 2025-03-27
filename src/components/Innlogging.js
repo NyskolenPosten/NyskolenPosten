@@ -33,17 +33,11 @@ function Innlogging({ onLogin, userIsAuthenticated, brukere }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Sjekk at begge feltene er utfylt
-    if (!formData.epost || !formData.passord) {
-      setFeilmelding(translations.login.fillBothFields);
-      return;
-    }
-    
-    // Finn bruker
+    // Finn brukeren
     const bruker = brukere.find(b => b.epost === formData.epost);
     
     if (!bruker) {
-      setFeilmelding(translations.login.noUserFound);
+      setFeilmelding(translations.login.userNotFound);
       return;
     }
     
@@ -72,11 +66,38 @@ function Innlogging({ onLogin, userIsAuthenticated, brukere }) {
         }
         setSteg(2);
       } else {
-        setFeilmelding(translations.login.couldNotSendCode);
+        // Spesifikke feilmeldinger basert på feiltype
+        if (result.error && result.error.includes('SMTP')) {
+          setFeilmelding(translations.login.smtpError);
+        } else if (result.error && result.error.includes('connection')) {
+          setFeilmelding(translations.login.smtpError);
+        } else {
+          setFeilmelding(result.message || translations.login.couldNotSendCode);
+        }
+        
+        // Vis verifikasjonskoden for testing selv om sending feilet
+        if (process.env.NODE_ENV === 'development' && result.kode) {
+          setSuksessmelding(translations.login.noEmailServer);
+          setVisKode(result.kode);
+          setVerifiseringskode(result.kode);
+          setSteg(2);
+        }
       }
     } catch (error) {
       console.error('Feil ved sending av verifiseringskode:', error);
-      setFeilmelding(translations.login.errorOccurred);
+      setFeilmelding(translations.login.emailError);
+      
+      // For utvikling: hvis e-postsending feiler, vis koden for testing
+      if (process.env.NODE_ENV === 'development') {
+        const savedCodes = JSON.parse(localStorage.getItem('verificationCodes') || '{}');
+        const emailKey = Object.keys(savedCodes).find(key => key === formData.epost);
+        if (emailKey && savedCodes[emailKey].code) {
+          setSuksessmelding(translations.login.noEmailServer);
+          setVisKode(savedCodes[emailKey].code);
+          setVerifiseringskode(savedCodes[emailKey].code);
+          setSteg(2);
+        }
+      }
     }
   };
   

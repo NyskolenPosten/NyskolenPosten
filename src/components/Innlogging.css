@@ -51,6 +51,12 @@
   align-items: center;
 }
 
+.feilmelding::before {
+  content: "⚠️";
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
+}
+
 .suksessmelding {
   background-color: rgba(46, 125, 50, 0.1);
   color: #2e7d32;
@@ -61,6 +67,12 @@
   font-size: 0.95rem;
   display: flex;
   align-items: center;
+}
+
+.suksessmelding::before {
+  content: "✅";
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
 }
 
 .info-melding {
@@ -75,10 +87,11 @@
   text-align: left;
 }
 
-.feilmelding::before {
-  content: "⚠️";
+.info-melding::before {
+  content: "ℹ️";
   margin-right: 0.75rem;
   font-size: 1.2rem;
+  float: left;
 }
 
 .form-group {
@@ -239,7 +252,7 @@ input:focus, button:focus, a:focus {
 }
 
 .kode-visning {
-  background-color: rgba(97, 97, 97, 0.1);
+  background-color: rgba(97, 97, 97, 0.08);
   color: #424242;
   padding: 1rem;
   border-radius: 8px;
@@ -247,13 +260,19 @@ input:focus, button:focus, a:focus {
   border-left: 4px solid #424242;
   text-align: center;
   font-size: 0.95rem;
+  font-family: monospace;
 }
 
 .kode-display {
-  font-family: monospace;
-  font-size: 1.5rem;
+  font-family: 'Courier New', monospace;
+  font-size: 1.8rem;
   font-weight: bold;
+  color: #1a73e8;
+  background-color: #f5f5f5;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
   letter-spacing: 2px;
-  margin-top: 0.5rem;
-  color: #d81b60;
+  display: inline-block;
+  margin: 0.5rem 0;
+  border: 1px dashed #ccc;
 } 
