@@ -8,6 +8,98 @@ class CacheManager {
     this.cache = {};
     this.expiry = {};
     this.defaultTTL = 5 * 60 * 1000; // 5 minutter standard TTL (Time To Live)
+    this.maxCacheSize = 50; // Maksimalt antall elementer i cachen
+    this.cacheHitCount = {}; // Teller antall ganger en cache-verdi er hentet
+    this.gcInterval = null; // Intervall for garbage collection
+    
+    // Start automatisk garbage collection
+    this.startGarbageCollection();
+  }
+
+  /**
+   * Starter automatisk garbage collection som kjører hvert minutt
+   */
+  startGarbageCollection() {
+    // Rydd opp i utløpte verdier hvert minutt
+    this.gcInterval = setInterval(() => {
+      this.runGarbageCollection();
+    }, 60 * 1000); // Kjør hvert minutt
+  }
+  
+  /**
+   * Stopper automatisk garbage collection
+   */
+  stopGarbageCollection() {
+    if (this.gcInterval) {
+      clearInterval(this.gcInterval);
+      this.gcInterval = null;
+    }
+  }
+  
+  /**
+   * Kjører garbage collection for å fjerne utløpte verdier
+   */
+  runGarbageCollection() {
+    const now = Date.now();
+    let removed = 0;
+    
+    // Fjern utløpte verdier
+    Object.keys(this.expiry).forEach(key => {
+      if (this.expiry[key] <= now) {
+        this.remove(key);
+        removed++;
+      }
+    });
+    
+    // Logg resultatet i utviklingsmiljø
+    if (process.env.NODE_ENV === 'development' && removed > 0) {
+      console.log(`🧹 Cache GC: Fjernet ${removed} utløpte verdier`);
+    }
+    
+    // Fjern minst brukte verdier hvis cachen overstiger maksimal størrelse
+    this.enforceCacheLimit();
+    
+    return removed;
+  }
+  
+  /**
+   * Fjerner minst brukte elementer hvis cachen overstiger maksimal størrelse
+   */
+  enforceCacheLimit() {
+    const cacheSize = Object.keys(this.cache).length;
+    
+    if (cacheSize <= this.maxCacheSize) {
+      return; // Cachen er innenfor tillatt størrelse
+    }
+    
+    // Antall elementer som må fjernes
+    const removeCount = cacheSize - this.maxCacheSize;
+    
+    // Sorter elementer etter brukhyppighet (minst brukt først)
+    const sortedItems = Object.keys(this.cache)
+      .map(key => ({
+        key,
+        hits: this.cacheHitCount[key] || 0,
+        expiry: this.expiry[key] || 0
+      }))
+      .sort((a, b) => {
+        // Sorter først etter brukhyppighet, deretter etter utløpstid
+        if (a.hits === b.hits) {
+          return a.expiry - b.expiry; // Hvis like mange treff, fjern de som utløper først
+        }
+        return a.hits - b.hits; // Fjern minst brukte først
+      });
+    
+    // Fjern de minst brukte elementene
+    for (let i = 0; i < removeCount; i++) {
+      if (i < sortedItems.length) {
+        this.remove(sortedItems[i].key);
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🗑️ Cache LRU: Fjernet '${sortedItems[i].key}' (brukt ${sortedItems[i].hits} ganger)`);
+        }
+      }
+    }
   }
 
   /**
@@ -17,9 +109,17 @@ class CacheManager {
    * @param {number} ttl - Time To Live i millisekunder (valgfri)
    */
   set(key, value, ttl = this.defaultTTL) {
+    // Kjør garbage collection først hvis cachen er full
+    if (Object.keys(this.cache).length >= this.maxCacheSize) {
+      this.enforceCacheLimit();
+    }
+    
     this.cache[key] = value;
     const expiryTime = Date.now() + ttl;
     this.expiry[key] = expiryTime;
+    
+    // Nullstill hit count for ny verdi
+    this.cacheHitCount[key] = 0;
     
     // Logg til konsoll i utviklingsmiljø
     if (process.env.NODE_ENV === 'development') {
@@ -40,10 +140,13 @@ class CacheManager {
     
     // Sjekk om verdien finnes og ikke er utløpt
     if (value !== undefined && expiryTime > Date.now()) {
+      // Øk antall hits for denne nøkkelen
+      this.cacheHitCount[key] = (this.cacheHitCount[key] || 0) + 1;
+      
       // Logg til konsoll i utviklingsmiljø
       if (process.env.NODE_ENV === 'development') {
         const timeLeft = Math.round((expiryTime - Date.now()) / 1000);
-        console.log(`🟢 Cache: Hentet '${key}' fra cache (utløper om ${timeLeft}s)`);
+        console.log(`🟢 Cache: Hentet '${key}' fra cache (utløper om ${timeLeft}s, brukt ${this.cacheHitCount[key]} ganger)`);
       }
       return value;
     }
@@ -66,6 +169,7 @@ class CacheManager {
   remove(key) {
     delete this.cache[key];
     delete this.expiry[key];
+    delete this.cacheHitCount[key];
     
     if (process.env.NODE_ENV === 'development') {
       console.log(`🔴 Cache: Fjernet '${key}' fra cache`);
@@ -78,6 +182,7 @@ class CacheManager {
   clear() {
     this.cache = {};
     this.expiry = {};
+    this.cacheHitCount = {};
     
     if (process.env.NODE_ENV === 'development') {
       console.log('🧹 Cache: Tømt hele cachen');
@@ -131,6 +236,50 @@ class CacheManager {
       console.log(`🧹 Cache: Invalidert nøkler som matcher '${pattern}'`);
     }
   }
+  
+  /**
+   * Setter maksimalt antall elementer i cachen
+   * @param {number} size - Maksimalt antall elementer
+   */
+  setMaxSize(size) {
+    if (size < 1) {
+      throw new Error('Maksimal cache-størrelse må være minst 1');
+    }
+    
+    this.maxCacheSize = size;
+    
+    // Tving håndhevelse av ny størrelse
+    this.enforceCacheLimit();
+  }
+  
+  /**
+   * Returnerer statistikk om cachen
+   * @returns {Object} Cache-statistikk
+   */
+  getStats() {
+    const keys = Object.keys(this.cache);
+    const now = Date.now();
+    
+    // Tell aktive vs utløpte elementer
+    let activeCount = 0;
+    let expiredCount = 0;
+    
+    keys.forEach(key => {
+      if (this.expiry[key] > now) {
+        activeCount++;
+      } else {
+        expiredCount++;
+      }
+    });
+    
+    return {
+      totalSize: keys.length,
+      activeSize: activeCount,
+      expiredSize: expiredCount,
+      maxSize: this.maxCacheSize,
+      hitCounts: { ...this.cacheHitCount }
+    };
+  }
 }
 
 // Eksporter en singleton-instans
@@ -172,6 +321,13 @@ export function invalidateArtikkelCache() {
  */
 export function invalidateBrukerCache() {
   cacheManager.invalidatePattern(/^bruker:/);
+}
+
+// Når applikasjonen lukkes eller refreshes, stopp garbage collection
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    cacheManager.stopGarbageCollection();
+  });
 }
 
 export default cacheManager; 

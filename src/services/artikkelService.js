@@ -8,6 +8,14 @@ const CACHE_TTL = {
   ARTICLE_DETAIL: 10 * 60 * 1000 // 10 minutter for artikkeldetaljer
 };
 
+// Konstanter for bildehåndtering
+const BILDE_SETTINGS = {
+  MAX_WIDTH: 1200,     // Maksimal bredde for lagrede bilder
+  MAX_HEIGHT: 1200,    // Maksimal høyde for lagrede bilder
+  JPEG_QUALITY: 0.85,  // JPEG-kvalitet (0-1)
+  MAX_FILE_SIZE: 1024 * 1024 // 1MB maks størrelse
+};
+
 // Hjelpefunksjon for å generere en unik ID
 const genererID = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
@@ -29,6 +37,71 @@ const base64ToBlob = (base64, mimeType) => {
   }
   
   return new Blob([ab], { type: mimeType });
+};
+
+/**
+ * Komprimerer og skalerer et bilde for å redusere filstørrelsen
+ * @param {string} base64Image - Base64-kodet bilde
+ * @returns {Promise<string>} - Komprimert base64-bilde
+ */
+const komprimerBilde = async (base64Image) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const img = new Image();
+      img.onload = () => {
+        // Beregn nye dimensjoner
+        let newWidth = img.width;
+        let newHeight = img.height;
+        
+        if (newWidth > BILDE_SETTINGS.MAX_WIDTH) {
+          const ratio = BILDE_SETTINGS.MAX_WIDTH / newWidth;
+          newWidth = BILDE_SETTINGS.MAX_WIDTH;
+          newHeight = Math.round(newHeight * ratio);
+        }
+        
+        if (newHeight > BILDE_SETTINGS.MAX_HEIGHT) {
+          const ratio = BILDE_SETTINGS.MAX_HEIGHT / newHeight;
+          newHeight = BILDE_SETTINGS.MAX_HEIGHT;
+          newWidth = Math.round(newWidth * ratio);
+        }
+        
+        // Opprett canvas for skalering
+        const canvas = document.createElement('canvas');
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+        const ctx = canvas.getContext('2d');
+        
+        // Tegn bildet på canvas
+        ctx.drawImage(img, 0, 0, newWidth, newHeight);
+        
+        // Hent typen (png, jpeg, etc.)
+        const mimeType = base64Image.split(';')[0].split(':')[1] || 'image/jpeg';
+        
+        // Konverter til base64 med kvalitet (kun for JPEG)
+        const quality = mimeType === 'image/jpeg' ? BILDE_SETTINGS.JPEG_QUALITY : 1.0;
+        const komprimertBase64 = canvas.toDataURL(mimeType, quality);
+        
+        // Sjekk om resultatet er under maks filstørrelse
+        const approxSize = Math.round((komprimertBase64.length * 3) / 4);
+        if (approxSize > BILDE_SETTINGS.MAX_FILE_SIZE) {
+          // Hvis fortsatt for stort, prøv med lavere kvalitet
+          const redusertQuality = Math.max(0.5, quality - 0.1);
+          const merKomprimert = canvas.toDataURL(mimeType, redusertQuality);
+          resolve(merKomprimert);
+        } else {
+          resolve(komprimertBase64);
+        }
+      };
+      
+      img.onerror = () => {
+        reject(new Error('Kunne ikke laste inn bildet for komprimering'));
+      };
+      
+      img.src = base64Image;
+    } catch (error) {
+      reject(error);
+    }
+  });
 };
 
 // Hent alle godkjente artikler
@@ -110,9 +183,19 @@ export const leggTilArtikkel = async (artikkelData, bilde) => {
     // Håndter bilde
     let bildeURL = null;
     if (bilde) {
-      // I en lokal versjon lagrer vi bildet som base64 direkte i localStorage
-      // Dette er ikke optimalt for store bilder, men fungerer for testing
-      bildeURL = bilde;
+      try {
+        // Komprimer bildet før lagring
+        bildeURL = await komprimerBilde(bilde);
+        
+        // Logg bildestørrelse etter komprimering i utviklingsmiljø
+        if (process.env.NODE_ENV === 'development') {
+          const approxSize = Math.round((bildeURL.length * 3) / 4);
+          console.log(`Bilde komprimert: ~${Math.round(approxSize / 1024)}KB`);
+        }
+      } catch (err) {
+        console.error('Feil ved bildekomprimering:', err);
+        bildeURL = bilde; // Bruk originalt bilde ved feil
+      }
     }
     
     const nyArtikkel = {
@@ -148,8 +231,19 @@ export const oppdaterArtikkel = async (artikkelID, oppdatertData, nyttBilde) => 
     // Håndter bilde
     let bildeURL = artikler[artikkelIndex].bilde;
     if (nyttBilde) {
-      // Erstatt gammelt bilde med nytt
-      bildeURL = nyttBilde;
+      try {
+        // Komprimer bildet før lagring
+        bildeURL = await komprimerBilde(nyttBilde);
+        
+        // Logg bildestørrelse etter komprimering i utviklingsmiljø
+        if (process.env.NODE_ENV === 'development') {
+          const approxSize = Math.round((bildeURL.length * 3) / 4);
+          console.log(`Bilde oppdatert og komprimert: ~${Math.round(approxSize / 1024)}KB`);
+        }
+      } catch (err) {
+        console.error('Feil ved bildekomprimering:', err);
+        bildeURL = nyttBilde; // Bruk originalt bilde ved feil
+      }
     }
     
     // Oppdater artikkelen
