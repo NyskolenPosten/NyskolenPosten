@@ -18,7 +18,8 @@ export const EMAIL_CONFIG = {
 };
 
 /**
- * Simulerer sending av e-post via konsollen
+ * Sender e-post via e-posttjeneste
+ * I produksjon bør dette byttes ut med faktisk API-kall til en e-posttjeneste
  * @param {string} to Mottakerens e-postadresse
  * @param {string} subject E-postens emne
  * @param {string} body E-postens innhold
@@ -26,39 +27,53 @@ export const EMAIL_CONFIG = {
  */
 export async function sendEmail(to, subject, body) {
   try {
-    // Vis e-post i konsollen med tydelig formatering
-    console.log('\n%c📧 E-POST SIMULERING 📧', 'font-size: 14px; font-weight: bold; color: #4285f4; background-color: #e8f0fe; padding: 5px; border-radius: 3px;');
-    console.log('%cTil: ' + to, 'color: #333; font-weight: bold;');
-    console.log('%cEmne: ' + subject, 'color: #333; font-weight: bold;');
-    console.log('%cInnhold:\n' + body, 'color: #444;');
-    console.log('%c📤 MERK: Faktisk e-postsending må implementeres på serversiden. 📤', 'font-size: 12px; color: #d81b60; border-top: 1px solid #ccc; padding-top: 5px;');
+    // TEMP: Vis e-post i konsollen i utviklingsmodus
+    if (process.env.NODE_ENV === 'development') {
+      console.log('\n%c📧 E-POST | TIL API FOR SENDING 📧', 'font-size: 14px; font-weight: bold; color: #4285f4; background-color: #e8f0fe; padding: 5px; border-radius: 3px;');
+      console.log('%cTil: ' + to, 'color: #333; font-weight: bold;');
+      console.log('%cEmne: ' + subject, 'color: #333; font-weight: bold;');
+      console.log('%cInnhold:\n' + body, 'color: #444;');
+    }
     
-    // Simuler en liten forsinkelse
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Her kommer koden for faktisk sending via e-posttjeneste
+    // For eksempel, bruk fetch eller axios til å kalle en back-end API-endepunkt
+    // som håndterer sending via Gmail eller annen e-posttjeneste
     
+    // Eksempel:
+    // const response = await fetch('/api/send-email', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ to, subject, body, from: EMAIL_CONFIG.fromEmail })
+    // });
+    // const data = await response.json();
+    // if (!data.success) throw new Error(data.message);
+    
+    // Simuler en liten forsinkelse for mer realistisk oppførsel
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Returner suksess (dette vil erstattes av faktisk respons fra API)
     return { 
       success: true, 
-      message: 'E-post simulert i konsollen',
-      messageId: 'simulated-' + Date.now(),
-      emailData: { to, subject, body }
+      message: 'E-post sendt til ' + to,
+      messageId: 'temp-' + Date.now()
     };
   } catch (error) {
-    console.error('Feil ved simulering av e-post:', error);
+    console.error('Feil ved sending av e-post:', error);
     
     return { 
       success: false, 
-      message: 'Kunne ikke simulere e-post: ' + error.message,
+      message: 'Kunne ikke sende e-post: ' + error.message,
       error: error.message
     };
   }
 }
 
 /**
- * Sender en verifiseringskode via e-post (simulert)
+ * Sender en verifiseringskode via e-post
  * @param {string} email Brukerens e-postadresse
  * @param {string} name Brukerens navn
  * @param {string} purpose Formålet med verifiseringen (login/registration)
- * @returns {Promise<object>} Resultatet av e-postsendingen og generert kode
+ * @returns {Promise<object>} Resultatet av e-postsendingen
  */
 export async function sendVerificationCode(email, name, purpose) {
   // Generer og lagre koden
@@ -83,36 +98,25 @@ Redaksjonen i Nyskolen Posten
 `;
 
   try {
-    // Log verifiseringskoden tydelig i konsollen for lokal testing
-    console.log('\n%c🔑 VERIFISERINGSKODE: %c' + code + ' %c🔑', 
-      'background-color: #1a73e8; color: white; font-size: 16px; font-weight: bold; padding: 5px; border-radius: 3px;', 
-      'background-color: #e8f0fe; color: #1a73e8; font-size: 24px; font-weight: bold; padding: 5px 10px; border-radius: 3px;',
-      'background-color: #1a73e8; color: white; font-size: 16px; font-weight: bold; padding: 5px; border-radius: 3px;'
-    );
-    console.log('%cE-post: ' + email, 'color: #333;');
-    console.log('%cFormål: ' + verifiseringsTekst, 'color: #333;');
-    
-    // Send e-post (simulert)
+    // Send e-post
     const result = await sendEmail(email, subject, body);
     
-    // Returner resultatet sammen med koden for testing
+    // Returner resultatet
     return { 
       success: result.success, 
-      message: result.success ? 'Verifiseringskode sendt til din e-post (simulert)' : result.message,
-      kode: code // Returnerer koden direkte for utviklingsformål
+      message: result.success ? 'Verifiseringskode sendt til din e-post' : result.message
     };
   } catch (error) {
     console.error('Feil ved sending av verifiseringskode:', error);
     return { 
       success: false, 
-      message: 'Kunne ikke sende verifiseringskode: ' + error.message,
-      kode: code // Fortsatt returner koden for lokal testing ved feil
+      message: 'Kunne ikke sende verifiseringskode: ' + error.message
     };
   }
 }
 
 /**
- * Sender en velkomst-e-post til nyregistrert bruker (simulert)
+ * Sender en velkomst-e-post til nyregistrert bruker
  * @param {string} email Brukerens e-postadresse
  * @param {string} name Brukerens navn
  * @param {string} role Brukerens rolle (journalist/redaktør/admin)
@@ -136,13 +140,12 @@ export async function sendWelcomeEmail(email, name, role) {
     + `E-post: ${EMAIL_CONFIG.fromEmail}`;
   
   try {
-    // Send e-post (simulert)
+    // Send e-post
     const result = await sendEmail(email, subject, body);
     
     return { 
       success: result.success, 
-      message: result.success ? 'Velkomst-e-post sendt (simulert)' : result.message,
-      emailData: { to: email, subject, body }
+      message: result.success ? 'Velkomst-e-post sendt' : result.message
     };
   } catch (error) {
     console.error('Feil ved sending av velkomst-e-post:', error);

@@ -1,13 +1,11 @@
 // App.js - Hovedkomponenten for Nyskolen Posten
 import React, { useState, useEffect } from 'react';
-import { HashRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
 import Hjem from './components/Hjem';
 import OmOss from './components/OmOss';
 import NyArtikkel from './components/NyArtikkel';
 import ArtikkelVisning from './components/ArtikkelVisning';
-import Login from './components/Login';
-import Register from './components/Register';
 import MineArtikler from './components/MineArtikler';
 import AdminPanel from './components/AdminPanel';
 import Footer from './components/Footer';
@@ -16,6 +14,8 @@ import Innlogging from './components/Innlogging';
 import Registrering from './components/Registrering';
 import CacheMonitor from './components/CacheMonitor';
 import { LanguageProvider } from './utils/LanguageContext';
+import { AuthProvider } from './utils/AuthContext';
+import Profil from './components/Profil';
 
 function App() {
   const [innloggetBruker, setInnloggetBruker] = useState(null);
@@ -23,6 +23,7 @@ function App() {
   const [brukere, setBrukere] = useState([]);
   const [jobbliste, setJobbliste] = useState([]);
   const [kategoriliste, setKategoriliste] = useState([]);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   
   // Admin e-postliste for automatisk godkjenning og admin-rolle
   const adminEpostliste = ['mattis.tollefsen@nionett.no', 'admin@nyskolen.no'];
@@ -134,6 +135,17 @@ function App() {
       setKategoriliste(standardKategoriliste);
       localStorage.setItem('kategoriliste', JSON.stringify(standardKategoriliste));
     }
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
   
   // Funksjon for å logge inn
@@ -264,108 +276,117 @@ function App() {
   };
   
   return (
-    <LanguageProvider>
-      <Router>
-        <div className="app-container">
-          <Header 
-            isAuthenticated={innloggetBruker !== null} 
-            currentUser={innloggetBruker} 
-            onLogout={handleLogout}
-          />
-          
-          <main className="main-content">
-            <Routes>
-              <Route path="/" element={<Hjem artikler={artikler.filter(a => a.godkjent)} />} />
-              <Route path="/om-oss" element={<OmOss jobbliste={jobbliste} />} />
-              <Route 
-                path="/innlogging" 
-                element={
-                  <Innlogging 
-                    onLogin={handleLogin} 
-                    userIsAuthenticated={innloggetBruker !== null}
-                    brukere={brukere}
-                  />
-                } 
-              />
-              <Route 
-                path="/registrering" 
-                element={
-                  <Registrering 
-                    onRegistrer={registrerBruker}
-                  />
-                } 
-              />
-              <Route 
-                path="/ny-artikkel" 
-                element={
-                  innloggetBruker ? 
-                    <NyArtikkel 
-                      onSubmit={handleNyArtikkel} 
-                      currentUser={innloggetBruker}
-                      kategoriliste={kategoriliste}
-                    /> : 
+    <AuthProvider>
+      <LanguageProvider>
+        <Router basename="/NyskolenPosten">
+          <div className="app-container">
+            <Header 
+              isAuthenticated={innloggetBruker !== null} 
+              currentUser={innloggetBruker} 
+              onLogout={handleLogout}
+            />
+            
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<Hjem artikler={artikler.filter(a => a.godkjent)} />} />
+                <Route path="/om-oss" element={<OmOss jobbliste={jobbliste} />} />
+                <Route 
+                  path="/innlogging" 
+                  element={
                     <Innlogging 
                       onLogin={handleLogin} 
                       userIsAuthenticated={innloggetBruker !== null}
                       brukere={brukere}
                     />
-                } 
-              />
-              <Route 
-                path="/mine-artikler" 
-                element={
-                  innloggetBruker ? 
-                    <MineArtikler 
-                      artikler={artikler} 
-                      currentUser={innloggetBruker}
-                      onDelete={handleSlettArtikkel}
-                      onEdit={handleRedigerArtikkel}
-                      kategoriliste={kategoriliste}
-                    /> : 
-                    <Innlogging 
-                      onLogin={handleLogin} 
-                      userIsAuthenticated={innloggetBruker !== null}
-                      brukere={brukere}
+                  } 
+                />
+                <Route 
+                  path="/registrering" 
+                  element={
+                    <Registrering 
+                      onRegistrer={registrerBruker}
                     />
-                }
-              />
-              <Route 
-                path="/admin" 
-                element={
-                  innloggetBruker && innloggetBruker.rolle === 'admin' ? 
-                    <AdminPanel 
-                      brukere={brukere}
-                      artikler={artikler}
-                      onOppdaterArtikkel={handleOppdaterArtikkel}
-                      onGodkjennBruker={godkjennBruker}
-                      onOppdaterBruker={oppdaterBruker}
-                      onSlettBruker={slettBruker}
-                      kategoriliste={kategoriliste}
-                      setKategoriliste={setKategoriliste}
-                      jobbliste={jobbliste}
-                      setJobbliste={setJobbliste}
-                    /> : 
-                    <Innlogging 
-                      onLogin={handleLogin} 
-                      userIsAuthenticated={innloggetBruker !== null}
-                      brukere={brukere}
-                    />
-                }
-              />
-              <Route 
-                path="/artikkel/:id" 
-                element={<ArtikkelVisning artikler={artikler} />} 
-              />
-            </Routes>
-          </main>
-          
-          <Footer />
-          
-          {/* Vis CacheMonitor kun i utviklermodus */}
-          {process.env.NODE_ENV === 'development' && <CacheMonitor />}
-        </div>
-      </Router>
-    </LanguageProvider>
+                  } 
+                />
+                <Route 
+                  path="/ny-artikkel" 
+                  element={
+                    innloggetBruker ? 
+                      <NyArtikkel 
+                        onSubmit={handleNyArtikkel} 
+                        currentUser={innloggetBruker}
+                        kategoriliste={kategoriliste}
+                      /> : 
+                      <Innlogging 
+                        onLogin={handleLogin} 
+                        userIsAuthenticated={innloggetBruker !== null}
+                        brukere={brukere}
+                      />
+                  } 
+                />
+                <Route 
+                  path="/mine-artikler" 
+                  element={
+                    innloggetBruker ? 
+                      <MineArtikler 
+                        artikler={artikler} 
+                        currentUser={innloggetBruker}
+                        onDelete={handleSlettArtikkel}
+                        onEdit={handleRedigerArtikkel}
+                        kategoriliste={kategoriliste}
+                      /> : 
+                      <Innlogging 
+                        onLogin={handleLogin} 
+                        userIsAuthenticated={innloggetBruker !== null}
+                        brukere={brukere}
+                      />
+                  }
+                />
+                <Route 
+                  path="/admin" 
+                  element={
+                    innloggetBruker && innloggetBruker.rolle === 'admin' ? 
+                      <AdminPanel 
+                        brukere={brukere}
+                        artikler={artikler}
+                        onOppdaterArtikkel={handleOppdaterArtikkel}
+                        onGodkjennBruker={godkjennBruker}
+                        onOppdaterBruker={oppdaterBruker}
+                        onSlettBruker={slettBruker}
+                        kategoriliste={kategoriliste}
+                        setKategoriliste={setKategoriliste}
+                        jobbliste={jobbliste}
+                        setJobbliste={setJobbliste}
+                      /> : 
+                      <Innlogging 
+                        onLogin={handleLogin} 
+                        userIsAuthenticated={innloggetBruker !== null}
+                        brukere={brukere}
+                      />
+                  }
+                />
+                <Route 
+                  path="/artikkel/:id" 
+                  element={<ArtikkelVisning artikler={artikler} />} 
+                />
+                <Route path="/profil" element={<Profil />} />
+              </Routes>
+            </main>
+            
+            <Footer />
+            
+            {/* Vis CacheMonitor kun i utviklermodus */}
+            {process.env.NODE_ENV === 'development' && <CacheMonitor />}
+            
+            {!isOnline && (
+              <div className="offline-indicator">
+                Du er nå i frakoblet modus. Vær oppmerksom på at enkelte funksjoner kan være begrenset.
+              </div>
+            )}
+          </div>
+        </Router>
+      </LanguageProvider>
+    </AuthProvider>
   );
 }
 

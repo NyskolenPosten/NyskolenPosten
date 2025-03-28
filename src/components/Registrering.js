@@ -18,7 +18,6 @@ function Registrering({ onRegistrer }) {
   const [verifiseringskode, setVerifiseringskode] = useState('');
   const [feilmelding, setFeilmelding] = useState('');
   const [suksessmelding, setSuksessmelding] = useState('');
-  const [visKode, setVisKode] = useState(''); // Vis generert kode for lokal testing
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -56,7 +55,6 @@ function Registrering({ onRegistrer }) {
     
     setFeilmelding('');
     setSuksessmelding(translations.login.sendingCode);
-    setVisKode('');
     
     try {
       // Send verifiseringskode til brukerens e-post
@@ -64,12 +62,6 @@ function Registrering({ onRegistrer }) {
       
       if (result.success) {
         setSuksessmelding(translations.login.codeSent);
-        // Vis koden for lokal testing
-        if (result.kode) {
-          setVisKode(result.kode);
-          // Sett koden automatisk i input-feltet for enklere testing
-          setVerifiseringskode(result.kode);
-        }
         setSteg(2);
       } else {
         // Spesifikke feilmeldinger basert på feiltype
@@ -80,30 +72,10 @@ function Registrering({ onRegistrer }) {
         } else {
           setFeilmelding(result.message || translations.login.couldNotSendCode);
         }
-        
-        // Vis verifikasjonskoden for testing selv om sending feilet
-        if (process.env.NODE_ENV === 'development' && result.kode) {
-          setSuksessmelding(translations.login.noEmailServer);
-          setVisKode(result.kode);
-          setVerifiseringskode(result.kode);
-          setSteg(2);
-        }
       }
     } catch (error) {
       console.error('Feil ved sending av verifiseringskode:', error);
       setFeilmelding(translations.login.emailError);
-      
-      // For utvikling: hvis e-postsending feiler, vis koden for testing
-      if (process.env.NODE_ENV === 'development') {
-        const savedCodes = JSON.parse(localStorage.getItem('verificationCodes') || '{}');
-        const emailKey = Object.keys(savedCodes).find(key => key === formData.epost);
-        if (emailKey && savedCodes[emailKey].code) {
-          setSuksessmelding(translations.login.noEmailServer);
-          setVisKode(savedCodes[emailKey].code);
-          setVerifiseringskode(savedCodes[emailKey].code);
-          setSteg(2);
-        }
-      }
     }
   };
 
@@ -256,14 +228,6 @@ function Registrering({ onRegistrer }) {
         {feilmelding && <div className="feilmelding" role="alert">{feilmelding}</div>}
         {suksessmelding && <div className="suksessmelding" role="status">{suksessmelding}</div>}
         <p className="info-melding">{translations.login.checkEmailForCode}</p>
-        
-        {/* Vis koden lokalt for enklere testing */}
-        {visKode && (
-          <div className="kode-visning">
-            <p>{translations.login.localTestingCode}</p>
-            <p className="kode-display">{visKode}</p>
-          </div>
-        )}
         
         <form onSubmit={handleVerification}>
           <div className="form-group">

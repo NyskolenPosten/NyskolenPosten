@@ -1,0 +1,121 @@
+/* Profil.css - Stiler for profilkomponenten */
+
+.profil-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.profil-form {
+  margin-top: 1.5rem;
+}
+
+.profil-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.lagre-knapp {
+  background: linear-gradient(to right, #1e88e5, #42a5f5);
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 30px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.lagre-knapp:hover {
+  background: linear-gradient(to right, #1565c0, #1e88e5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.slett-konto-knapp {
+  background: linear-gradient(to right, #f44336, #e57373);
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 30px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.slett-konto-knapp:hover {
+  background: linear-gradient(to right, #d32f2f, #f44336);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.passord-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passord-container input {
+  flex: 1;
+  padding-right: 40px;
+}
+
+.vis-passord-knapp {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 4px;
+  box-shadow: none;
+}
+
+.vis-passord-knapp:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: none;
+  box-shadow: none;
+}
+
+.profil-info {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.profil-info p {
+  margin-bottom: 0.5rem;
+  color: #666;
+}
+
+.feilmelding {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #d32f2f;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #d32f2f;
+}
+
+.suksessmelding {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #2e7d32;
+}
+
+.laster {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #666;
+} 
