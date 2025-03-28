@@ -275,4 +275,12 @@ input:focus, button:focus, a:focus {
   display: inline-block;
   margin: 0.5rem 0;
   border: 1px dashed #ccc;
+}
+
+.kode-forklaring {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.5;
+  margin-top: 0.5rem;
+  font-style: italic;
 } 

@@ -16,6 +16,7 @@ function Innlogging({ onLogin, userIsAuthenticated, brukere }) {
   const [feilmelding, setFeilmelding] = useState('');
   const [suksessmelding, setSuksessmelding] = useState('');
   const [redirect, setRedirect] = useState(false);
+  const [visKode, setVisKode] = useState(''); // Vis verifiseringskode for testing
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,6 +50,7 @@ function Innlogging({ onLogin, userIsAuthenticated, brukere }) {
     // Nullstill feilmelding og vis suksessmelding
     setFeilmelding('');
     setSuksessmelding(translations.login.sendingCode);
+    setVisKode(''); // Nullstill kodevisning
     
     try {
       // Send verifiseringskode til brukerens e-post
@@ -56,6 +58,14 @@ function Innlogging({ onLogin, userIsAuthenticated, brukere }) {
       
       if (result.success) {
         setSuksessmelding(translations.login.codeSent);
+        
+        // Vis koden for testing (siden vi ikke kan sende faktiske e-poster uten backend)
+        if (result.kode) {
+          setVisKode(result.kode);
+          // Prefill koden for enklere testing
+          setVerifiseringskode(result.kode);
+        }
+        
         setSteg(2);
       } else {
         // Spesifikke feilmeldinger basert på feiltype
@@ -160,6 +170,18 @@ function Innlogging({ onLogin, userIsAuthenticated, brukere }) {
         {feilmelding && <div className="feilmelding" role="alert">{feilmelding}</div>}
         {suksessmelding && <div className="suksessmelding" role="status">{suksessmelding}</div>}
         <p className="info-melding">{translations.login.checkEmailForCode}</p>
+        
+        {/* Vis koden for utvikling/testing */}
+        {visKode && (
+          <div className="kode-visning">
+            <p>Siden dette er en frontend-app uten backend, vises koden her for testing:</p>
+            <p className="kode-display">{visKode}</p>
+            <p className="kode-forklaring">
+              <strong>Merk:</strong> I en reell produksjonsapplikasjon vil koden sendes via e-post, ikke vises her.
+              For å implementere faktisk e-postsending, må du lage en backend-tjeneste som bruker Nodemailer eller en tilsvarende tjeneste.
+            </p>
+          </div>
+        )}
         
         <form onSubmit={handleVerification}>
           <div className="form-group">

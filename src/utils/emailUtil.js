@@ -18,62 +18,63 @@ export const EMAIL_CONFIG = {
 };
 
 /**
- * Sender e-post via e-posttjeneste
- * I produksjon bør dette byttes ut med faktisk API-kall til en e-posttjeneste
+ * MERK: Sending av e-post kan ikke gjøres direkte fra frontend via Nodemailer
+ * Dette krever en backend-tjeneste eller en tredjeparts-API
+ * 
+ * Eksempler på løsninger:
+ * 1. Lag en enkel Express-server som kjører Nodemailer
+ * 2. Bruk en tredjeparts-tjeneste som SendGrid, Mailgun, eller EmailJS
+ * 3. Bruk Google Apps Script for å lage et API-endepunkt for å sende via Gmail
+ * 
+ * Denne funksjonen simulerer e-postsending og returnerer koden for enklere testing
+ * 
  * @param {string} to Mottakerens e-postadresse
  * @param {string} subject E-postens emne
  * @param {string} body E-postens innhold
- * @returns {Promise<object>} Resultatet av e-postsendingen
+ * @returns {Promise<object>} Resultatet av e-postsendingen og kode for testing
  */
 export async function sendEmail(to, subject, body) {
   try {
-    // TEMP: Vis e-post i konsollen i utviklingsmodus
-    if (process.env.NODE_ENV === 'development') {
-      console.log('\n%c📧 E-POST | TIL API FOR SENDING 📧', 'font-size: 14px; font-weight: bold; color: #4285f4; background-color: #e8f0fe; padding: 5px; border-radius: 3px;');
-      console.log('%cTil: ' + to, 'color: #333; font-weight: bold;');
-      console.log('%cEmne: ' + subject, 'color: #333; font-weight: bold;');
-      console.log('%cInnhold:\n' + body, 'color: #444;');
-    }
+    // Vis e-post i konsollen med tydelig formatering
+    console.log('\n%c📧 E-POST SIMULERING 📧', 'font-size: 14px; font-weight: bold; color: #4285f4; background-color: #e8f0fe; padding: 5px; border-radius: 3px;');
+    console.log('%cTil: ' + to, 'color: #333; font-weight: bold;');
+    console.log('%cEmne: ' + subject, 'color: #333; font-weight: bold;');
+    console.log('%cInnhold:\n' + body, 'color: #444;');
+    console.log('%c⚠️ MERK: For faktisk e-postsending, må en backend-tjeneste implementeres. ⚠️', 'font-size: 12px; color: #d81b60; border-top: 1px solid #ccc; padding-top: 5px;');
     
-    // Her kommer koden for faktisk sending via e-posttjeneste
-    // For eksempel, bruk fetch eller axios til å kalle en back-end API-endepunkt
-    // som håndterer sending via Gmail eller annen e-posttjeneste
-    
-    // Eksempel:
-    // const response = await fetch('/api/send-email', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ to, subject, body, from: EMAIL_CONFIG.fromEmail })
-    // });
-    // const data = await response.json();
-    // if (!data.success) throw new Error(data.message);
+    // Ekstraherer verifiseringskoden fra e-postinnholdet hvis det finnes en
+    const kodeMatch = body.match(/\d{6}/);
+    const kode = kodeMatch ? kodeMatch[0] : null;
     
     // Simuler en liten forsinkelse for mer realistisk oppførsel
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Returner suksess (dette vil erstattes av faktisk respons fra API)
+    // Returner suksess og inkluder koden for testing
     return { 
       success: true, 
-      message: 'E-post sendt til ' + to,
-      messageId: 'temp-' + Date.now()
+      message: 'Simulert e-post til ' + to,
+      messageId: 'sim-' + Date.now(),
+      testCode: kode // Inkluder koden for testing
     };
   } catch (error) {
-    console.error('Feil ved sending av e-post:', error);
+    console.error('Feil ved simulering av e-post:', error);
     
     return { 
       success: false, 
-      message: 'Kunne ikke sende e-post: ' + error.message,
+      message: 'Kunne ikke simulere e-post: ' + error.message,
       error: error.message
     };
   }
 }
 
 /**
- * Sender en verifiseringskode via e-post
+ * Sender en verifiseringskode via e-post (simulert for testing)
+ * I en produksjonsmiljø må dette erstattes med faktisk e-postsending via en backend
+ * 
  * @param {string} email Brukerens e-postadresse
  * @param {string} name Brukerens navn
  * @param {string} purpose Formålet med verifiseringen (login/registration)
- * @returns {Promise<object>} Resultatet av e-postsendingen
+ * @returns {Promise<object>} Resultatet av e-postsendingen og kode for testing
  */
 export async function sendVerificationCode(email, name, purpose) {
   // Generer og lagre koden
@@ -98,25 +99,36 @@ Redaksjonen i Nyskolen Posten
 `;
 
   try {
-    // Send e-post
+    // Log verifiseringskoden tydelig i konsollen for testing
+    console.log('\n%c🔑 VERIFISERINGSKODE: %c' + code + ' %c🔑', 
+      'background-color: #1a73e8; color: white; font-size: 16px; font-weight: bold; padding: 5px; border-radius: 3px;', 
+      'background-color: #e8f0fe; color: #1a73e8; font-size: 24px; font-weight: bold; padding: 5px 10px; border-radius: 3px;',
+      'background-color: #1a73e8; color: white; font-size: 16px; font-weight: bold; padding: 5px; border-radius: 3px;'
+    );
+    console.log('%cE-post: ' + email, 'color: #333;');
+    console.log('%cFormål: ' + verifiseringsTekst, 'color: #333;');
+    
+    // Simuler sending av e-post
     const result = await sendEmail(email, subject, body);
     
-    // Returner resultatet
+    // Returner resultatet med koden for testing
     return { 
       success: result.success, 
-      message: result.success ? 'Verifiseringskode sendt til din e-post' : result.message
+      message: result.success ? 'Verifiseringskode simulert (se konsollen)' : result.message,
+      kode: code // Returnerer koden direkte for testing
     };
   } catch (error) {
     console.error('Feil ved sending av verifiseringskode:', error);
     return { 
       success: false, 
-      message: 'Kunne ikke sende verifiseringskode: ' + error.message
+      message: 'Kunne ikke sende verifiseringskode: ' + error.message,
+      kode: code // Returnerer koden selv ved feil
     };
   }
 }
 
 /**
- * Sender en velkomst-e-post til nyregistrert bruker
+ * Sender en velkomst-e-post til nyregistrert bruker (simulert)
  * @param {string} email Brukerens e-postadresse
  * @param {string} name Brukerens navn
  * @param {string} role Brukerens rolle (journalist/redaktør/admin)
@@ -140,12 +152,13 @@ export async function sendWelcomeEmail(email, name, role) {
     + `E-post: ${EMAIL_CONFIG.fromEmail}`;
   
   try {
-    // Send e-post
+    // Send e-post (simulert)
     const result = await sendEmail(email, subject, body);
     
     return { 
       success: result.success, 
-      message: result.success ? 'Velkomst-e-post sendt' : result.message
+      message: result.success ? 'Velkomst-e-post simulert (se konsollen)' : result.message,
+      emailData: { to: email, subject, body }
     };
   } catch (error) {
     console.error('Feil ved sending av velkomst-e-post:', error);
