@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { sendVerificationCode } from '../utils/emailUtil';
-import { verifyCode, checkPrivilegedEmail } from '../utils/verificationUtil';
+import { Link, Navigate } from 'react-router-dom';
 import { useLanguage } from '../utils/LanguageContext';
 import './Registrering.css';
 
 function Registrering({ onRegistrer }) {
   const { translations } = useLanguage();
-  const [steg, setSteg] = useState(1); // 1: Skjema, 2: Verifisering, 3: Fullført
+  const [steg, setSteg] = useState(1); // 1: Skjema, 2: Fullført
   const [formData, setFormData] = useState({
     navn: '',
     epost: '',
@@ -15,10 +13,9 @@ function Registrering({ onRegistrer }) {
     bekreftPassord: '',
     klasse: ''
   });
-  const [verifiseringskode, setVerifiseringskode] = useState('');
   const [feilmelding, setFeilmelding] = useState('');
   const [suksessmelding, setSuksessmelding] = useState('');
-  const [visKode, setVisKode] = useState(''); // Vis verifiseringskode for testing
+  const [redirect, setRedirect] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -55,74 +52,26 @@ function Registrering({ onRegistrer }) {
     if (!validateForm()) return;
     
     setFeilmelding('');
-    setSuksessmelding(translations.login.sendingCode);
-    setVisKode(''); // Nullstill kodevisning
+    setSuksessmelding('');
     
-    try {
-      // Send verifiseringskode til brukerens e-post
-      const result = await sendVerificationCode(formData.epost, formData.navn, 'registration');
-      
-      if (result.success) {
-        setSuksessmelding(translations.login.codeSent);
-        
-        // Vis koden for testing (siden vi ikke kan sende faktiske e-poster uten backend)
-        if (result.kode) {
-          setVisKode(result.kode);
-          // Prefill koden for enklere testing
-          setVerifiseringskode(result.kode);
-        }
-        
-        setSteg(2);
-      } else {
-        // Spesifikke feilmeldinger basert på feiltype
-        if (result.error && result.error.includes('SMTP')) {
-          setFeilmelding(translations.login.smtpError);
-        } else if (result.error && result.error.includes('connection')) {
-          setFeilmelding(translations.login.smtpError);
-        } else {
-          setFeilmelding(result.message || translations.login.couldNotSendCode);
-        }
-      }
-    } catch (error) {
-      console.error('Feil ved sending av verifiseringskode:', error);
-      setFeilmelding(translations.login.emailError);
-    }
-  };
-
-  const handleVerification = (e) => {
-    e.preventDefault();
+    // Forbered brukerdata for registrering
+    const brukerData = {
+      navn: formData.navn,
+      epost: formData.epost,
+      passord: formData.passord,
+      klasse: formData.klasse,
+      rolle: 'journalist', // Standard rolle er journalist
+      dato: new Date().toISOString()
+    };
     
-    if (!verifiseringskode) {
-      setFeilmelding(translations.login.enterCode);
-      return;
-    }
+    // Fullfør registreringsprosessen
+    const registreringsResultat = onRegistrer(brukerData);
     
-    if (verifyCode(formData.epost, verifiseringskode)) {
-      // Sjekk om e-posten er for privilegert bruker
-      const rolle = checkPrivilegedEmail(formData.epost);
-      
-      // Forbered brukerdata for registrering
-      const brukerData = {
-        navn: formData.navn,
-        epost: formData.epost,
-        passord: formData.passord,
-        klasse: formData.klasse,
-        rolle: rolle || 'journalist', // Standard rolle er journalist
-        dato: new Date().toISOString()
-      };
-      
-      // Fullfør registreringsprosessen
-      const registreringsResultat = onRegistrer(brukerData);
-      
-      if (registreringsResultat.success) {
-        setSuksessmelding(translations.registration.registrationSuccess);
-        setSteg(3); // Ferdig
-      } else {
-        setFeilmelding(registreringsResultat.message || translations.registration.registrationFailed);
-        setSteg(1); // Tilbake til registreringsskjema
-      }
+    if (registreringsResultat.success) {
+      setSuksessmelding(translations.registration.registrationSuccess);
+      setSteg(2); // Ferdig
     } else {
-      setFeilmelding(translations.login.invalidCode);
+      setFeilmelding(registreringsResultat.message || translations.registration.registrationFailed);
     }
   };
 
@@ -130,12 +79,16 @@ function Registrering({ onRegistrer }) {
   const StegIndikator = () => (
     <div className="registrering-steg">
       <div className="steg-indikator">
-        <div className={`steg-dot ${steg >= 1 ? 'aktiv' : ''}`} role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="3"></div>
-        <div className={`steg-dot ${steg >= 2 ? 'aktiv' : ''}`} role="progressbar" aria-valuenow="2" aria-valuemin="1" aria-valuemax="3"></div>
-        <div className={`steg-dot ${steg >= 3 ? 'aktiv' : ''}`} role="progressbar" aria-valuenow="3" aria-valuemin="1" aria-valuemax="3"></div>
+        <div className={`steg-dot ${steg >= 1 ? 'aktiv' : ''}`} role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="2"></div>
+        <div className={`steg-dot ${steg >= 2 ? 'aktiv' : ''}`} role="progressbar" aria-valuenow="2" aria-valuemin="1" aria-valuemax="2"></div>
       </div>
     </div>
   );
+
+  // Redirect til innloggingssiden etter registrering
+  if (redirect) {
+    return <Navigate to="/innlogging" />;
+  }
 
   // Vis skjema basert på hvilket steg vi er på
   if (steg === 1) {
@@ -229,55 +182,6 @@ function Registrering({ onRegistrer }) {
         </div>
       </div>
     );
-  } else if (steg === 2) {
-    return (
-      <div className="registrering-container">
-        <h2>{translations.login.verifyEmail}</h2>
-        <StegIndikator />
-        
-        {feilmelding && <div className="feilmelding" role="alert">{feilmelding}</div>}
-        {suksessmelding && <div className="suksessmelding" role="status">{suksessmelding}</div>}
-        <p className="info-melding">{translations.login.checkEmailForCode}</p>
-        
-        {/* Vis koden for utvikling/testing */}
-        {visKode && (
-          <div className="kode-visning">
-            <p>Siden dette er en frontend-app uten backend, vises koden her for testing:</p>
-            <p className="kode-display">{visKode}</p>
-            <p className="kode-forklaring">
-              <strong>Merk:</strong> I en reell produksjonsapplikasjon vil koden sendes via e-post, ikke vises her.
-              For å implementere faktisk e-postsending, må du lage en backend-tjeneste som bruker Nodemailer eller en tilsvarende tjeneste.
-            </p>
-          </div>
-        )}
-        
-        <form onSubmit={handleVerification}>
-          <div className="form-group">
-            <label htmlFor="verifiseringskode">{translations.login.verificationCode}</label>
-            <input
-              type="text"
-              id="verifiseringskode"
-              value={verifiseringskode}
-              onChange={(e) => setVerifiseringskode(e.target.value)}
-              placeholder={translations.login.verificationPlaceholder}
-              autoComplete="one-time-code"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength="6"
-              required
-            />
-          </div>
-          
-          <button type="submit" className="verifiser-knapp">{translations.login.verifyButton}</button>
-          <button 
-            type="button" 
-            className="tilbake-knapp"
-            onClick={() => setSteg(1)}>
-            {translations.login.backButton}
-          </button>
-        </form>
-      </div>
-    );
   } else {
     return (
       <div className="registrering-container">
@@ -286,11 +190,11 @@ function Registrering({ onRegistrer }) {
         
         <div className="suksessmelding" role="status">{suksessmelding}</div>
         
-        <Link to="/innlogging">
-          <button className="innlogging-knapp">
-            {translations.registration.goToLogin}
-          </button>
-        </Link>
+        <button 
+          className="innlogging-knapp"
+          onClick={() => setRedirect(true)}>
+          {translations.registration.goToLogin}
+        </button>
       </div>
     );
   }
