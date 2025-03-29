@@ -129,6 +129,7 @@ function ArtikkelVisning({ artikler = [], innloggetBruker, onSlettArtikkel, onRe
       (!innloggetBruker || 
        (innloggetBruker.rolle !== 'admin' && 
         innloggetBruker.rolle !== 'redaktør' &&
+        innloggetBruker.rolle !== 'teknisk_leder' &&
         innloggetBruker.id !== artikkel.forfatterID))) {
     return <Navigate to="/" replace />;
   }
@@ -147,6 +148,7 @@ function ArtikkelVisning({ artikler = [], innloggetBruker, onSlettArtikkel, onRe
   const kanRedigere = innloggetBruker && 
                      (innloggetBruker.rolle === 'admin' || 
                       innloggetBruker.rolle === 'redaktør' ||
+                      innloggetBruker.rolle === 'teknisk_leder' ||
                       innloggetBruker.id === artikkel.forfatterID);
 
   return (

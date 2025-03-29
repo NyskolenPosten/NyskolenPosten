@@ -33,8 +33,8 @@ function AdminPanel({
     oppdaterFiltrering();
   }, [artikler]);
   
-  // Sjekk om brukeren er admin
-  if (!innloggetBruker || innloggetBruker.rolle !== 'admin') {
+  // Sjekk om brukeren er admin eller teknisk leder
+  if (!innloggetBruker || (innloggetBruker.rolle !== 'admin' && innloggetBruker.rolle !== 'redaktør' && innloggetBruker.rolle !== 'teknisk_leder')) {
     return <Navigate to="/" replace />;
   }
 

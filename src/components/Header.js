@@ -8,6 +8,11 @@ function Header({ innloggetBruker, onLogout, isLockdown }) {
   const { translations } = useLanguage();
   const { navigation, footer } = translations;
   
+  // Sjekk om brukeren er teknisk leder
+  const erTekniskLeder = innloggetBruker && innloggetBruker.rolle === 'teknisk_leder';
+  // Sjekk om brukeren er admin eller redaktør
+  const erAdmin = innloggetBruker && (innloggetBruker.rolle === 'admin' || innloggetBruker.rolle === 'redaktør');
+  
   return (
     <header className="header">
       <div className="logo-container">
@@ -28,16 +33,14 @@ function Header({ innloggetBruker, onLogout, isLockdown }) {
               <Link to="/ny-artikkel">{navigation.writeArticle}</Link>
             )}
             
-            {innloggetBruker.rolle === 'admin' && !isLockdown && (
+            {/* Admin-panel er tilgjengelig for admin, redaktør OG teknisk leder */}
+            {(erAdmin || erTekniskLeder) && !isLockdown && (
               <Link to="/admin">{navigation.admin}</Link>
             )}
             
-            {innloggetBruker.rolle === 'teknisk_leder' && (
+            {/* Website Panel er kun tilgjengelig for teknisk leder */}
+            {erTekniskLeder && (
               <Link to="/website-panel" className="tech-leader-link">Website Panel</Link>
-            )}
-            
-            {innloggetBruker.rolle === 'redaktør' && !isLockdown && (
-              <Link to="/admin">{navigation.admin}</Link>
             )}
             
             <button 
