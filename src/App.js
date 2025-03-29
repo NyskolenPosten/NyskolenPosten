@@ -380,6 +380,46 @@ function App() {
     }
   };
   
+  // Funksjon for å endre rolle for en bruker i jobblisten
+  const handleEndreRolleBruker = (jobbId, nyRolle) => {
+    try {
+      // Finn jobben i jobblisten
+      const oppdatertJobbliste = jobbliste.map(jobb => {
+        if (jobb.id === jobbId) {
+          return { ...jobb, rolle: nyRolle };
+        }
+        return jobb;
+      });
+      
+      // Oppdater jobblisten
+      setJobbliste(oppdatertJobbliste);
+      
+      // Lagre i localStorage
+      localStorage.setItem('jobbliste', JSON.stringify(oppdatertJobbliste));
+      
+      // Synkroniser også med brukerens rolle hvis mulig
+      const jobb = jobbliste.find(j => j.id === jobbId);
+      if (jobb) {
+        const bruker = brukere.find(b => b.navn === jobb.navn);
+        if (bruker) {
+          // Mappingen mellom jobbliste-rolle og bruker-rolle
+          const brukerRolle = nyRolle === 'Redaktør' ? 'redaktør' : 
+                            nyRolle === 'Teknisk leder' ? 'teknisk_leder' : 
+                            nyRolle === 'Administrator' ? 'admin' : 'skribent';
+          
+          // Oppdater brukerens rolle
+          const oppdatertBruker = { ...bruker, rolle: brukerRolle };
+          oppdaterBruker(oppdatertBruker);
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Feil ved endring av rolle:", error);
+      return false;
+    }
+  };
+  
   // Funksjon for å redigere artikkel
   const handleRedigerArtikkel = (artikkelID, oppdatertArtikkel) => {
     return handleOppdaterArtikkel(artikkelID, oppdatertArtikkel);
@@ -515,6 +555,7 @@ function App() {
                           onApproveArticle={handleGodkjennArtikkel}
                           onUpdateJobbliste={setJobbliste}
                           onUpdateKategoriliste={setKategoriliste}
+                          onEndreRolleBruker={handleEndreRolleBruker}
                         />
                       } 
                     />
