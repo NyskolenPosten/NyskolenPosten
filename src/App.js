@@ -34,7 +34,21 @@ function App() {
   const [kategoriliste, setKategoriliste] = useState([]);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [websiteSettings, setWebsiteSettings] = useState(() => {
-    return JSON.parse(localStorage.getItem('websiteSettings') || '{"lockdown": false, "fullLockdown": false, "note": ""}');
+    try {
+      const savedSettings = localStorage.getItem('websiteSettings');
+      // Hvis det finnes lagrede innstillinger, bruk dem, ellers bruk standardverdier
+      if (savedSettings) {
+        return JSON.parse(savedSettings);
+      }
+    } catch (e) {
+      console.error("Feil ved lasting av websiteSettings:", e);
+    }
+    // Standardverdier (alltid tilgjengelig)
+    return {
+      lockdown: false,
+      fullLockdown: false,
+      note: ""
+    };
   });
   
   // Admin e-postliste for automatisk godkjenning og admin-rolle
@@ -371,6 +385,25 @@ function App() {
     return handleOppdaterArtikkel(artikkelID, oppdatertArtikkel);
   };
   
+  // Funksjon for å oppdatere websiteSettings
+  const handleUpdateWebsiteSettings = (newSettings) => {
+    try {
+      // Oppdater state
+      setWebsiteSettings(newSettings);
+      
+      // Lagre i localStorage
+      localStorage.setItem('websiteSettings', JSON.stringify(newSettings));
+      
+      // Her kunne vi hatt en API-kall til en server for å lagre innstillingene globalt
+      // I en produktivsetting ville dette lagres i en sentral database
+      
+      return { success: true };
+    } catch (error) {
+      console.error("Feil ved oppdatering av websiteSettings:", error);
+      return { success: false, error: error.message };
+    }
+  };
+  
   // Sjekk om nettsiden er i WEBSITE LOCKDOWN modus
   if (websiteSettings.fullLockdown) {
     return (
@@ -493,7 +526,9 @@ function App() {
                   path="/website-panel" 
                   element={
                     <WebsitePanel 
-                      innloggetBruker={innloggetBruker} 
+                      innloggetBruker={innloggetBruker}
+                      currentSettings={websiteSettings}
+                      onUpdateSettings={handleUpdateWebsiteSettings}
                     />
                   } 
                 />

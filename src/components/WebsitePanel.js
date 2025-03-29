@@ -1,25 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import './AdminPanel.css'; // Bruker samme CSS som AdminPanel
 import { useLanguage } from '../utils/LanguageContext';
 
-function WebsitePanel({ innloggetBruker }) {
+function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
   const { translations } = useLanguage();
   const [melding, setMelding] = useState('');
   const [feilmelding, setFeilmelding] = useState('');
   const [passordInput, setPassordInput] = useState('');
   const [erAutentisert, setErAutentisert] = useState(false);
   const [noteText, setNoteText] = useState('');
-  
-  // Hent nåværende tilstand fra localStorage
-  const [lockdownStatus, setLockdownStatus] = useState(() => {
-    return JSON.parse(localStorage.getItem('websiteSettings') || '{"lockdown": false, "fullLockdown": false, "note": ""}');
+  const [localSettings, setLocalSettings] = useState(currentSettings || {
+    lockdown: false,
+    fullLockdown: false,
+    note: ""
   });
-  
-  // Oppdater localStorage når tilstanden endres
-  useEffect(() => {
-    localStorage.setItem('websiteSettings', JSON.stringify(lockdownStatus));
-  }, [lockdownStatus]);
   
   // Sjekk om brukeren er teknisk leder
   if (!innloggetBruker || innloggetBruker.rolle !== 'teknisk_leder') {
@@ -38,32 +33,53 @@ function WebsitePanel({ innloggetBruker }) {
     }
   };
   
+  // Oppdater settings både lokalt og globalt
+  const updateSettings = (newSettings) => {
+    // Oppdater lokalt state
+    setLocalSettings(newSettings);
+    
+    // Oppdater globalt (i App.js og i localStorage)
+    const result = onUpdateSettings(newSettings);
+    
+    if (result.success) {
+      setMelding('Innstillingene ble oppdatert');
+    } else {
+      setFeilmelding(`Feil ved oppdatering av innstillinger: ${result.error || 'Ukjent feil'}`);
+    }
+  };
+  
   // Toggle LOCKDOWN mode (bare lesing, ingen redigering)
   const toggleLockdown = () => {
-    setLockdownStatus(prev => ({
-      ...prev,
-      lockdown: !prev.lockdown
-    }));
-    setMelding(`LOCKDOWN modus er nå ${!lockdownStatus.lockdown ? 'aktivert' : 'deaktivert'}`);
+    const newSettings = {
+      ...localSettings,
+      lockdown: !localSettings.lockdown
+    };
+    
+    updateSettings(newSettings);
+    setMelding(`LOCKDOWN modus er nå ${newSettings.lockdown ? 'aktivert' : 'deaktivert'}`);
   };
   
   // Toggle WEBSITE LOCKDOWN mode (ingen tilgang)
   const toggleWebsiteLockdown = () => {
-    setLockdownStatus(prev => ({
-      ...prev,
-      fullLockdown: !prev.fullLockdown
-    }));
-    setMelding(`WEBSITE LOCKDOWN er nå ${!lockdownStatus.fullLockdown ? 'aktivert' : 'deaktivert'}`);
+    const newSettings = {
+      ...localSettings,
+      fullLockdown: !localSettings.fullLockdown
+    };
+    
+    updateSettings(newSettings);
+    setMelding(`WEBSITE LOCKDOWN er nå ${newSettings.fullLockdown ? 'aktivert' : 'deaktivert'}`);
   };
   
   // Legg til NOTE på forsiden
   const handleNoteSubmit = (e) => {
     e.preventDefault();
     if (noteText.trim()) {
-      setLockdownStatus(prev => ({
-        ...prev,
+      const newSettings = {
+        ...localSettings,
         note: noteText
-      }));
+      };
+      
+      updateSettings(newSettings);
       setMelding('NOTE er lagt til på forsiden');
       setNoteText('');
     } else {
@@ -73,10 +89,12 @@ function WebsitePanel({ innloggetBruker }) {
   
   // Fjern NOTE
   const removeNote = () => {
-    setLockdownStatus(prev => ({
-      ...prev,
-      note: ''
-    }));
+    const newSettings = {
+      ...localSettings,
+      note: ""
+    };
+    
+    updateSettings(newSettings);
     setMelding('NOTE er fjernet fra forsiden');
   };
   
@@ -120,20 +138,20 @@ function WebsitePanel({ innloggetBruker }) {
           
           <div className="control-buttons">
             <button 
-              className={`btn ${lockdownStatus.lockdown ? 'btn-danger' : 'btn-primary'}`}
+              className={`btn ${localSettings.lockdown ? 'btn-danger' : 'btn-primary'}`}
               onClick={toggleLockdown}
             >
-              {lockdownStatus.lockdown ? 'DEAKTIVER LOCKDOWN' : 'AKTIVER LOCKDOWN'}
+              {localSettings.lockdown ? 'DEAKTIVER LOCKDOWN' : 'AKTIVER LOCKDOWN'}
             </button>
             <p className="control-description">
               LOCKDOWN: Når aktivert, kan brukere bare lese artikler. Admin-paneler er utilgjengelige og nye artikler kan ikke opprettes.
             </p>
             
             <button 
-              className={`btn ${lockdownStatus.fullLockdown ? 'btn-danger' : 'btn-warning'}`}
+              className={`btn ${localSettings.fullLockdown ? 'btn-danger' : 'btn-warning'}`}
               onClick={toggleWebsiteLockdown}
             >
-              {lockdownStatus.fullLockdown ? 'DEAKTIVER WEBSITE LOCKDOWN' : 'AKTIVER WEBSITE LOCKDOWN'}
+              {localSettings.fullLockdown ? 'DEAKTIVER WEBSITE LOCKDOWN' : 'AKTIVER WEBSITE LOCKDOWN'}
             </button>
             <p className="control-description">
               WEBSITE LOCKDOWN: Når aktivert, vises bare en vedlikeholdsmelding på nettsiden. Ingen tilgang til innhold.
@@ -156,15 +174,15 @@ function WebsitePanel({ innloggetBruker }) {
               ></textarea>
             </div>
             <button type="submit" className="btn btn-primary">Legg til NOTE</button>
-            {lockdownStatus.note && (
+            {localSettings.note && (
               <button type="button" className="btn btn-secondary" onClick={removeNote}>Fjern NOTE</button>
             )}
           </form>
           
-          {lockdownStatus.note && (
+          {localSettings.note && (
             <div className="preview-note">
               <h3>Forhåndsvisning av NOTE:</h3>
-              <div className="note-content">{lockdownStatus.note}</div>
+              <div className="note-content">{localSettings.note}</div>
             </div>
           )}
         </div>
@@ -174,20 +192,20 @@ function WebsitePanel({ innloggetBruker }) {
           <ul className="status-list">
             <li>
               <strong>LOCKDOWN Status:</strong> 
-              <span className={lockdownStatus.lockdown ? 'status-active' : 'status-inactive'}>
-                {lockdownStatus.lockdown ? 'AKTIV' : 'INAKTIV'}
+              <span className={localSettings.lockdown ? 'status-active' : 'status-inactive'}>
+                {localSettings.lockdown ? 'AKTIV' : 'INAKTIV'}
               </span>
             </li>
             <li>
               <strong>WEBSITE LOCKDOWN Status:</strong> 
-              <span className={lockdownStatus.fullLockdown ? 'status-active' : 'status-inactive'}>
-                {lockdownStatus.fullLockdown ? 'AKTIV' : 'INAKTIV'}
+              <span className={localSettings.fullLockdown ? 'status-active' : 'status-inactive'}>
+                {localSettings.fullLockdown ? 'AKTIV' : 'INAKTIV'}
               </span>
             </li>
             <li>
               <strong>NOTE Status:</strong> 
-              <span className={lockdownStatus.note ? 'status-active' : 'status-inactive'}>
-                {lockdownStatus.note ? 'VISES PÅ FORSIDEN' : 'INGEN NOTE'}
+              <span className={localSettings.note ? 'status-active' : 'status-inactive'}>
+                {localSettings.note ? 'VISES PÅ FORSIDEN' : 'INGEN NOTE'}
               </span>
             </li>
           </ul>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Fikse NyskolenPosten Lockdown</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Fikse NyskolenPosten Lockdown</h1>
+  <p>Dette verktøyet vil deaktivere WEBSITE LOCKDOWN og normale LOCKDOWN for NyskolenPosten.</p>
+  
+  <div>
+    <button id="fixLockdown">Deaktiver WEBSITE LOCKDOWN</button>
+    <button id="checkSettings">Sjekk nåværende innstillinger</button>
+    <button id="toggleNote">Fjern/Legg til NOTE</button>
+  </div>
+  
+  <div id="result"></div>
+  
+  <script>
+    function displayResult(message, isError = false) {
+      const resultDiv = document.getElementById('result');
+      const pre = document.createElement('pre');
+      pre.className = isError ? 'error' : 'success';
+      pre.textContent = message;
+      resultDiv.appendChild(pre);
+    }
+    
+    function getSettings() {
+      try {
+        const settings = JSON.parse(localStorage.getItem('websiteSettings')) || {
+          lockdown: false, 
+          fullLockdown: false, 
+          note: ""
+        };
+        return settings;
+      } catch (e) {
+        return {
+          lockdown: false, 
+          fullLockdown: false, 
+          note: ""
+        };
+      }
+    }
+    
+    function saveSettings(settings) {
+      localStorage.setItem('websiteSettings', JSON.stringify(settings));
+    }
+    
+    document.getElementById('fixLockdown').addEventListener('click', function() {
+      try {
+        const settings = getSettings();
+        
+        // Lagre de gamle innstillingene for visning
+        const oldSettings = {...settings};
+        
+        // Sett begge lockdown-flaggene til false
+        settings.lockdown = false;
+        settings.fullLockdown = false;
+        
+        // Lagre de nye innstillingene
+        saveSettings(settings);
+        
+        displayResult(`WEBSITE LOCKDOWN deaktivert!\n\nGamle innstillinger: ${JSON.stringify(oldSettings, null, 2)}\n\nNye innstillinger: ${JSON.stringify(settings, null, 2)}`);
+      } catch (e) {
+        displayResult(`Feil: ${e.message}`, true);
+      }
+    });
+    
+    document.getElementById('checkSettings').addEventListener('click', function() {
+      try {
+        const settings = getSettings();
+        
+        // Vis nåværende innstillinger
+        displayResult(`Nåværende innstillinger: ${JSON.stringify(settings, null, 2)}`);
+      } catch (e) {
+        displayResult(`Feil: ${e.message}`, true);
+      }
+    });
+    
+    document.getElementById('toggleNote').addEventListener('click', function() {
+      try {
+        const settings = getSettings();
+        
+        // Lagre de gamle innstillingene for visning
+        const oldSettings = {...settings};
+        
+        // Hvis det er en melding, fjern den. Ellers legg til en.
+        if (settings.note) {
+          settings.note = "";
+        } else {
+          settings.note = "Velkommen til Nyskolen Posten! Vi er nå i normal drift.";
+        }
+        
+        // Lagre de nye innstillingene
+        saveSettings(settings);
+        
+        displayResult(`NOTE ${settings.note ? 'lagt til' : 'fjernet'}!\n\nGamle innstillinger: ${JSON.stringify(oldSettings, null, 2)}\n\nNye innstillinger: ${JSON.stringify(settings, null, 2)}`);
+      } catch (e) {
+        displayResult(`Feil: ${e.message}`, true);
+      }
+    });
+  </script>
+</body>
+</html> 
