@@ -4,10 +4,10 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#1a73e8" />
+    <meta name="theme-color" content="#000000" />
     <meta
       name="description"
-      content="Nyskolen Posten - Elevdrevet nettavis for Nyskolen i Oslo"
+      content="Nyskolen Posten - Elevdrevet avis for Nyskolen i Oslo"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
@@ -25,8 +25,12 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>Nyskolen Posten</title>
-    <!-- Håndterer redirect fra 404 page -->
+    
+    <!-- Start Single Page Apps for GitHub Pages -->
     <script type="text/javascript">
+      // Single Page Apps for GitHub Pages
+      // MIT License
+      // https://github.com/rafgraph/spa-github-pages
       (function(l) {
         if (l.search[1] === '/' ) {
           var decoded = l.search.slice(1).split('&').map(function(s) { 
@@ -38,9 +42,10 @@
         }
       }(window.location))
     </script>
+    <!-- End Single Page Apps for GitHub Pages -->
   </head>
   <body>
-    <noscript>Du må aktivere JavaScript for å kjøre denne appen.</noscript>
+    <noscript>Du må aktivere JavaScript for å se denne nettsiden.</noscript>
     <div id="root"></div>
     <!--
       This HTML file is a template.

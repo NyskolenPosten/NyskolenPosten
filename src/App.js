@@ -387,7 +387,7 @@ function App() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <Router>
+        <Router basename="/NyskolenPosten">
           <div className="app-container">
             {websiteSettings.note && (
               <div className="site-notification">
