@@ -2,6 +2,7 @@
 
 import { auth } from './firebaseConfig';
 import cacheManager, { invalidateBrukerCache } from '../utils/cacheUtil';
+import { encrypt, decrypt, verifyPassword, isEncrypted } from '../utils/cryptoUtil';
 
 // Cache-TTL-konstanter (i millisekunder)
 const CACHE_TTL = {
@@ -75,12 +76,15 @@ export const registrerBruker = async (email, password, navn, klasse) => {
       rolle = SPECIAL_EMAILS[email];
     }
     
+    // Krypter passordet før lagring
+    const encryptedPassword = encrypt(password);
+    
     // Lagre utvidet brukerinformasjon
     const brukerInfo = {
       id: userId,
       navn: navn,
       email: email,
-      password: password, // Vi legger til passordet her
+      password: encryptedPassword, // Lagrer kryptert passord
       klasse: klasse,
       rolle: rolle,
       godkjent: true, // Brukere er automatisk godkjent
@@ -136,9 +140,23 @@ export const loggInn = async (email, password) => {
       return { success: false, error: 'Brukeren finnes ikke' };
     }
     
-    // Sjekk passord
-    if (bruker.password !== password) {
-      return { success: false, error: 'Feil passord' };
+    // Sjekk passord - med støtte for både krypterte og ukrypterte passord
+    if (isEncrypted(bruker.password)) {
+      // Hvis passordet er kryptert, verifiser med crypto-funksjonen
+      if (!verifyPassword(password, bruker.password)) {
+        return { success: false, error: 'Feil passord' };
+      }
+    } else {
+      // Hvis passordet ikke er kryptert ennå (gamle brukere), sjekk direkte
+      // og oppdater deretter til kryptert format
+      if (bruker.password !== password) {
+        return { success: false, error: 'Feil passord' };
+      }
+      
+      // Oppdater til kryptert passord
+      bruker.password = encrypt(password);
+      const oppdaterteBrukere = brukere.map(b => b.id === bruker.id ? bruker : b);
+      localStorage.setItem('brukere', JSON.stringify(oppdaterteBrukere));
     }
     
     // Sjekk om e-posten har spesiell rolle og oppdater hvis nødvendig
@@ -199,6 +217,11 @@ export const oppdaterBruker = async (userId, oppdatertInfo) => {
     
     if (brukerIndex === -1) {
       return { success: false, error: 'Brukeren finnes ikke' };
+    }
+    
+    // Hvis passordet oppdateres, krypter det
+    if (oppdatertInfo.password) {
+      oppdatertInfo.password = encrypt(oppdatertInfo.password);
     }
     
     // Oppdater bruker

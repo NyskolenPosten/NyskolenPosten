@@ -9,6 +9,7 @@ import ArtikkelVisning from './components/ArtikkelVisning';
 import MineArtikler from './components/MineArtikler';
 import AdminPanel from './components/AdminPanel';
 import WebsitePanel from './components/WebsitePanel';
+import DataPanel from './components/DataPanel';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import Innlogging from './components/Innlogging';
@@ -18,6 +19,7 @@ import { LanguageProvider } from './utils/LanguageContext';
 import { AuthProvider } from './utils/AuthContext';
 import Profil from './components/Profil';
 import { loggUt, hentAlleBrukere } from './services/authService';
+import { autoMigratePasswords } from './utils/migratePasswords';
 import { 
   leggTilArtikkel, 
   hentAlleArtikler, 
@@ -56,6 +58,9 @@ function App() {
   
   // Last inn data fra localStorage ved oppstart
   useEffect(() => {
+    // Kjør migrering av passord til kryptert format
+    autoMigratePasswords();
+    
     // Last inn innlogget bruker
     const lagretBruker = localStorage.getItem('currentUser');
     if (lagretBruker) {
@@ -570,6 +575,16 @@ function App() {
                       innloggetBruker={innloggetBruker}
                       currentSettings={websiteSettings}
                       onUpdateSettings={handleUpdateWebsiteSettings}
+                    />
+                  } 
+                />
+                
+                {/* DataPanel for import/export av data */}
+                <Route 
+                  path="/data-panel" 
+                  element={
+                    <DataPanel 
+                      innloggetBruker={innloggetBruker}
                     />
                   } 
                 />

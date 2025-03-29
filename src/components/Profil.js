@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
 import { useLanguage } from '../utils/LanguageContext';
+import { encrypt } from '../utils/cryptoUtil';
 import './Profil.css';
 
 const Profil = () => {

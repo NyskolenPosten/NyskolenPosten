@@ -40,7 +40,15 @@ function Header({ innloggetBruker, onLogout, isLockdown }) {
             
             {/* Website Panel er kun tilgjengelig for teknisk leder */}
             {erTekniskLeder && (
-              <Link to="/website-panel" className="tech-leader-link">Website Panel</Link>
+              <>
+                <Link to="/website-panel" className="tech-leader-link">Website Panel</Link>
+                <Link to="/data-panel" className="tech-leader-link">Data Panel</Link>
+              </>
+            )}
+            
+            {/* Data Panel er tilgjengelig for admin, redaktør OG teknisk leder */}
+            {erAdmin && !erTekniskLeder && (
+              <Link to="/data-panel" className="admin-link">Data Panel</Link>
             )}
             
             <button 

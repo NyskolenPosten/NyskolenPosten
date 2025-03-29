@@ -1,0 +1,125 @@
+/* DataPanel.css - Stil for datahåndteringspanelet */
+
+.data-panel {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.data-panel h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #333;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.75rem;
+}
+
+.data-panel h3 {
+  margin-top: 0;
+  color: #444;
+}
+
+.melding-boks {
+  padding: 1rem;
+  background-color: #e6f7e6;
+  border-left: 4px solid #28a745;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+}
+
+.feilmelding {
+  padding: 1rem;
+  background-color: #f8d7da;
+  border-left: 4px solid #dc3545;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+  color: #721c24;
+}
+
+.data-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.data-section {
+  flex: 1;
+  min-width: 300px;
+  background-color: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.data-section p {
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.eksport-knapp, .import-knapp {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.eksport-knapp {
+  background-color: #007bff;
+  color: white;
+}
+
+.import-knapp {
+  background-color: #6c757d;
+  color: white;
+}
+
+.eksport-knapp:hover, .import-knapp:hover {
+  filter: brightness(110%);
+}
+
+.eksport-knapp:active, .import-knapp:active {
+  transform: translateY(1px);
+}
+
+.eksport-knapp:disabled, .import-knapp:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.data-info {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 6px;
+  border-left: 4px solid #17a2b8;
+}
+
+.data-info p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.data-info p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .data-actions {
+    flex-direction: column;
+  }
+  
+  .data-section {
+    min-width: auto;
+  }
+  
+  .data-panel {
+    padding: 1.5rem;
+  }
+} 
