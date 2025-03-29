@@ -206,7 +206,13 @@ const Profil = () => {
       
       <div className="profil-info">
         <p><strong>Brukerrolle:</strong> {user.rolle}</p>
-        <p><strong>Medlem siden:</strong> {new Date(user.dato).toLocaleDateString('no-NO')}</p>
+        <p><strong>Medlem siden:</strong> {
+          user.dato ? 
+            new Date(user.dato).toLocaleDateString('no-NO') : 
+            user.opprettet ? 
+              new Date(user.opprettet).toLocaleDateString('no-NO') : 
+              'Ukjent dato'
+        }</p>
       </div>
     </div>
   );

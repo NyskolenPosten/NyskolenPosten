@@ -43,7 +43,9 @@ function Hjem({ artikler = [] }) {
                   <div className="artikkel-meta">
                     <span className="artikkel-forfatter">{artikkel.forfatter}</span>
                     <span className="artikkel-dato">
-                      {new Date(artikkel.dato).toLocaleDateString('no-NO')}
+                      {artikkel.dato ? 
+                        new Date(artikkel.dato).toLocaleDateString('no-NO') : 
+                        'Ukjent dato'}
                     </span>
                   </div>
                 </div>
@@ -73,7 +75,9 @@ function Hjem({ artikler = [] }) {
                   <div className="artikkel-meta">
                     <span className="artikkel-forfatter">{artikkel.forfatter}</span>
                     <span className="artikkel-dato">
-                      {new Date(artikkel.dato).toLocaleDateString('no-NO')}
+                      {artikkel.dato ? 
+                        new Date(artikkel.dato).toLocaleDateString('no-NO') : 
+                        'Ukjent dato'}
                     </span>
                   </div>
                 </Link>

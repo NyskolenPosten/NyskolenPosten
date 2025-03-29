@@ -147,7 +147,11 @@ function MineArtikler({ innloggetBruker, artikler = [], onDeleteArticle, onUpdat
                     <div className="artikkel-meta">
                       <span className={`status-${artikkel.status}`}>{artikkel.status}</span>
                       <span className="kategori">{artikkel.kategori}</span>
-                      <span className="dato">{new Date(artikkel.dato).toLocaleDateString('nb-NO')}</span>
+                      <span className="dato">
+                        {artikkel.dato ? 
+                          new Date(artikkel.dato).toLocaleDateString('nb-NO') : 
+                          'Ukjent dato'}
+                      </span>
                     </div>
                     <p className="ingress">{artikkel.ingress}</p>
                   </div>

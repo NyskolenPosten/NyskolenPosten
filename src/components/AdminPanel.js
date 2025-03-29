@@ -1,6 +1,6 @@
 // components/AdminPanel.js
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import './AdminPanel.css';
 import { useLanguage } from '../utils/LanguageContext';
 
@@ -187,16 +187,18 @@ function AdminPanel({
                       {artikkel.godkjent ? 'Publisert' : 'Venter på godkjenning'}
                     </span>
                   </td>
-                  <td>{new Date(artikkel.dato).toLocaleDateString('no-NO')}</td>
+                  <td>
+                    {artikkel.dato ? 
+                      new Date(artikkel.dato).toLocaleDateString('no-NO') : 
+                      'Ukjent dato'}
+                  </td>
                   <td className="admin-buttons">
-                    <a 
-                      href={`/artikkel/${artikkel.artikkelID}`} 
+                    <Link 
+                      to={`/artikkel/${artikkel.artikkelID}`} 
                       className="view-button"
-                      target="_blank"
-                      rel="noopener noreferrer"
                     >
                       Se
-                    </a>
+                    </Link>
                     {!artikkel.godkjent && (
                       <button 
                         className="approve-button" 
@@ -241,7 +243,13 @@ function AdminPanel({
                   <td>{bruker.epost}</td>
                   <td>{bruker.klasse || '-'}</td>
                   <td>{bruker.rolle}</td>
-                  <td>{new Date(bruker.dato).toLocaleDateString('no-NO')}</td>
+                  <td>
+                    {bruker.dato ? 
+                      new Date(bruker.dato).toLocaleDateString('no-NO') : 
+                      bruker.opprettet ? 
+                        new Date(bruker.opprettet).toLocaleDateString('no-NO') : 
+                        'Ukjent dato'}
+                  </td>
                   <td className="admin-buttons">
                     {bruker.id !== innloggetBruker.id && (
                       <button 
@@ -277,7 +285,11 @@ function AdminPanel({
                 <tr key={jobb.id}>
                   <td>{jobb.navn}</td>
                   <td>{jobb.rolle}</td>
-                  <td>{new Date(jobb.dato).toLocaleDateString('no-NO')}</td>
+                  <td>
+                    {jobb.dato ? 
+                      new Date(jobb.dato).toLocaleDateString('no-NO') : 
+                      'Ukjent dato'}
+                  </td>
                   <td className="admin-buttons">
                     {jobb.rolle === 'Journalist' && (
                       <button 

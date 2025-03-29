@@ -135,11 +135,12 @@ function ArtikkelVisning({ artikler = [], innloggetBruker, onSlettArtikkel, onRe
   }
   
   // Formater dato
-  const formatertDato = new Date(artikkel.dato).toLocaleDateString('no-NO', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const formatertDato = artikkel.dato ? 
+    new Date(artikkel.dato).toLocaleDateString('no-NO', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }) : 'Ukjent dato';
   
   // Konverter markdown til HTML
   const formatertInnhold = konverterMarkdown(artikkel.innhold);
