@@ -1,8 +1,8 @@
 // components/AdminPanel.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import './AdminPanel.css';
-import { sendWelcomeEmail } from '../utils/emailUtil';
+import { useLanguage } from '../utils/LanguageContext';
 
 function AdminPanel({ 
   innloggetBruker, 
@@ -19,6 +19,7 @@ function AdminPanel({
   onUpdateKategoriliste,
   onEndreRolleBruker
 }) {
+  const { translations } = useLanguage();
   const [aktivFane, setAktivFane] = useState('artikler');
   const [redigerArtikkel, setRedigerArtikkel] = useState(null);
   const [redigerBruker, setRedigerBruker] = useState(null);
@@ -31,6 +32,16 @@ function AdminPanel({
   if (!innloggetBruker || innloggetBruker.rolle !== 'admin') {
     return <Navigate to="/" replace />;
   }
+  
+  // Initiel filtrering av artikler
+  useEffect(() => {
+    oppdaterFiltrering();
+  }, [artikler]);
+
+  // Funksjon for å filtrere artiklene basert på godkjenningsstatus
+  const oppdaterFiltrering = () => {
+    // Implementer filtrering her
+  };
   
   const handleDeleteArticle = (artikkelId) => {
     if (window.confirm('Er du sikker på at du vil slette denne artikkelen?')) {
@@ -107,25 +118,12 @@ function AdminPanel({
     }
   };
   
-  const handleApproveUser = async (userId) => {
-    // Oppdater bruker til godkjent
-    const oppdaterteBrukere = brukere.map(bruker => 
-      bruker.id === userId ? {...bruker, godkjent: true} : bruker
-    );
-    
-    // Finn brukeren som ble godkjent
-    const godkjentBruker = oppdaterteBrukere.find(b => b.id === userId);
-    
-    // Lagre oppdaterte brukere
-    onUpdateUser(oppdaterteBrukere);
-    
-    // Send velkomste-post
-    if (godkjentBruker) {
-      await sendWelcomeEmail(
-        godkjentBruker.epost, 
-        godkjentBruker.navn, 
-        godkjentBruker.rolle
-      );
+  const handleApproveUser = (userId) => {
+    // Finn brukerdata
+    const bruker = brukere.find(b => b.id === userId);
+    if (bruker) {
+      // Logger i stedet for å sende e-post
+      console.log(`Velkommen-e-post ville ha blitt sendt til ${bruker.epost} (${bruker.navn})`);
     }
   };
   

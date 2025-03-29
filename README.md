@@ -28,9 +28,6 @@ npm install
 ```bash
 npm start
 ```
-
-Nettstedet vil nå være tilgjengelig på [http://localhost:3000](http://localhost:3000)
-
 ## Deployering til GitHub Pages
 
 For å publisere endringer til GitHub Pages:
@@ -140,9 +137,8 @@ Denne seksjonen blir oppdatert regelmessig for å informere om prosjektets statu
 - 🔄 Oppdatering av brukergrensesnitt med nye farger og ikoner
 
 ### Kommende funksjoner
-- 📅 Kommentarsystem for artikler
 - 📅 Avansert søkefunksjonalitet
 - 📅 Mulighet for å legge til kategorier
 - 📅 Støtte for opplasting av bilder direkte i artikler
-
-Sist oppdatert: 14.10.2023 
+- 📅 Jobb søkning
+Sist oppdatert: 29.3.2025 
