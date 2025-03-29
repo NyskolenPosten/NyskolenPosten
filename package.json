@@ -42,7 +42,8 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^6.3.0"
+    "gh-pages": "^6.3.0",
+    "sharp": "^0.33.5"
   },
   "description": "Nyskolen Posten er en nettbasert skoleavis for elever på Nyskolen i Oslo. Applikasjonen er bygget med React og bruker lokal lagring (localStorage) for å lagre artikler og brukerinformasjon.",
   "main": "App.js",
