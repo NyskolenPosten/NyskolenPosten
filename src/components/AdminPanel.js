@@ -28,15 +28,15 @@ function AdminPanel({
   const [melding, setMelding] = useState('');
   const [feilmelding, setFeilmelding] = useState('');
   
-  // Sjekk om brukeren er admin
-  if (!innloggetBruker || innloggetBruker.rolle !== 'admin') {
-    return <Navigate to="/" replace />;
-  }
-  
   // Initiel filtrering av artikler
   useEffect(() => {
     oppdaterFiltrering();
   }, [artikler]);
+  
+  // Sjekk om brukeren er admin
+  if (!innloggetBruker || innloggetBruker.rolle !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
 
   // Funksjon for å filtrere artiklene basert på godkjenningsstatus
   const oppdaterFiltrering = () => {
