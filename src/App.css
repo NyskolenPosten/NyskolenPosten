@@ -574,4 +574,140 @@ input:focus, textarea:focus, select:focus {
 .steg-dot.aktiv {
   background-color: var(--primary-color);
   transform: scale(1.2);
+}
+
+/* Lockdown og vedlikeholdsmodus */
+.lockdown-indicator {
+  display: inline-block;
+  background-color: #ff4c4c;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.75rem;
+  margin-left: 10px;
+  animation: pulse 2s infinite;
+}
+
+.maintenance-mode {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: #f8f8f8;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.maintenance-container {
+  text-align: center;
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  max-width: 80%;
+}
+
+.maintenance-container h1 {
+  color: #ff4c4c;
+  margin-bottom: 1rem;
+}
+
+/* Note og notifikasjoner */
+.site-notification {
+  background-color: #ffe57f;
+  padding: 10px 20px;
+  text-align: center;
+  font-weight: bold;
+  border-bottom: 2px solid #ffc107;
+}
+
+.note-content {
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+.preview-note {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.preview-note h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  color: #666;
+}
+
+/* Website Panel */
+.control-buttons {
+  margin-bottom: 20px;
+}
+
+.control-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.status-list {
+  list-style: none;
+  padding: 0;
+}
+
+.status-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.status-active {
+  color: #ff4c4c;
+  font-weight: bold;
+}
+
+.status-inactive {
+  color: #28a745;
+}
+
+.tech-leader-link {
+  background-color: #6a0dad;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.tech-leader-link:hover {
+  background-color: #8a2be2;
+}
+
+/* Animasjon for lockdown indicator */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Offline advarsel */
+.offline-warning {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  text-align: center;
 } 

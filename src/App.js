@@ -8,6 +8,7 @@ import NyArtikkel from './components/NyArtikkel';
 import ArtikkelVisning from './components/ArtikkelVisning';
 import MineArtikler from './components/MineArtikler';
 import AdminPanel from './components/AdminPanel';
+import WebsitePanel from './components/WebsitePanel';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import Innlogging from './components/Innlogging';
@@ -24,6 +25,9 @@ function App() {
   const [jobbliste, setJobbliste] = useState([]);
   const [kategoriliste, setKategoriliste] = useState([]);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [websiteSettings, setWebsiteSettings] = useState(() => {
+    return JSON.parse(localStorage.getItem('websiteSettings') || '{"lockdown": false, "fullLockdown": false, "note": ""}');
+  });
   
   // Admin e-postliste for automatisk godkjenning og admin-rolle
   const adminEpostliste = ['mattis.tollefsen@nionett.no', 'admin@nyskolen.no'];
@@ -136,6 +140,12 @@ function App() {
       localStorage.setItem('kategoriliste', JSON.stringify(standardKategoriliste));
     }
 
+    // Last inn websiteSettings
+    const lagretSettings = localStorage.getItem('websiteSettings');
+    if (lagretSettings) {
+      setWebsiteSettings(JSON.parse(lagretSettings));
+    }
+
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
@@ -146,6 +156,18 @@ function App() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
+  }, []);
+  
+  // Lytt etter endringer i websiteSettings
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'websiteSettings') {
+        setWebsiteSettings(JSON.parse(e.newValue));
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
   
   // Funksjon for å logge inn
@@ -275,118 +297,146 @@ function App() {
     localStorage.setItem('artikler', JSON.stringify(oppdatertArtikler));
   };
   
+  // Sjekk om nettsiden er i WEBSITE LOCKDOWN modus
+  if (websiteSettings.fullLockdown) {
+    return (
+      <div className="maintenance-mode">
+        <div className="maintenance-container">
+          <h1>NyskolenPosten er nede for vedlikehold</h1>
+          <p>Vi jobber med å forbedre nettsiden og er straks tilbake.</p>
+          <p>Beklager ulempene dette medfører.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <AuthProvider>
-      <LanguageProvider>
-        <Router basename="/NyskolenPosten">
+    <LanguageProvider>
+      <AuthProvider>
+        <Router>
           <div className="app-container">
+            {websiteSettings.note && (
+              <div className="site-notification">
+                <div className="note-content">{websiteSettings.note}</div>
+              </div>
+            )}
+            
             <Header 
-              isAuthenticated={innloggetBruker !== null} 
-              currentUser={innloggetBruker} 
+              innloggetBruker={innloggetBruker} 
               onLogout={handleLogout}
+              isLockdown={websiteSettings.lockdown}
             />
             
             <main className="main-content">
+              {!isOnline && (
+                <div className="offline-warning">
+                  Du er offline. Noen funksjoner kan være begrenset.
+                </div>
+              )}
+              
               <Routes>
-                <Route path="/" element={<Hjem artikler={artikler.filter(a => a.godkjent)} />} />
-                <Route path="/om-oss" element={<OmOss jobbliste={jobbliste} />} />
-                <Route 
-                  path="/innlogging" 
-                  element={
-                    <Innlogging 
-                      onLogin={handleLogin} 
-                      userIsAuthenticated={innloggetBruker !== null}
-                      brukere={brukere}
-                    />
-                  } 
-                />
-                <Route 
-                  path="/registrering" 
-                  element={
-                    <Registrering 
-                      onRegistrer={registrerBruker}
-                    />
-                  } 
-                />
-                <Route 
-                  path="/ny-artikkel" 
-                  element={
-                    innloggetBruker ? 
-                      <NyArtikkel 
-                        onSubmit={handleNyArtikkel} 
-                        currentUser={innloggetBruker}
-                        kategoriliste={kategoriliste}
-                      /> : 
-                      <Innlogging 
-                        onLogin={handleLogin} 
-                        userIsAuthenticated={innloggetBruker !== null}
-                        brukere={brukere}
-                      />
-                  } 
-                />
-                <Route 
-                  path="/mine-artikler" 
-                  element={
-                    innloggetBruker ? 
-                      <MineArtikler 
-                        artikler={artikler} 
-                        currentUser={innloggetBruker}
-                        onDelete={handleSlettArtikkel}
-                        onEdit={handleRedigerArtikkel}
-                        kategoriliste={kategoriliste}
-                      /> : 
-                      <Innlogging 
-                        onLogin={handleLogin} 
-                        userIsAuthenticated={innloggetBruker !== null}
-                        brukere={brukere}
-                      />
-                  }
-                />
-                <Route 
-                  path="/admin" 
-                  element={
-                    innloggetBruker && innloggetBruker.rolle === 'admin' ? 
-                      <AdminPanel 
-                        brukere={brukere}
-                        artikler={artikler}
-                        onOppdaterArtikkel={handleOppdaterArtikkel}
-                        onGodkjennBruker={godkjennBruker}
-                        onOppdaterBruker={oppdaterBruker}
-                        onSlettBruker={slettBruker}
-                        kategoriliste={kategoriliste}
-                        setKategoriliste={setKategoriliste}
-                        jobbliste={jobbliste}
-                        setJobbliste={setJobbliste}
-                      /> : 
-                      <Innlogging 
-                        onLogin={handleLogin} 
-                        userIsAuthenticated={innloggetBruker !== null}
-                        brukere={brukere}
-                      />
-                  }
-                />
+                <Route path="/" element={<Hjem artikler={artikler} />} />
+                <Route path="/om-oss" element={<OmOss />} />
                 <Route 
                   path="/artikkel/:id" 
-                  element={<ArtikkelVisning artikler={artikler} />} 
+                  element={
+                    <ArtikkelVisning 
+                      artikler={artikler} 
+                      innloggetBruker={innloggetBruker} 
+                      onSlettArtikkel={handleSlettArtikkel} 
+                      onRedigerArtikkel={handleRedigerArtikkel} 
+                    />
+                  } 
                 />
-                <Route path="/profil" element={<Profil />} />
+
+                {/* Ruter som krever innlogging og ikke er påvirket av lockdown */}
+                <Route 
+                  path="/logg-inn" 
+                  element={<Innlogging onLogin={handleLogin} />} 
+                />
+                <Route 
+                  path="/registrer" 
+                  element={<Registrering onRegistrer={registrerBruker} />} 
+                />
+                <Route 
+                  path="/profil" 
+                  element={
+                    <Profil 
+                      innloggetBruker={innloggetBruker} 
+                      onOppdaterBruker={oppdaterBruker} 
+                    />
+                  } 
+                />
+                
+                {/* Ruter som påvirkes av lockdown */}
+                {!websiteSettings.lockdown && (
+                  <>
+                    <Route 
+                      path="/ny-artikkel" 
+                      element={
+                        <NyArtikkel 
+                          innloggetBruker={innloggetBruker} 
+                          onLeggTilArtikkel={handleNyArtikkel} 
+                          kategoriliste={kategoriliste}
+                        />
+                      } 
+                    />
+                    <Route 
+                      path="/mine-artikler" 
+                      element={
+                        <MineArtikler 
+                          innloggetBruker={innloggetBruker} 
+                          artikler={artikler} 
+                          onSlettArtikkel={handleSlettArtikkel} 
+                          onOppdaterArtikkel={handleOppdaterArtikkel} 
+                        />
+                      } 
+                    />
+                    <Route 
+                      path="/admin" 
+                      element={
+                        <AdminPanel 
+                          innloggetBruker={innloggetBruker} 
+                          artikler={artikler} 
+                          brukere={brukere} 
+                          jobbliste={jobbliste} 
+                          kategoriliste={kategoriliste}
+                          onDeleteArticle={handleSlettArtikkel}
+                          onUpdateArticle={handleOppdaterArtikkel}
+                          onUpdateUser={oppdaterBruker}
+                          onDeleteUser={slettBruker}
+                          onApproveArticle={godkjennBruker}
+                          onUpdateJobbliste={setJobbliste}
+                          onUpdateKategoriliste={setKategoriliste}
+                        />
+                      } 
+                    />
+                  </>
+                )}
+                
+                {/* WebsitePanel, tilgjengelig kun for teknisk leder */}
+                <Route 
+                  path="/website-panel" 
+                  element={
+                    <WebsitePanel 
+                      innloggetBruker={innloggetBruker} 
+                    />
+                  } 
+                />
+                
+                {/* Debug-panel for Cache-monitoring */}
+                <Route 
+                  path="/cache-monitor" 
+                  element={<CacheMonitor />} 
+                />
               </Routes>
             </main>
             
             <Footer />
-            
-            {/* Vis CacheMonitor kun i utviklermodus */}
-            {process.env.NODE_ENV === 'development' && <CacheMonitor />}
-            
-            {!isOnline && (
-              <div className="offline-indicator">
-                Du er nå i frakoblet modus. Vær oppmerksom på at enkelte funksjoner kan være begrenset.
-              </div>
-            )}
           </div>
         </Router>
-      </LanguageProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

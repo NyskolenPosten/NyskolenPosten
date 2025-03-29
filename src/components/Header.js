@@ -4,7 +4,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 import { useLanguage } from '../utils/LanguageContext';
 import './Header.css';
 
-function Header({ innloggetBruker, onLogout }) {
+function Header({ innloggetBruker, onLogout, isLockdown }) {
   const { translations } = useLanguage();
   const { navigation, footer } = translations;
   
@@ -15,6 +15,7 @@ function Header({ innloggetBruker, onLogout }) {
           <h1>Nyskolen Posten</h1>
         </Link>
         <p className="slogan">{footer.copyright}</p>
+        {isLockdown && <span className="lockdown-indicator">LOCKDOWN MODUS</span>}
       </div>
       
       <nav className="navigation">
@@ -23,9 +24,19 @@ function Header({ innloggetBruker, onLogout }) {
         
         {innloggetBruker ? (
           <>
-            <Link to="/ny-artikkel">{navigation.writeArticle}</Link>
+            {!isLockdown && (
+              <Link to="/ny-artikkel">{navigation.writeArticle}</Link>
+            )}
             
-            {innloggetBruker.rolle === 'admin' && (
+            {innloggetBruker.rolle === 'admin' && !isLockdown && (
+              <Link to="/admin">{navigation.admin}</Link>
+            )}
+            
+            {innloggetBruker.rolle === 'teknisk_leder' && (
+              <Link to="/website-panel" className="tech-leader-link">Website Panel</Link>
+            )}
+            
+            {innloggetBruker.rolle === 'redaktør' && !isLockdown && (
               <Link to="/admin">{navigation.admin}</Link>
             )}
             
@@ -38,8 +49,8 @@ function Header({ innloggetBruker, onLogout }) {
           </>
         ) : (
           <>
-            <Link to="/innlogging" className="login-button">{navigation.login}</Link>
-            <Link to="/registrering" className="register-button">{navigation.register}</Link>
+            <Link to="/logg-inn" className="login-button">{navigation.login}</Link>
+            <Link to="/registrer" className="register-button">{navigation.register}</Link>
           </>
         )}
         

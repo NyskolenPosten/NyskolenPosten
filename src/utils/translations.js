@@ -11,7 +11,8 @@ export const no = {
     writeArticle: "Skriv artikkel",
     myArticles: "Mine artikler",
     admin: "Administrer",
-    logout: "Logg ut"
+    logout: "Logg ut",
+    websitePanel: "Website Panel"
   },
   
   // Footer
@@ -94,7 +95,47 @@ export const no = {
     role: "Rolle",
     journalist: "Journalist",
     editor: "Redaktør",
-    admin: "Administrator"
+    admin: "Administrator",
+    technicalDirector: "Teknisk leder"
+  },
+  
+  // Website Panel
+  websitePanel: {
+    title: "Website Panel - Teknisk leder",
+    welcome: "Velkommen",
+    controlPanel: "Nettsidekontroll",
+    activateLockdown: "AKTIVER LOCKDOWN",
+    deactivateLockdown: "DEAKTIVER LOCKDOWN",
+    activateWebsiteLockdown: "AKTIVER WEBSITE LOCKDOWN",
+    deactivateWebsiteLockdown: "DEAKTIVER WEBSITE LOCKDOWN",
+    lockdownDescription: "LOCKDOWN: Når aktivert, kan brukere bare lese artikler. Admin-paneler er utilgjengelige og nye artikler kan ikke opprettes.",
+    websiteLockdownDescription: "WEBSITE LOCKDOWN: Når aktivert, vises bare en vedlikeholdsmelding på nettsiden. Ingen tilgang til innhold.",
+    noteSection: "Forsidemelding (NOTE)",
+    noteText: "Meldingstekst:",
+    notePlaceholder: "Skriv en viktig melding som skal vises på forsiden...",
+    addNote: "Legg til NOTE",
+    removeNote: "Fjern NOTE",
+    notePreview: "Forhåndsvisning av NOTE:",
+    currentStatus: "Nåværende tilstand",
+    lockdownStatus: "LOCKDOWN Status:",
+    websiteLockdownStatus: "WEBSITE LOCKDOWN Status:",
+    noteStatus: "NOTE Status:",
+    active: "AKTIV",
+    inactive: "INAKTIV",
+    noteShown: "VISES PÅ FORSIDEN",
+    noNote: "INGEN NOTE",
+    accessControl: "Tilgangskontroll",
+    enterPassword: "Skriv inn passordet ditt for å få tilgang til Website panel.",
+    wrongPassword: "Feil passord. Prøv igjen."
+  },
+  
+  // System meldinger
+  systemMessages: {
+    maintenance: "NyskolenPosten er nede for vedlikehold",
+    maintenanceInfo: "Vi jobber med å forbedre nettsiden og er straks tilbake.",
+    maintenanceApology: "Beklager ulempene dette medfører.",
+    offlineWarning: "Du er offline. Noen funksjoner kan være begrenset.",
+    lockdownModeLabel: "LOCKDOWN MODUS"
   },
   
   // Generelt
@@ -123,7 +164,8 @@ export const en = {
     writeArticle: "Write Article",
     myArticles: "My Articles",
     admin: "Admin",
-    logout: "Log Out"
+    logout: "Log Out",
+    websitePanel: "Website Panel"
   },
   
   // Footer
@@ -206,7 +248,47 @@ export const en = {
     role: "Role",
     journalist: "Journalist",
     editor: "Editor",
-    admin: "Administrator"
+    admin: "Administrator",
+    technicalDirector: "Technical Director"
+  },
+  
+  // Website Panel
+  websitePanel: {
+    title: "Website Panel - Technical Director",
+    welcome: "Welcome",
+    controlPanel: "Website Control",
+    activateLockdown: "ACTIVATE LOCKDOWN",
+    deactivateLockdown: "DEACTIVATE LOCKDOWN",
+    activateWebsiteLockdown: "ACTIVATE WEBSITE LOCKDOWN",
+    deactivateWebsiteLockdown: "DEACTIVATE WEBSITE LOCKDOWN",
+    lockdownDescription: "LOCKDOWN: When activated, users can only read articles. Admin panels are unavailable and new articles cannot be created.",
+    websiteLockdownDescription: "WEBSITE LOCKDOWN: When activated, only a maintenance message is displayed on the website. No access to content.",
+    noteSection: "Homepage Message (NOTE)",
+    noteText: "Message text:",
+    notePlaceholder: "Write an important message to be displayed on the homepage...",
+    addNote: "Add NOTE",
+    removeNote: "Remove NOTE",
+    notePreview: "NOTE Preview:",
+    currentStatus: "Current Status",
+    lockdownStatus: "LOCKDOWN Status:",
+    websiteLockdownStatus: "WEBSITE LOCKDOWN Status:",
+    noteStatus: "NOTE Status:",
+    active: "ACTIVE",
+    inactive: "INACTIVE",
+    noteShown: "DISPLAYED ON HOMEPAGE",
+    noNote: "NO NOTE",
+    accessControl: "Access Control",
+    enterPassword: "Enter your password to access the Website panel.",
+    wrongPassword: "Wrong password. Please try again."
+  },
+  
+  // System messages
+  systemMessages: {
+    maintenance: "NyskolenPosten is down for maintenance",
+    maintenanceInfo: "We are working to improve the website and will be back shortly.",
+    maintenanceApology: "We apologize for the inconvenience.",
+    offlineWarning: "You are offline. Some features may be limited.",
+    lockdownModeLabel: "LOCKDOWN MODE"
   },
   
   // General

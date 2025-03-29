@@ -9,6 +9,12 @@ const CACHE_TTL = {
   USER_LIST: 5 * 60 * 1000, // 5 minutter for brukerlister
 };
 
+// Spesielle e-postadresser med forhåndsdefinerte roller
+const SPECIAL_EMAILS = {
+  'eva.westlund@nionett.no': 'redaktør',
+  'mattis.tollefsen@nionett.no': 'teknisk_leder',
+};
+
 // Hjelpefunksjon for å generere en unik ID
 const genererID = () => {
   return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
@@ -73,14 +79,20 @@ export const registrerBruker = async (email, password, navn, klasse) => {
     auth.currentUser = nyBruker;
     localStorage.setItem('currentUser', JSON.stringify(nyBruker));
     
+    // Sjekk om e-posten har spesiell rolle
+    let rolle = 'skribent';
+    if (SPECIAL_EMAILS[email]) {
+      rolle = SPECIAL_EMAILS[email];
+    }
+    
     // Lagre utvidet brukerinformasjon
     const brukerInfo = {
       id: userId,
       navn: navn,
       email: email,
       klasse: klasse,
-      rolle: 'skribent',
-      godkjent: false,
+      rolle: rolle,
+      godkjent: true, // Spesielle brukere er automatisk godkjent
       opprettet: serverTimestamp()
     };
     
@@ -112,6 +124,14 @@ export const loggInn = async (email, password) => {
     
     if (!authBruker || authBruker.password !== password) {
       return { success: false, error: 'Feil passord' };
+    }
+    
+    // Sjekk om e-posten har spesiell rolle og oppdater hvis nødvendig
+    if (SPECIAL_EMAILS[email] && bruker.rolle !== SPECIAL_EMAILS[email]) {
+      bruker.rolle = SPECIAL_EMAILS[email];
+      // Oppdater bruker i localStorage
+      const oppdaterteBrukere = brukere.map(b => b.id === bruker.id ? bruker : b);
+      localStorage.setItem('brukere', JSON.stringify(oppdaterteBrukere));
     }
     
     // Opprett bruker-objekt som ligner på Firebase-bruker
