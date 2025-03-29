@@ -29,8 +29,8 @@ function WebsitePanel({ innloggetBruker }) {
   // Passordsjekk
   const handlePassordSubmit = (e) => {
     e.preventDefault();
-    // Bruk samme passord som brukeren har
-    if (passordInput === innloggetBruker.password) {
+    // Bruk det hemmelige passordet i stedet for brukerens passord
+    if (passordInput === 'Tveita16') {
       setErAutentisert(true);
       setFeilmelding('');
     } else {

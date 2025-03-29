@@ -17,6 +17,7 @@ import CacheMonitor from './components/CacheMonitor';
 import { LanguageProvider } from './utils/LanguageContext';
 import { AuthProvider } from './utils/AuthContext';
 import Profil from './components/Profil';
+import { loggUt } from './services/authService';
 
 function App() {
   const [innloggetBruker, setInnloggetBruker] = useState(null);
@@ -35,9 +36,15 @@ function App() {
   // Last inn data fra localStorage ved oppstart
   useEffect(() => {
     // Last inn innlogget bruker
-    const lagretBruker = localStorage.getItem('innloggetBruker');
+    const lagretBruker = localStorage.getItem('currentUser');
     if (lagretBruker) {
-      setInnloggetBruker(JSON.parse(lagretBruker));
+      const brukerObj = JSON.parse(lagretBruker);
+      // Hent mer informasjon fra brukere-arrayet
+      const brukere = JSON.parse(localStorage.getItem('brukere')) || [];
+      const fullBruker = brukere.find(b => b.id === brukerObj.uid);
+      if (fullBruker) {
+        setInnloggetBruker(fullBruker);
+      }
     }
     
     // Last inn artikler
@@ -55,11 +62,11 @@ function App() {
       const adminBruker = {
         id: 'admin-' + Date.now(),
         navn: 'Administrator',
-        epost: 'admin@nyskolen.no',
-        passord: 'admin123',
+        email: 'admin@nyskolen.no',
+        password: 'admin123',
         rolle: 'admin',
         godkjent: true,
-        dato: new Date().toISOString()
+        opprettet: new Date().toISOString()
       };
       setBrukere([adminBruker]);
       localStorage.setItem('brukere', JSON.stringify([adminBruker]));
@@ -173,13 +180,12 @@ function App() {
   // Funksjon for å logge inn
   const handleLogin = (bruker) => {
     setInnloggetBruker(bruker);
-    localStorage.setItem('innloggetBruker', JSON.stringify(bruker));
   };
   
   // Funksjon for å logge ut
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await loggUt();
     setInnloggetBruker(null);
-    localStorage.removeItem('innloggetBruker');
   };
   
   // Funksjon for å registrere ny bruker
@@ -233,7 +239,6 @@ function App() {
     // Oppdater også innlogget bruker hvis det er samme bruker
     if (innloggetBruker && innloggetBruker.id === oppdatertBruker.id) {
       setInnloggetBruker(oppdatertBruker);
-      localStorage.setItem('innloggetBruker', JSON.stringify(oppdatertBruker));
     }
   };
   
@@ -356,7 +361,7 @@ function App() {
                 />
                 <Route 
                   path="/registrer" 
-                  element={<Registrering onRegistrer={registrerBruker} />} 
+                  element={<Registrering />} 
                 />
                 <Route 
                   path="/profil" 

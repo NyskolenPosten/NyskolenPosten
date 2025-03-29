@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../utils/LanguageContext';
+import { loggInn } from '../services/authService';
 import './Innlogging.css';
 
-function Innlogging({ onLogin, userIsAuthenticated, brukere }) {
+function Innlogging({ onLogin }) {
   const { translations } = useLanguage();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    epost: '',
-    passord: ''
+    email: '',
+    password: ''
   });
   const [feilmelding, setFeilmelding] = useState('');
   const [suksessmelding, setSuksessmelding] = useState('');
-  const [redirect, setRedirect] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,44 +29,43 @@ function Innlogging({ onLogin, userIsAuthenticated, brukere }) {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     
     // Valider input
-    if (!formData.epost || !formData.passord) {
+    if (!formData.email || !formData.password) {
       setFeilmelding(translations.login.fillBothFields);
+      setLoading(false);
       return;
     }
     
-    // Finn brukeren
-    const bruker = brukere.find(b => b.epost === formData.epost);
-    
-    if (!bruker) {
-      setFeilmelding(translations.login.userNotFound);
-      return;
+    try {
+      // Bruk authService for innlogging
+      const result = await loggInn(formData.email, formData.password);
+      
+      if (!result.success) {
+        setFeilmelding(result.error);
+        setLoading(false);
+        return;
+      }
+      
+      // Utfør innlogging via callback
+      onLogin(result.bruker);
+      
+      // Vis suksessmelding
+      setSuksessmelding(translations.login.loginSuccess);
+      setFeilmelding('');
+      
+      // Redirect til forsiden etter en kort pause
+      setTimeout(() => {
+        navigate('/');
+      }, 1000);
+      
+    } catch (error) {
+      setFeilmelding(error.message || 'Innlogging feilet. Prøv igjen.');
+    } finally {
+      setLoading(false);
     }
-    
-    // Sjekk passord
-    if (bruker.passord !== formData.passord) {
-      setFeilmelding(translations.login.wrongPassword);
-      return;
-    }
-    
-    // Utfør innlogging
-    onLogin(bruker);
-    
-    // Vis suksessmelding
-    setSuksessmelding(translations.login.loginSuccess);
-    setFeilmelding('');
-    
-    // Redirect til forsiden etter en kort pause
-    setTimeout(() => {
-      setRedirect(true);
-    }, 1000);
   };
-  
-  // Redirect hvis allerede logget inn
-  if (userIsAuthenticated || redirect) {
-    return <Navigate to="/" />;
-  }
   
   return (
     <div className="innlogging-container">
@@ -75,12 +76,12 @@ function Innlogging({ onLogin, userIsAuthenticated, brukere }) {
       
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="epost">{translations.login.email}</label>
+          <label htmlFor="email">{translations.login.email}</label>
           <input
             type="email"
-            id="epost"
-            name="epost"
-            value={formData.epost}
+            id="email"
+            name="email"
+            value={formData.email}
             onChange={handleChange}
             placeholder={translations.login.emailPlaceholder}
             autoComplete="email"
@@ -90,12 +91,12 @@ function Innlogging({ onLogin, userIsAuthenticated, brukere }) {
         </div>
         
         <div className="form-group">
-          <label htmlFor="passord">{translations.login.password}</label>
+          <label htmlFor="password">{translations.login.password}</label>
           <input
             type="password"
-            id="passord"
-            name="passord"
-            value={formData.passord}
+            id="password"
+            name="password"
+            value={formData.password}
             onChange={handleChange}
             placeholder={translations.login.passwordPlaceholder}
             autoComplete="current-password"
@@ -103,11 +104,17 @@ function Innlogging({ onLogin, userIsAuthenticated, brukere }) {
           />
         </div>
         
-        <button type="submit" className="login-knapp">{translations.login.loginButton}</button>
+        <button 
+          type="submit" 
+          className="login-knapp"
+          disabled={loading}
+        >
+          {loading ? translations.general.loading : translations.login.loginButton}
+        </button>
       </form>
       
       <div className="register-link">
-        <p>{translations.login.registerPrompt} <Link to="/registrering">{translations.login.registerHere}</Link></p>
+        <p>{translations.login.registerPrompt} <Link to="/registrer">{translations.login.registerHere}</Link></p>
       </div>
     </div>
   );

@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../utils/LanguageContext';
+import { registrerBruker } from '../services/authService';
 import './Registrering.css';
 
-function Registrering({ onRegistrer }) {
+function Registrering() {
   const { translations } = useLanguage();
+  const navigate = useNavigate();
   const [steg, setSteg] = useState(1); // 1: Skjema, 2: Fullført
   const [formData, setFormData] = useState({
     navn: '',
-    epost: '',
-    passord: '',
-    bekreftPassord: '',
+    email: '',
+    password: '',
+    bekreftPassword: '',
     klasse: ''
   });
   const [feilmelding, setFeilmelding] = useState('');
   const [suksessmelding, setSuksessmelding] = useState('');
-  const [redirect, setRedirect] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,17 +30,17 @@ function Registrering({ onRegistrer }) {
   };
 
   const validateForm = () => {
-    if (!formData.navn || !formData.epost || !formData.passord || !formData.klasse) {
+    if (!formData.navn || !formData.email || !formData.password || !formData.klasse) {
       setFeilmelding(translations.registration.allFieldsRequired);
       return false;
     }
     
-    if (formData.passord !== formData.bekreftPassord) {
+    if (formData.password !== formData.bekreftPassword) {
       setFeilmelding(translations.registration.passwordsMustMatch);
       return false;
     }
     
-    if (!formData.epost.includes('@')) {
+    if (!formData.email.includes('@')) {
       setFeilmelding(translations.registration.invalidEmail);
       return false;
     }
@@ -53,25 +55,30 @@ function Registrering({ onRegistrer }) {
     
     setFeilmelding('');
     setSuksessmelding('');
+    setLoading(true);
     
-    // Forbered brukerdata for registrering
-    const brukerData = {
-      navn: formData.navn,
-      epost: formData.epost,
-      passord: formData.passord,
-      klasse: formData.klasse,
-      rolle: 'journalist', // Standard rolle er journalist
-      dato: new Date().toISOString()
-    };
-    
-    // Fullfør registreringsprosessen
-    const registreringsResultat = onRegistrer(brukerData);
-    
-    if (registreringsResultat.success) {
+    try {
+      // Bruk authService for registrering
+      const result = await registrerBruker(
+        formData.email, 
+        formData.password, 
+        formData.navn, 
+        formData.klasse
+      );
+      
+      if (!result.success) {
+        setFeilmelding(result.error || translations.registration.registrationFailed);
+        setLoading(false);
+        return;
+      }
+      
       setSuksessmelding(translations.registration.registrationSuccess);
-      setSteg(2); // Ferdig
-    } else {
-      setFeilmelding(registreringsResultat.message || translations.registration.registrationFailed);
+      setSteg(2); // Gå til fullført-skjermen
+      
+    } catch (error) {
+      setFeilmelding(error.message || translations.registration.registrationFailed);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,11 +91,6 @@ function Registrering({ onRegistrer }) {
       </div>
     </div>
   );
-
-  // Redirect til innloggingssiden etter registrering
-  if (redirect) {
-    return <Navigate to="/innlogging" />;
-  }
 
   // Vis skjema basert på hvilket steg vi er på
   if (steg === 1) {
@@ -116,12 +118,12 @@ function Registrering({ onRegistrer }) {
           </div>
           
           <div className="form-group">
-            <label htmlFor="epost">{translations.registration.email}</label>
+            <label htmlFor="email">{translations.registration.email}</label>
             <input
               type="email"
-              id="epost"
-              name="epost"
-              value={formData.epost}
+              id="email"
+              name="email"
+              value={formData.email}
               onChange={handleChange}
               placeholder={translations.registration.emailPlaceholder}
               autoComplete="email"
@@ -131,12 +133,12 @@ function Registrering({ onRegistrer }) {
           </div>
           
           <div className="form-group">
-            <label htmlFor="passord">{translations.registration.password}</label>
+            <label htmlFor="password">{translations.registration.password}</label>
             <input
               type="password"
-              id="passord"
-              name="passord"
-              value={formData.passord}
+              id="password"
+              name="password"
+              value={formData.password}
               onChange={handleChange}
               placeholder={translations.registration.passwordPlaceholder}
               autoComplete="new-password"
@@ -146,12 +148,12 @@ function Registrering({ onRegistrer }) {
           </div>
           
           <div className="form-group">
-            <label htmlFor="bekreftPassord">{translations.registration.confirmPassword}</label>
+            <label htmlFor="bekreftPassword">{translations.registration.confirmPassword}</label>
             <input
               type="password"
-              id="bekreftPassord"
-              name="bekreftPassord"
-              value={formData.bekreftPassord}
+              id="bekreftPassword"
+              name="bekreftPassword"
+              value={formData.bekreftPassword}
               onChange={handleChange}
               placeholder={translations.registration.confirmPasswordPlaceholder}
               autoComplete="new-password"
@@ -174,11 +176,17 @@ function Registrering({ onRegistrer }) {
             />
           </div>
           
-          <button type="submit" className="registrer-knapp">{translations.registration.registerButton}</button>
+          <button 
+            type="submit" 
+            className="registrer-knapp"
+            disabled={loading}
+          >
+            {loading ? translations.general.loading : translations.registration.registerButton}
+          </button>
         </form>
         
         <div className="innlogging-link">
-          <p>{translations.registration.haveAccount} <Link to="/innlogging">{translations.registration.loginHere}</Link></p>
+          <p>{translations.registration.haveAccount} <Link to="/logg-inn">{translations.registration.loginHere}</Link></p>
         </div>
       </div>
     );
@@ -192,7 +200,7 @@ function Registrering({ onRegistrer }) {
         
         <button 
           className="innlogging-knapp"
-          onClick={() => setRedirect(true)}>
+          onClick={() => navigate('/logg-inn')}>
           {translations.registration.goToLogin}
         </button>
       </div>
