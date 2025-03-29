@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/NyskolenPosten/static/css/main.538a09e7.css",
-    "main.js": "/NyskolenPosten/static/js/main.7e6c404f.js",
+    "main.js": "/NyskolenPosten/static/js/main.d33294ba.js",
     "static/js/453.36515fcc.chunk.js": "/NyskolenPosten/static/js/453.36515fcc.chunk.js",
     "index.html": "/NyskolenPosten/index.html",
     "main.538a09e7.css.map": "/NyskolenPosten/static/css/main.538a09e7.css.map",
-    "main.7e6c404f.js.map": "/NyskolenPosten/static/js/main.7e6c404f.js.map",
+    "main.d33294ba.js.map": "/NyskolenPosten/static/js/main.d33294ba.js.map",
     "453.36515fcc.chunk.js.map": "/NyskolenPosten/static/js/453.36515fcc.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.538a09e7.css",
-    "static/js/main.7e6c404f.js"
+    "static/js/main.d33294ba.js"
   ]
 }
