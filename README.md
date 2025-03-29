@@ -15,7 +15,7 @@ Nyskolen Posten er en nettbasert skoleavis for elever på Nyskolen i Oslo. Appli
 
 1. Klon prosjektet:
 ```bash
-git clone https://github.com/MattisCrafting/NyskolenPosten.git
+git clone https://github.com/NyskolenPosten/NyskolenPosten.git
 cd NyskolenPosten
 ```
 
@@ -39,7 +39,7 @@ For å publisere endringer til GitHub Pages:
 npm run deploy
 ```
 
-Nettstedet vil være tilgjengelig på [https://MattisCrafting.github.io/NyskolenPosten](https://MattisCrafting.github.io/NyskolenPosten)
+Nettstedet vil være tilgjengelig på [https://NyskolenPosten.github.io/NyskolenPosten](https://NyskolenPosten.github.io/NyskolenPosten)
 
 ## Teknologier brukt
 

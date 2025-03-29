@@ -2,7 +2,7 @@
   "name": "nyskolen-posten",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://MattisCrafting.github.io/NyskolenPosten",
+  "homepage": "https://NyskolenPosten.github.io/NyskolenPosten",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
@@ -48,12 +48,12 @@
   "main": "App.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MattisCrafting/NyskolenPosten.git"
+    "url": "git+https://github.com/NyskolenPosten/NyskolenPosten.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/MattisCrafting/NyskolenPosten/issues"
+    "url": "https://github.com/NyskolenPosten/NyskolenPosten/issues"
   }
 }

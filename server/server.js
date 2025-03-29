@@ -7,13 +7,15 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Konfigurer e-posttransport
+// Konfigurer nodemailer med SMTP-detaljer
 const transporter = nodemailer.createTransport({
-  service: 'gmail',  // Eller en annen e-posttjeneste
+  host: 'smtp.hostinger.com',
+  port: 465,
+  secure: true,
   auth: {
     user: 'redaksjonenyskolenposten@nionett.no',
-    pass: 'ditt-passord-her' // Bruk miljøvariabler i produksjon
-  }
+    pass: process.env.EMAIL_PASSWORD || 'dittPassord',
+  },
 });
 
 // Endepunkt for å sende verifiseringskode
@@ -24,12 +26,12 @@ app.post('/send-verification', async (req, res) => {
   const code = Math.floor(100000 + Math.random() * 900000).toString();
   
   // Emnet er likt for alle verifiseringer
-  const subject = 'Verifisering Nyskolen Posten';
+  const subject = 'Bekreft din e-post for Nyskolen Posten';
   
   // HTML-versjon av e-posten med kopieringsknapp
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border-radius: 5px; border: 1px solid #e0e0e0;">
-      <h2 style="color: #333;">Verifisering Nyskolen Posten</h2>
+      <h2 style="color: #333;">Bekreft din e-post for Nyskolen Posten</h2>
       <p>Hei 👋</p>
       <p>Du har fått en verifiserings kode. Koden er:</p>
       <div style="background-color: #f5f5f5; padding: 15px; border-radius: 4px; text-align: center; margin: 20px 0; position: relative;">
