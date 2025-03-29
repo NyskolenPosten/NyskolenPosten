@@ -14,10 +14,11 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   const [feilmelding, setFeilmelding] = useState('');
   const [redirect, setRedirect] = useState(false);
   const [artikkelID, setArtikkelID] = useState(null);
+  const [laster, setLaster] = useState(false);
 
   // Sjekk om brukeren er logget inn
   if (!innloggetBruker) {
-    return <Navigate to="/innlogging" replace />;
+    return <Navigate to="/logg-inn" replace />;
   }
 
   // Håndterer opplasting av bilde
@@ -40,7 +41,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   };
 
   // Håndterer innsending av skjema
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validering
@@ -48,6 +49,10 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
       setFeilmelding('Alle påkrevde feltene må fylles ut');
       return;
     }
+    
+    setLaster(true);
+    setFeilmelding('');
+    setMelding('');
     
     // Hvis ingress ikke er fylt ut, lager vi en automatisk basert på første setning
     const automatiskIngress = !ingress.trim() 
@@ -63,34 +68,37 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
       bilde: bildeData
     };
     
-    // Legg til artikkel
-    const id = onLeggTilArtikkel(nyArtikkel);
-    
-    if (id) {
-      // Sjekk om brukeren er admin eller redaktør i jobblisten
-      const erRedaktør = innloggetBruker.rolle === 'admin' || 
-        window.localStorage.getItem('jobbliste') && 
-        JSON.parse(window.localStorage.getItem('jobbliste')).some(
-          jobb => jobb.navn === innloggetBruker.navn && jobb.rolle === 'Redaktør'
-        );
+    try {
+      // Legg til artikkel
+      const id = await onLeggTilArtikkel(nyArtikkel);
       
-      setMelding('Artikkel opprettet! ' + (erRedaktør ? 'Artikkelen er publisert.' : 'Artikkelen venter på godkjenning.'));
-      setArtikkelID(id);
-      
-      // Tøm skjema
-      setTittel('');
-      setIngress('');
-      setInnhold('');
-      setKategori('');
-      setBildeForhåndsvisning(null);
-      setBildeData(null);
-      
-      // Redirect etter 2 sekunder
-      setTimeout(() => {
-        setRedirect(true);
-      }, 2000);
-    } else {
-      setFeilmelding('Noe gikk galt ved oppretting av artikkel');
+      if (id) {
+        // Sjekk om brukeren er admin eller redaktør
+        const erRedaktør = innloggetBruker.rolle === 'admin' || innloggetBruker.rolle === 'redaktør';
+        
+        setMelding('Artikkel opprettet! ' + (erRedaktør ? 'Artikkelen er publisert.' : 'Artikkelen venter på godkjenning.'));
+        setArtikkelID(id);
+        
+        // Tøm skjema
+        setTittel('');
+        setIngress('');
+        setInnhold('');
+        setKategori('');
+        setBildeForhåndsvisning(null);
+        setBildeData(null);
+        
+        // Redirect etter 2 sekunder
+        setTimeout(() => {
+          setRedirect(true);
+        }, 2000);
+      } else {
+        setFeilmelding('Noe gikk galt ved oppretting av artikkel');
+      }
+    } catch (error) {
+      console.error("Feil ved oppretting av artikkel:", error);
+      setFeilmelding('En feil oppstod: ' + (error.message || 'Ukjent feil'));
+    } finally {
+      setLaster(false);
     }
   };
   
@@ -116,6 +124,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
             onChange={(e) => setTittel(e.target.value)} 
             required 
             placeholder="Skriv en kort og fengende tittel"
+            disabled={laster}
           />
         </div>
         
@@ -126,6 +135,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
             value={kategori} 
             onChange={(e) => setKategori(e.target.value)} 
             required
+            disabled={laster}
           >
             <option value="">Velg kategori</option>
             {kategoriliste.map(kat => (
@@ -143,6 +153,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
             value={ingress} 
             onChange={(e) => setIngress(e.target.value)} 
             placeholder="Skriv en kort introduksjon (valgfritt - lages automatisk hvis tom)"
+            disabled={laster}
           />
         </div>
         
@@ -155,6 +166,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
             required 
             rows="10"
             placeholder="Skriv artikkelteksten her. Du kan bruke enkel formatering: **fet tekst**, *kursiv tekst*, ### overskrift"
+            disabled={laster}
           />
         </div>
         
@@ -165,12 +177,13 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
             id="bilde" 
             accept="image/*" 
             onChange={handleBildeEndring} 
+            disabled={laster}
           />
           
           {bildeForhåndsvisning && (
             <div className="bilde-forhåndsvisning">
               <img src={bildeForhåndsvisning} alt="Forhåndsvisning" />
-              <button type="button" onClick={fjernBilde} className="fjern-bilde">
+              <button type="button" onClick={fjernBilde} className="fjern-bilde" disabled={laster}>
                 Fjern bilde
               </button>
             </div>
@@ -185,18 +198,14 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
             <li><code>### Overskrift</code> for overskrifter</li>
           </ul>
           <p className="info-tekst">
-            {innloggetBruker.rolle === 'admin' || 
-              (window.localStorage.getItem('jobbliste') && 
-               JSON.parse(window.localStorage.getItem('jobbliste')).some(
-                 jobb => jobb.navn === innloggetBruker.navn && jobb.rolle === 'Redaktør'
-               ))
+            {innloggetBruker.rolle === 'admin' || innloggetBruker.rolle === 'redaktør'
               ? 'Som redaktør vil artikkelen din publiseres umiddelbart.' 
               : 'Artikkelen din må godkjennes før den publiseres.'}
           </p>
         </div>
         
-        <button type="submit" className="send-knapp">
-          Send inn artikkel
+        <button type="submit" className="send-knapp" disabled={laster}>
+          {laster ? 'Sender inn...' : 'Send inn artikkel'}
         </button>
       </form>
     </div>

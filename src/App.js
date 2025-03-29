@@ -17,7 +17,14 @@ import CacheMonitor from './components/CacheMonitor';
 import { LanguageProvider } from './utils/LanguageContext';
 import { AuthProvider } from './utils/AuthContext';
 import Profil from './components/Profil';
-import { loggUt } from './services/authService';
+import { loggUt, hentAlleBrukere } from './services/authService';
+import { 
+  leggTilArtikkel, 
+  hentAlleArtikler, 
+  slettArtikkel as slettArtikkelService,
+  oppdaterArtikkel as oppdaterArtikkelService,
+  godkjennArtikkel as godkjennArtikkelService 
+} from './services/artikkelService';
 
 function App() {
   const [innloggetBruker, setInnloggetBruker] = useState(null);
@@ -48,10 +55,15 @@ function App() {
     }
     
     // Last inn artikler
-    const lagredeArtikler = localStorage.getItem('artikler');
-    if (lagredeArtikler) {
-      setArtikler(JSON.parse(lagredeArtikler));
-    }
+    const lastArtikler = async () => {
+      const resultat = await hentAlleArtikler();
+      if (resultat.success) {
+        setArtikler(resultat.artikler);
+      } else {
+        console.error("Kunne ikke laste artikler:", resultat.error);
+      }
+    };
+    lastArtikler();
     
     // Last inn brukere
     const lagredeBrukere = localStorage.getItem('brukere');
@@ -165,6 +177,26 @@ function App() {
     };
   }, []);
   
+  // Lytter etter endringer i brukerdatabasen
+  useEffect(() => {
+    const handleStorageChange = async (e) => {
+      if (e.key === 'brukere') {
+        const result = await hentAlleBrukere();
+        if (result.success) {
+          setBrukere(result.brukere);
+        }
+      } else if (e.key === 'artikler') {
+        const resultat = await hentAlleArtikler();
+        if (resultat.success) {
+          setArtikler(resultat.artikler);
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+  
   // Lytt etter endringer i websiteSettings
   useEffect(() => {
     const handleStorageChange = (e) => {
@@ -186,46 +218,6 @@ function App() {
   const handleLogout = async () => {
     await loggUt();
     setInnloggetBruker(null);
-  };
-  
-  // Funksjon for å registrere ny bruker
-  const registrerBruker = (nyBruker) => {
-    // Sjekk om e-posten allerede er registrert
-    const eksisterendeBruker = brukere.find(b => b.epost === nyBruker.epost);
-    if (eksisterendeBruker) {
-      return { success: false, message: 'E-postadressen er allerede registrert' };
-    }
-    
-    // Sjekk om e-posten er i admin-listen
-    const erAdmin = adminEpostliste.includes(nyBruker.epost);
-    
-    // Opprett bruker-objekt
-    const brukerObjekt = {
-      ...nyBruker,
-      id: 'bruker-' + Date.now(),
-      rolle: erAdmin ? 'admin' : 'journalist',
-      godkjent: true, // Alle brukere er automatisk godkjent
-      dato: new Date().toISOString()
-    };
-    
-    // Legg til i brukerlisten
-    const oppdatertBrukere = [...brukere, brukerObjekt];
-    setBrukere(oppdatertBrukere);
-    localStorage.setItem('brukere', JSON.stringify(oppdatertBrukere));
-    
-    // Legg til i jobblisten
-    const nyJobblisteOppføring = {
-      id: 'jobb-' + Date.now(),
-      navn: brukerObjekt.navn,
-      rolle: erAdmin ? 'Redaktør' : 'Journalist',
-      dato: new Date().toISOString()
-    };
-    
-    const oppdatertJobbliste = [...jobbliste, nyJobblisteOppføring];
-    setJobbliste(oppdatertJobbliste);
-    localStorage.setItem('jobbliste', JSON.stringify(oppdatertJobbliste));
-    
-    return { success: true, message: 'Bruker registrert' };
   };
   
   // Funksjon for å oppdatere bruker
@@ -271,35 +263,112 @@ function App() {
   };
   
   // Funksjon for å legge til ny artikkel
-  const handleNyArtikkel = (nyArtikkel) => {
-    const oppdatertArtikler = [...artikler, nyArtikkel];
-    setArtikler(oppdatertArtikler);
-    localStorage.setItem('artikler', JSON.stringify(oppdatertArtikler));
+  const handleNyArtikkel = async (artikkelData) => {
+    if (!innloggetBruker) {
+      console.error("Bruker må være logget inn for å opprette artikkel");
+      return null;
+    }
+    
+    // Legg til forfatterinformasjon
+    const kompletArtikkelData = {
+      ...artikkelData,
+      forfatterID: innloggetBruker.id,
+      forfatterNavn: innloggetBruker.navn,
+      // Hvis brukeren er admin eller redaktør, godkjenn artikkelen automatisk
+      godkjent: innloggetBruker.rolle === 'admin' || innloggetBruker.rolle === 'redaktør'
+    };
+    
+    try {
+      // Bruk artikkelService for å legge til artikkelen
+      const resultat = await leggTilArtikkel(kompletArtikkelData, artikkelData.bilde);
+      
+      if (resultat.success) {
+        // Oppdater artikler-state
+        const oppdatertArtikkelListe = await hentAlleArtikler();
+        if (oppdatertArtikkelListe.success) {
+          setArtikler(oppdatertArtikkelListe.artikler);
+        }
+        
+        return resultat.artikkelID;
+      } else {
+        console.error("Kunne ikke legge til artikkel:", resultat.error);
+        return null;
+      }
+    } catch (error) {
+      console.error("Feil ved å legge til artikkel:", error);
+      return null;
+    }
   };
   
   // Funksjon for å slette artikkel
-  const handleSlettArtikkel = (artikkelId) => {
-    const oppdatertArtikler = artikler.filter(artikkel => artikkel.id !== artikkelId);
-    setArtikler(oppdatertArtikler);
-    localStorage.setItem('artikler', JSON.stringify(oppdatertArtikler));
-  };
-  
-  // Funksjon for å redigere artikkel
-  const handleRedigerArtikkel = (artikkelId, oppdatertArtikkel) => {
-    const oppdatertArtikler = artikler.map(artikkel => 
-      artikkel.id === artikkelId ? { ...artikkel, ...oppdatertArtikkel } : artikkel
-    );
-    setArtikler(oppdatertArtikler);
-    localStorage.setItem('artikler', JSON.stringify(oppdatertArtikler));
+  const handleSlettArtikkel = async (artikkelID) => {
+    try {
+      const resultat = await slettArtikkelService(artikkelID);
+      
+      if (resultat.success) {
+        // Oppdater artikkellistene
+        const oppdatertArtikkelListe = await hentAlleArtikler();
+        if (oppdatertArtikkelListe.success) {
+          setArtikler(oppdatertArtikkelListe.artikler);
+        }
+        return true;
+      } else {
+        console.error("Kunne ikke slette artikkel:", resultat.error);
+        return false;
+      }
+    } catch (error) {
+      console.error("Feil ved sletting av artikkel:", error);
+      return false;
+    }
   };
   
   // Funksjon for å oppdatere artikkel
-  const handleOppdaterArtikkel = (oppdatertArtikkel) => {
-    const oppdatertArtikler = artikler.map(artikkel => 
-      artikkel.id === oppdatertArtikkel.id ? oppdatertArtikkel : artikkel
-    );
-    setArtikler(oppdatertArtikler);
-    localStorage.setItem('artikler', JSON.stringify(oppdatertArtikler));
+  const handleOppdaterArtikkel = async (artikkelID, oppdatertData, nyttBilde = null) => {
+    try {
+      const resultat = await oppdaterArtikkelService(artikkelID, oppdatertData, nyttBilde);
+      
+      if (resultat.success) {
+        // Oppdater artikkellistene
+        const oppdatertArtikkelListe = await hentAlleArtikler();
+        if (oppdatertArtikkelListe.success) {
+          setArtikler(oppdatertArtikkelListe.artikler);
+        }
+        return true;
+      } else {
+        console.error("Kunne ikke oppdatere artikkel:", resultat.error);
+        return false;
+      }
+    } catch (error) {
+      console.error("Feil ved oppdatering av artikkel:", error);
+      return false;
+    }
+  };
+  
+  // Funksjon for å godkjenne artikkel
+  const handleGodkjennArtikkel = async (artikkelID) => {
+    try {
+      const resultat = await godkjennArtikkelService(artikkelID);
+      
+      if (resultat.success) {
+        // Oppdater artikkellistene
+        const oppdatertArtikkelListe = await hentAlleArtikler();
+        if (oppdatertArtikkelListe.success) {
+          setArtikler(oppdatertArtikkelListe.artikler);
+        }
+        return true;
+      } else {
+        console.error("Kunne ikke godkjenne artikkel:", resultat.error);
+        return false;
+      }
+    } catch (error) {
+      console.error("Feil ved godkjenning av artikkel:", error);
+      return false;
+    }
+  };
+  
+  // Funksjon for å redigere artikkel
+  const handleRedigerArtikkel = (artikkelID, oppdatertArtikkel) => {
+    return handleOppdaterArtikkel(artikkelID, oppdatertArtikkel);
   };
   
   // Sjekk om nettsiden er i WEBSITE LOCKDOWN modus
@@ -340,7 +409,7 @@ function App() {
               )}
               
               <Routes>
-                <Route path="/" element={<Hjem artikler={artikler} />} />
+                <Route path="/" element={<Hjem artikler={artikler.filter(a => a.godkjent)} />} />
                 <Route path="/om-oss" element={<OmOss />} />
                 <Route 
                   path="/artikkel/:id" 
@@ -391,7 +460,7 @@ function App() {
                       element={
                         <MineArtikler 
                           innloggetBruker={innloggetBruker} 
-                          artikler={artikler} 
+                          artikler={artikler.filter(a => a.forfatterID === innloggetBruker?.id)} 
                           onSlettArtikkel={handleSlettArtikkel} 
                           onOppdaterArtikkel={handleOppdaterArtikkel} 
                         />
@@ -410,7 +479,7 @@ function App() {
                           onUpdateArticle={handleOppdaterArtikkel}
                           onUpdateUser={oppdaterBruker}
                           onDeleteUser={slettBruker}
-                          onApproveArticle={godkjennBruker}
+                          onApproveArticle={handleGodkjennArtikkel}
                           onUpdateJobbliste={setJobbliste}
                           onUpdateKategoriliste={setKategoriliste}
                         />

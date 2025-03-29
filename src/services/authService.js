@@ -68,16 +68,6 @@ export const registrerBruker = async (email, password, navn, klasse) => {
     
     // Opprett ny bruker
     const userId = genererID();
-    const nyBruker = {
-      uid: userId,
-      email: email,
-      password: password, // I en ekte app ville dette vært kryptert
-      displayName: navn
-    };
-    
-    // Lagre bruker i "auth"
-    auth.currentUser = nyBruker;
-    localStorage.setItem('currentUser', JSON.stringify(nyBruker));
     
     // Sjekk om e-posten har spesiell rolle
     let rolle = 'skribent';
@@ -90,19 +80,47 @@ export const registrerBruker = async (email, password, navn, klasse) => {
       id: userId,
       navn: navn,
       email: email,
+      password: password, // Vi legger til passordet her
       klasse: klasse,
       rolle: rolle,
-      godkjent: true, // Spesielle brukere er automatisk godkjent
+      godkjent: true, // Brukere er automatisk godkjent
       opprettet: serverTimestamp()
     };
     
     brukere.push(brukerInfo);
     localStorage.setItem('brukere', JSON.stringify(brukere));
     
+    // Opprett bruker-objekt for auth
+    const nyBruker = {
+      uid: userId,
+      email: email,
+      displayName: navn
+    };
+    
+    // Lagre bruker i "auth"
+    auth.currentUser = nyBruker;
+    localStorage.setItem('currentUser', JSON.stringify(nyBruker));
+    
+    // Opprett jobbliste oppføring for nye brukere
+    const jobbliste = JSON.parse(localStorage.getItem('jobbliste')) || [];
+    const jobbTittel = rolle === 'admin' ? 'Administrator' : 
+                      rolle === 'redaktør' ? 'Redaktør' :
+                      rolle === 'teknisk_leder' ? 'Teknisk leder' : 'Skribent';
+                      
+    const nyJobb = {
+      id: 'jobb-' + Date.now(),
+      navn: navn,
+      rolle: jobbTittel,
+      dato: serverTimestamp()
+    };
+    
+    jobbliste.push(nyJobb);
+    localStorage.setItem('jobbliste', JSON.stringify(jobbliste));
+    
     // Invalider brukercache
     invalidateBrukerCache();
     
-    return { success: true, userId: userId };
+    return { success: true, userId: userId, bruker: brukerInfo };
   } catch (error) {
     return { success: false, error: error.message || 'Registrering feilet' };
   }
@@ -118,11 +136,8 @@ export const loggInn = async (email, password) => {
       return { success: false, error: 'Brukeren finnes ikke' };
     }
     
-    // Sjekk passord (i en ekte app ville dette vært kryptert)
-    const authBrukere = JSON.parse(localStorage.getItem('brukere')) || [];
-    const authBruker = authBrukere.find(b => b.email === email);
-    
-    if (!authBruker || authBruker.password !== password) {
+    // Sjekk passord
+    if (bruker.password !== password) {
       return { success: false, error: 'Feil passord' };
     }
     
@@ -149,26 +164,12 @@ export const loggInn = async (email, password) => {
     const cacheKey = `bruker:info:${bruker.id}`;
     cacheManager.set(cacheKey, { 
       success: true, 
-      bruker: {
-        id: bruker.id,
-        navn: bruker.navn,
-        email: bruker.email,
-        rolle: bruker.rolle,
-        godkjent: bruker.godkjent,
-        klasse: bruker.klasse
-      }
+      bruker: bruker
     }, CACHE_TTL.USER_INFO);
     
     return { 
       success: true, 
-      bruker: {
-        id: bruker.id,
-        navn: bruker.navn,
-        email: bruker.email,
-        rolle: bruker.rolle,
-        godkjent: bruker.godkjent,
-        klasse: bruker.klasse
-      }
+      bruker: bruker
     };
   } catch (error) {
     return { success: false, error: error.message || 'Innlogging feilet' };

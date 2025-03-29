@@ -72,9 +72,22 @@ function Registrering() {
         return;
       }
       
+      // Viser brukeren at registreringen var vellykket
       setSuksessmelding(translations.registration.registrationSuccess);
       setSteg(2); // Gå til fullført-skjermen
+
+      // Viser detaljert informasjon om den nye brukeren (for debug-formål)
+      console.log('Registrert bruker:', result.bruker);
       
+      // Lagre i localStorage for å sikre at brukeren er tilgjengelig i hele appen
+      if (result.bruker) {
+        localStorage.setItem('currentUser', JSON.stringify({
+          uid: result.bruker.id,
+          email: result.bruker.email,
+          displayName: result.bruker.navn
+        }));
+      }
+
     } catch (error) {
       setFeilmelding(error.message || translations.registration.registrationFailed);
     } finally {
