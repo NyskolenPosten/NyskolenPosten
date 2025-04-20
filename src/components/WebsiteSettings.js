@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { websocketClient } from '../utils/websocket';
-import { useAuth } from '../contexts/AuthContext';
+import { AuthContext } from '../contexts/AuthContext';
+import './WebsiteSettings.css';
 
 const WebsiteSettings = () => {
   const [isLocked, setIsLocked] = useState(false);
   const [lockMessage, setLockMessage] = useState('');
-  const { user } = useAuth();
+  const { user } = React.useContext(AuthContext);
 
   useEffect(() => {
     // Koble til websocket

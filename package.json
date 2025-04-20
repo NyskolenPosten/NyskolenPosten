@@ -15,8 +15,9 @@
     "react-helmet-async": "^2.0.5",
     "react-markdown": "^8.0.5",
     "react-router-dom": "^6.8.1",
-    "react-scripts": "^5.0.1",
-    "web-vitals": "^2.1.4"
+    "react-scripts": "^3.0.1",
+    "web-vitals": "^2.1.4",
+    "ws": "^8.18.1"
   },
   "scripts": {
     "start": "react-scripts start",
