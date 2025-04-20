@@ -1,6 +1,7 @@
 // App.js - Hovedkomponenten for Nyskolen Posten
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import './App.css';
 import Hjem from './components/Hjem';
 import OmOss from './components/OmOss';
@@ -467,6 +468,15 @@ function App() {
       <AuthProvider>
         <Router basename="/NyskolenPosten">
           <div className="app-container">
+            <Helmet>
+              <title>Nyskolen Posten</title>
+              <meta name="description" content="Nyskolen Posten - Skoleavisen for Nyskolen i Oslo" />
+              <meta name="keywords" content="skoleavis, nyskolen, oslo, elever, artikler" />
+              <meta property="og:title" content="Nyskolen Posten" />
+              <meta property="og:description" content="Skoleavisen for Nyskolen i Oslo" />
+              <meta property="og:type" content="website" />
+            </Helmet>
+            
             {websiteSettings.note && (
               <div className="site-notification">
                 <div className="note-content">{websiteSettings.note}</div>

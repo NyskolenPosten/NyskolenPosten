@@ -2,9 +2,35 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const cors = require('cors');
 const cacheManager = require('./cache');
+const WebSocket = require('ws');
 
 const prisma = new PrismaClient();
 const app = express();
+const port = process.env.PORT || 3001;
+
+// Opprett WebSocket server
+const wss = new WebSocket.Server({ port: 3002 });
+
+// Lagre alle tilkoblede klienter
+const clients = new Set();
+
+wss.on('connection', (ws) => {
+  clients.add(ws);
+  
+  ws.on('close', () => {
+    clients.delete(ws);
+  });
+});
+
+// Funksjon for å sende oppdateringer til alle tilkoblede klienter
+const broadcastUpdate = (type, data) => {
+  const message = JSON.stringify({ type, data });
+  clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+};
 
 app.use(express.json());
 app.use(cors());
@@ -121,22 +147,22 @@ app.get('/api/global-status', async (req, res) => {
 
 // Oppdater global status
 app.put('/api/global-status', async (req, res) => {
-  const { isLocked, lockMessage, lastUpdatedBy } = req.body;
-  
   try {
     const status = await cacheManager.updateGlobalStatus({
-      isLocked,
-      lockMessage,
-      lastUpdatedBy
+      isLocked: req.body.isLocked,
+      lockMessage: req.body.lockMessage,
+      lastUpdatedBy: req.body.userId
     });
-
+    
+    // Send oppdatering til alle tilkoblede klienter
+    broadcastUpdate('globalStatus', status);
+    
     res.json({
-      version: cacheManager.getGlobalStatusVersion(),
-      status: status
+      status,
+      version: cacheManager.getGlobalStatusVersion()
     });
   } catch (error) {
-    console.error('Feil ved oppdatering av global status:', error);
-    res.status(500).json({ error: 'Kunne ikke oppdatere global status' });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -247,7 +273,6 @@ app.post('/api/cache/invalidate', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Server kjører på port ${PORT}`);
+app.listen(port, () => {
+  console.log(`Server kjører på port ${port}`);
 }); 

@@ -118,13 +118,22 @@
 }
 
 .ingress {
-  color: #555;
-  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
   line-height: 1.5;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  display: -moz-box;
+  display: box;
   -webkit-box-orient: vertical;
+  -moz-box-orient: vertical;
+  box-orient: vertical;
+  -webkit-line-clamp: 2;
+  -moz-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
+  margin-bottom: var(--spacing-md);
+  /* Fallback for nettlesere som ikke støtter line-clamp */
+  max-height: 3em; /* line-height (1.5) * antall linjer (2) */
 }
 
 .artikkel-handlinger {
