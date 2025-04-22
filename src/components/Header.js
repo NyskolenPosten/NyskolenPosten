@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useLanguage } from '../utils/LanguageContext';
-import logo from '../assets/images/logo.svg';
 import './Header.css';
 
 function Header({ innloggetBruker, onLogout, isLockdown }) {
@@ -16,17 +15,12 @@ function Header({ innloggetBruker, onLogout, isLockdown }) {
   
   return (
     <header className="header">
-      <div className="header-container">
-        <Link to="/" className="logo">
-          <img src={logo} alt="Nyskolen Posten Logo" className="header-logo" />
+      <div className="logo-container">
+        <Link to="/" className="logo-link">
+          <h1>Nyskolen Posten</h1>
         </Link>
-        <div className="logo-container">
-          <Link to="/" className="logo-link">
-            <h1>Nyskolen Posten</h1>
-          </Link>
-          <p className="slogan">{footer.copyright}</p>
-          {isLockdown && <span className="lockdown-indicator">LOCKDOWN MODUS</span>}
-        </div>
+        <p className="slogan">{footer.copyright}</p>
+        {isLockdown && <span className="lockdown-indicator">LOCKDOWN MODUS</span>}
       </div>
       
       <nav className="navigation">
