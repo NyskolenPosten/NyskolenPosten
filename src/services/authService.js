@@ -113,17 +113,89 @@ export const loggUt = async () => {
   }
 };
 
+// Logg inn eksisterende bruker
 export const loggInn = async (email, password) => {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (error) throw error;
-    return data;
+    
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    
+    if (!data.user) {
+      return { success: false, error: 'Ingen bruker funnet' };
+    }
+    
+    // Hent brukerens metadata fra Supabase
+    const { data: userData, error: userError } = await supabase
+      .from('brukere')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+      
+    // Hvis brukeren ikke finnes i brukere-tabellen, opprett en ny bruker
+    if (userError && userError.code === 'PGRST116') {
+      const { error: insertError } = await supabase
+        .from('brukere')
+        .insert([
+          {
+            id: data.user.id,
+            navn: data.user.email.split('@')[0],
+            rolle: 'bruker',
+            godkjent: false
+          }
+        ]);
+        
+      if (insertError) {
+        console.error('Error creating user profile:', insertError);
+        return { success: false, error: 'Kunne ikke opprette brukerprofil' };
+      }
+      
+      // Hent den nylig opprettede brukeren
+      const { data: newUserData } = await supabase
+        .from('brukere')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+        
+      return {
+        success: true,
+        bruker: {
+          id: data.user.id,
+          email: data.user.email,
+          navn: newUserData.navn,
+          rolle: newUserData.rolle,
+          godkjent: newUserData.godkjent,
+          klasse: newUserData.klasse
+        }
+      };
+    }
+    
+    if (userError) {
+      console.error('Error fetching user data:', userError);
+      return { success: false, error: 'Kunne ikke hente brukerdata' };
+    }
+    
+    // Kombiner auth-data med brukerdata
+    const bruker = {
+      id: data.user.id,
+      email: data.user.email,
+      navn: userData?.navn || data.user.email.split('@')[0],
+      rolle: userData?.rolle || 'bruker',
+      godkjent: userData?.godkjent || false,
+      klasse: userData?.klasse || null
+    };
+    
+    return { 
+      success: true, 
+      bruker 
+    };
   } catch (error) {
-    console.error('Error logging in:', error.message);
-    throw error;
+    console.error('Error logging in:', error);
+    return { success: false, error: error.message || 'Innlogging feilet' };
   }
 };
 

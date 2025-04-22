@@ -43,7 +43,7 @@ function Innlogging({ onLogin }) {
       const result = await loggInn(formData.email, formData.password);
       
       if (!result.success) {
-        setFeilmelding(result.error);
+        setFeilmelding(result.error || translations.login.loginFailed);
         setLoading(false);
         return;
       }
@@ -61,7 +61,7 @@ function Innlogging({ onLogin }) {
       }, 1000);
       
     } catch (error) {
-      setFeilmelding(error.message || 'Innlogging feilet. Prøv igjen.');
+      setFeilmelding(error.message || translations.login.loginFailed);
     } finally {
       setLoading(false);
     }

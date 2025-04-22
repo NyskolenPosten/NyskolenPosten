@@ -1,0 +1,102 @@
+.login {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.login h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.form-gruppe {
+  margin-bottom: 1.5rem;
+}
+
+.form-gruppe label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-gruppe input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-gruppe input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.login-knapp {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.login-knapp:hover {
+  background-color: #3a7bc8;
+}
+
+.feilmelding {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.melding-boks {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.register-link a {
+  color: #4a90e2;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
+}
+
+.info-boks {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.info-boks p {
+  margin: 0.5rem 0;
+} 
