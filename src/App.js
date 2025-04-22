@@ -295,8 +295,10 @@ function App() {
       ...artikkelData,
       forfatterID: innloggetBruker.id,
       forfatterNavn: innloggetBruker.navn,
-      // Hvis brukeren er admin eller redaktør, godkjenn artikkelen automatisk
-      godkjent: innloggetBruker.rolle === 'admin' || innloggetBruker.rolle === 'redaktør'
+      // Hvis brukeren er admin, redaktør eller teknisk leder, godkjenn artikkelen automatisk
+      godkjent: innloggetBruker.rolle === 'admin' || 
+                innloggetBruker.rolle === 'redaktør' || 
+                innloggetBruker.rolle === 'teknisk_leder'
     };
     
     try {
