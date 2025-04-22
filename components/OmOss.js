@@ -29,8 +29,8 @@ function OmOss() {
         
         <h3>Bli med!</h3>
         <p>
-          Alle elever på Nyskolen kan bidra med artikler, fotografier, tegninger, 
-          intervjuer, dikt, anmeldelser og mye mer. Logg inn og klikk på "Skriv ny artikkel" 
+          Alle elever på Nyskolen kan bidra med artikler, fotografier, 
+          intervjuer, anmeldelser og mye mer. Logg inn og klikk på "Skriv ny artikkel" 
           for å sende inn ditt bidrag!
         </p>
         

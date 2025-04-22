@@ -4,32 +4,28 @@
 .artikkel-visning {
   composes: page-container;
   animation: fadeIn 0.5s var(--transition-ease);
-  text-align: center;
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 40px;
 }
 
 .artikkel {
   composes: card;
   margin-bottom: var(--spacing-xl);
+  padding: 40px;
 }
 
 .artikkel-header {
-  text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .artikkel-tittel {
   font-family: 'Playfair Display', serif;
-  font-size: 2.8rem;
+  font-size: 3.2rem;
   margin-bottom: var(--spacing-md);
   line-height: 1.2;
   color: var(--text-primary);
   position: relative;
-  text-align: center;
-  margin: 0 auto;
-  max-width: 90%;
 }
 
 .artikkel-tittel::after {
@@ -38,7 +34,7 @@
   left: 0;
   bottom: -5px;
   height: 3px;
-  width: 100px;
+  width: 120px;
   background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
   border-radius: 3px;
 }
@@ -50,8 +46,7 @@
   align-items: center;
   margin-bottom: var(--spacing-lg);
   color: var(--text-secondary);
-  text-align: center;
-  margin: 20px auto;
+  font-size: 1.1rem;
 }
 
 .artikkel-forfatter {
@@ -69,22 +64,22 @@
   composes: status-badge;
   background: var(--primary-color);
   color: var(--text-light);
+  font-size: 1.1rem;
+  padding: 8px 16px;
 }
 
 .artikkel-bilde {
-  text-align: center;
-  margin: 20px auto;
-  max-width: 100%;
+  margin: var(--spacing-xl) 0;
   border-radius: var(--border-radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-lg);
 }
 
 .artikkel-bilde img {
-  max-width: 100%;
+  width: 100%;
   height: auto;
-  display: block;
-  margin: 0 auto;
+  max-height: 800px;
+  object-fit: cover;
   transition: transform var(--transition-speed) var(--transition-ease);
 }
 
@@ -93,26 +88,23 @@
 }
 
 .artikkel-ingress {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   line-height: 1.6;
   color: var(--text-secondary);
   margin: var(--spacing-xl) 0;
   padding-left: var(--spacing-md);
-  border-left: 3px solid var(--primary-color);
+  border-left: 4px solid var(--primary-color);
   font-family: 'Playfair Display', serif;
 }
 
 .artikkel-innhold {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   line-height: 1.8;
   color: var(--text-primary);
-  text-align: center;
-  margin: 0 auto;
-  max-width: 90%;
 }
 
 .artikkel-innhold h3 {
-  font-size: 1.7rem;
+  font-size: 2rem;
   margin: var(--spacing-xl) 0 var(--spacing-md);
   color: var(--text-primary);
 }

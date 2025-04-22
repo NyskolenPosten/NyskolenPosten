@@ -1,64 +1,99 @@
 .om-oss {
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 2rem;
 }
 
 .om-oss h2 {
   font-family: 'Playfair Display', serif;
-  font-size: 2.2rem;
-  margin-bottom: 30px;
-  color: var(--text-color);
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: var(--primary-color);
   text-align: center;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 1rem;
 }
 
 .om-oss-seksjon {
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 30px;
+  padding: 2rem;
+  margin-bottom: 2rem;
   line-height: 1.6;
 }
 
 .om-oss-seksjon h3 {
   font-family: 'Playfair Display', serif;
-  font-size: 1.5rem;
-  margin-top: 25px;
-  margin-bottom: 15px;
+  font-size: 1.8rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
   color: var(--primary-color);
 }
 
-.om-oss-seksjon h3:first-child {
-  margin-top: 0;
-}
-
 .om-oss-seksjon p {
-  margin-bottom: 20px;
-  font-size: 1.05rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
   color: #333;
 }
 
-.om-oss-seksjon ul {
-  margin-bottom: 25px;
-  padding-left: 20px;
+.medarbeider-tabell {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
 }
 
-.om-oss-seksjon li {
-  margin-bottom: 10px;
-  font-size: 1.05rem;
-  color: #333;
+.medarbeider-tabell th,
+.medarbeider-tabell td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.medarbeider-tabell th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.bli-med-knapper {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.bli-med-knapp {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary-color);
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.bli-med-knapp:hover {
+  background-color: var(--primary-color-dark);
 }
 
 @media (max-width: 768px) {
+  .om-oss {
+    padding: 1rem;
+  }
+  
   .om-oss h2 {
-    font-size: 1.8rem;
+    font-size: 2rem;
   }
   
   .om-oss-seksjon {
-    padding: 20px;
+    padding: 1.5rem;
   }
   
-  .om-oss-seksjon h3 {
-    font-size: 1.3rem;
+  .bli-med-knapper {
+    flex-direction: column;
+  }
+  
+  .bli-med-knapp {
+    text-align: center;
   }
 } 

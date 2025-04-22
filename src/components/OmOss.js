@@ -1,5 +1,6 @@
 // components/OmOss.js
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './OmOss.css';
 
 function OmOss({ jobbliste = [] }) {
@@ -33,8 +34,7 @@ function OmOss({ jobbliste = [] }) {
           <table className="medarbeider-tabell">
             <thead>
               <tr>
-                <th>Navn</th>
-                <th>Rolle</th>
+                <th>Navn Rolle</th>
               </tr>
             </thead>
             <tbody>
@@ -61,8 +61,8 @@ function OmOss({ jobbliste = [] }) {
           og sende den inn for vurdering.
         </p>
         <div className="bli-med-knapper">
-          <a href="/registrering" className="bli-med-knapp">Registrer deg</a>
-          <a href="/ny-artikkel" className="bli-med-knapp">Skriv en artikkel</a>
+          <Link to="/registrer" className="bli-med-knapp">Registrer deg</Link>
+          <Link to="/ny-artikkel" className="bli-med-knapp">Skriv en artikkel</Link>
         </div>
       </section>
       
