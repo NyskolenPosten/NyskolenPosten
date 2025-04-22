@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="4096" height="4096" viewBox="0 0 4096 4096" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bakgrunn -->
+  <rect width="4096" height="4096" fill="#f8f9fa"/>
+  
+  <!-- Moderne avis-design -->
+  <g transform="translate(1024, 1024)">
+    <!-- Hovedform -->
+    <path d="M2048,0 L2048,2048 L0,2048 L0,0 Z" fill="none" stroke="#1a73e8" stroke-width="64"/>
+    
+    <!-- Tekstlinjer (moderne avis-look) -->
+    <g fill="#1a73e8">
+      <rect x="256" y="256" width="1536" height="32" rx="16"/>
+      <rect x="256" y="384" width="1280" height="32" rx="16"/>
+      <rect x="256" y="512" width="1024" height="32" rx="16"/>
+      <rect x="256" y="640" width="768" height="32" rx="16"/>
+    </g>
+    
+    <!-- Skole-elementer -->
+    <g transform="translate(1024, 1024)">
+      <!-- Bøker -->
+      <path d="M-256,-128 L-128,-128 L-128,128 L-256,128 Z" fill="#4285f4"/>
+      <path d="M0,-128 L128,-128 L128,128 L0,128 Z" fill="#34a853"/>
+      <path d="M128,-128 L256,-128 L256,128 L128,128 Z" fill="#fbbc05"/>
+      
+      <!-- Penn -->
+      <path d="M-384,-256 L-256,-256 L-256,-128 L-384,-128 Z" fill="#ea4335" transform="rotate(45)"/>
+    </g>
+    
+    <!-- Norsk element (Nordisk kors) -->
+    <g transform="translate(1024, 1024)">
+      <rect x="-128" y="-32" width="256" height="64" fill="#1a73e8"/>
+      <rect x="-32" y="-128" width="64" height="256" fill="#1a73e8"/>
+    </g>
+  </g>
+  
+  <!-- Tekst: Nyskolen Posten -->
+  <g transform="translate(2048, 3072)">
+    <text x="0" y="0" 
+          font-family="Arial, sans-serif" 
+          font-size="256" 
+          font-weight="bold" 
+          text-anchor="middle" 
+          fill="#1a73e8">
+      Nyskolen Posten
+    </text>
+  </g>
+</svg> 
