@@ -710,4 +710,68 @@ input:focus, textarea:focus, select:focus {
   border: 1px solid #f5c6cb;
   border-radius: 4px;
   text-align: center;
+}
+
+.App {
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+  text-align: center;
+}
+
+.App-content {
+  flex: 1;
+  padding: 20px;
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.article-container {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.article-title {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.article-content {
+  text-align: center;
+  line-height: 1.6;
+}
+
+.form-container {
+  text-align: center;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.form-group {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.form-control {
+  text-align: center;
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0;
+}
+
+.button {
+  text-align: center;
+  margin: 10px auto;
+  display: block;
 } 
