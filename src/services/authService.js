@@ -88,4 +88,55 @@ export const getUserProfile = async (userId) => {
     console.error('Error getting user profile:', error.message);
     throw error;
   }
+};
+
+export const hentAlleBrukere = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*');
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error getting all users:', error.message);
+    throw error;
+  }
+};
+
+export const loggUt = async () => {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error logging out:', error.message);
+    throw error;
+  }
+};
+
+export const loggInn = async (email, password) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error logging in:', error.message);
+    throw error;
+  }
+};
+
+export const registrerBruker = async (email, password) => {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error registering user:', error.message);
+    throw error;
+  }
 }; 
