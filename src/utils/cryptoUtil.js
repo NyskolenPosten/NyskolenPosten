@@ -6,7 +6,7 @@
  */
 
 // En hemmelig nøkkel for kryptering (i produksjon bør dette være en miljøvariabel)
-const CRYPTO_KEY = 'NyskolenPosten2023_HEMMELIG_NØKKEL';
+const CRYPTO_KEY = 'NyskolenPosten2025_HEMMELIG_NØKKEL';
 
 /**
  * Krypterer en streng

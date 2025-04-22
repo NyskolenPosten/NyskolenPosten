@@ -12,7 +12,7 @@ function OmOss({ jobbliste = [] }) {
         <h3>Vår historie</h3>
         <p>
           Nyskolen Posten er en elevdrevet nettavis for Nyskolen i Oslo. 
-          Avisen ble startet i 2023 som et prosjekt for å gi elevene en stemme 
+          Avisen ble startet i 2025 som et prosjekt for å gi elevene en stemme 
           og en plattform for å dele nyheter, meninger og kreativt innhold.
         </p>
         <p>
