@@ -1,144 +1,33 @@
-# Nyskolen Posten
+## Kjøring med Docker
 
-Nyskolen Posten er en nettbasert skoleavis for elever på Nyskolen i Oslo. Applikasjonen er bygget med React og bruker lokal lagring (localStorage) for å lagre artikler og brukerinformasjon.
+Prosjektet kan enkelt kjøres i en isolert container med Docker og Docker Compose. Dette gir en forutsigbar og enkel oppstart, uavhengig av lokalt utviklingsmiljø.
 
-## Funksjoner
+### Forutsetninger
+- Docker og Docker Compose må være installert på maskinen din.
+- Node.js-versjon 22.13.1 brukes i Dockerfile (ingen Node-installasjon kreves lokalt).
 
-- Lese artikler publisert av elever
-- Registrere seg som bruker
-- Logge inn som registrert bruker
-- Skrive og sende inn artikler
-- Administrere egne artikler
-- Administratorpanel for godkjenning av artikler og brukere
+### Bygg og start applikasjonen
 
-## Installasjon og kjøring lokalt
-
-1. Klon prosjektet:
-```bash
-git clone https://github.com/NyskolenPosten/NyskolenPosten.git
-cd NyskolenPosten
-```
-
-2. Installer avhengigheter:
-```bash
-npm install
-```
-
-3. Start utviklingsserveren:
-```bash
-npm start
-```
-## Deployering til GitHub Pages
-
-For å publisere endringer til GitHub Pages:
-
-1. Gjør endringer i koden
-2. Commit og push endringene til GitHub
-3. Kjør deploy-kommandoen:
-```bash
-npm run deploy
-```
-
-Nettstedet vil være tilgjengelig på [https://NyskolenPosten.github.io/NyskolenPosten](https://NyskolenPosten.github.io/NyskolenPosten)
-
-## Teknologier brukt
-
-- React
-- React Router
-- React Markdown
-- GitHub Pages for hosting
-
-## Kontakt
-
-For spørsmål eller tilbakemeldinger, kontakt redaksjonen på redaksjonenyskolenposten@nionett.no
-
-## Bruk
-
-### Som leser
-- Bla gjennom publiserte artikler på forsiden
-- Klikk på en artikkel for å lese hele innholdet
-- Les om avisen på "Om oss"-siden
-
-### Som skribent
-1. Registrer deg med e-post, passord, navn og klasse
-2. Vent på godkjenning fra administrator
-3. Logg inn med dine brukerdetaljer
-4. Skriv nye artikler ved å klikke på "Ny artikkel"
-5. Administrer dine artikler i "Mine artikler"-seksjonen
-
-### Som administrator
-1. Logg inn med administratorkonto
-2. Gå til "Admin"-panelet
-3. Godkjenn eller avvis nye artikler
-4. Administrer brukere (godkjenn nye brukere, endre roller, slett brukere)
-
-## Lokal lagring
-
-Denne applikasjonen bruker nettleserens localStorage for å lagre data. Dette betyr at:
-- All data lagres lokalt i nettleseren din
-- Data vil være tilgjengelig selv etter at du lukker nettleseren, men kun på samme enhet
-- Hvis du tømmer nettleserdata eller bruker privat/inkognito-modus, vil dataene forsvinne
-
-
-## Utvikling
-
-Prosjektet er strukturert som følger:
-
-- `src/` - Kildekode for React-applikasjonen
-  - `components/` - React-komponenter
-  - `services/` - Tjenester for databehandling
-- `public/` - Statiske filer
-
-## Lisens
-
-Dette prosjektet er laget for utdanningsformål ved Nyskolen i Oslo.
-
-## Hvordan commite endringer
-
-For å commite endringer til prosjektet:
-
-1. Sjekk status for å se hvilke filer som er endret:
+1. Bygg og start containeren med Docker Compose:
    ```bash
-   git status
+   docker compose up --build
    ```
+   Dette bygger og starter applikasjonen i en container med alle nødvendige avhengigheter.
 
-2. Legg til endringene dine til staging:
-   ```bash
-   git add .
-   ```
+2. Applikasjonen vil være tilgjengelig på følgende porter:
+   - http://localhost:3001
+   - http://localhost:3002
 
-3. Commit endringene med en beskrivende melding:
-   ```bash
-   git commit -m "Beskrivelse av endringene"
-   ```
+### Miljøvariabler
+- Standardoppsettet bruker ikke eksterne miljøvariabler, men du kan legge til en `.env`-fil i prosjektroten og fjerne kommentaren på `env_file` i `docker-compose.yml` hvis du ønsker å overstyre konfigurasjon (f.eks. for produksjon).
+- **NB:** Hemmelige nøkler og sensitive data bør ikke legges inn i Docker-image, men settes som miljøvariabler ved oppstart.
 
-4. Push endringene til GitHub:
-   ```bash
-   git push origin main
-   ```
+### Databasen
+- Applikasjonen bruker som standard en lokal SQLite-database (`prisma/dev.db`) som lagres i containeren.
+- Hvis du ønsker å bruke en ekstern database i produksjon, må du oppdatere databasekonfigurasjonen og eventuelt legge til en database-tjeneste i `docker-compose.yml`.
 
-## Prosjektstatus
+### Spesielle hensyn
+- Containeren kjører som en ikke-root bruker for økt sikkerhet.
+- Kun nødvendige filer kopieres inn i produksjonscontaineren for å holde imaget slankt.
 
-Denne seksjonen blir oppdatert regelmessig for å informere om prosjektets status.
-
-### Nåværende status (oppdatert 14. oktober 2023)
-- ✅ Grunnfunksjonalitet for visning av artikler
-- ✅ Brukerregistrering og innlogging
-- ✅ Skriving og publisering av artikler
-- ✅ Godkjenningssystem for artikler
-- ✅ Admin-panel for administrering av brukere og artikler
-- ✅ E-postverifisering ved registrering
-- ✅ Responsivt design for mobil og desktop
-- ✅ GitHub Pages integrasjon for enkel publisering
-
-### Pågående arbeid
-- 🔄 Feilsøking av navigasjon på GitHub Pages
-- 🔄 Forbedring av markdown-formatering i artikler
-- 🔄 Oppdatering av brukergrensesnitt med nye farger og ikoner
-
-### Kommende funksjoner
-- 📅 Avansert søkefunksjonalitet
-- 📅 Mulighet for å legge til kategorier
-- 📅 Støtte for opplasting av bilder direkte i artikler
-- 📅 Jobb søkning
-Sist oppdatert: 29.3.2025 
+Se `Dockerfile` og `docker-compose.yml` for flere detaljer om oppsettet.

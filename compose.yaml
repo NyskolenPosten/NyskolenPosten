@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: .
+    container_name: nyskolenposten_app
+    restart: unless-stopped
+    init: true
+    # Expose the ports defined in Dockerfile (React frontend/backend)
+    ports:
+      - "3001:3001"
+      - "3002:3002"
+    # env_file: ./.env  # Uncomment if .env file exists
+    # The app uses a local SQLite database (prisma/dev.db) by default, so no external DB is needed
+    # If you switch to a production DB, add it here and configure connection
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    driver: bridge
