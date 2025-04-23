@@ -3,7 +3,18 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './OmOss.css';
 
-function OmOss({ jobbliste = [] }) {
+function OmOss() {
+  // Hardkodet liste over medarbeidere
+  const medarbeidere = [
+    {
+      id: 1,
+      navn: 'Mattis B Tøllefsen',
+      rolle: 'Teknisk Leder',
+      beskrivelse: 'Ansvarlig for teknisk utvikling og vedlikehold av nettavisen'
+    },
+    // Andre medarbeidere kan legges til her
+  ];
+
   return (
     <div className="om-oss">
       <h2>Om Nyskolen Posten</h2>
@@ -30,22 +41,16 @@ function OmOss({ jobbliste = [] }) {
         </p>
         
         <div className="redaksjon-liste">
-          <h4>Våre medarbeidere:</h4>
-          <table className="medarbeider-tabell">
-            <thead>
-              <tr>
-                <th>Navn Rolle</th>
-              </tr>
-            </thead>
-            <tbody>
-              {jobbliste.map(person => (
-                <tr key={person.id}>
-                  <td>{person.navn}</td>
-                  <td>{person.rolle}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <h4>Våre medarbeidere</h4>
+          <div className="medarbeider-grid">
+            {medarbeidere.map(person => (
+              <div key={person.id} className="medarbeider-kort">
+                <h5>{person.navn}</h5>
+                <div className="rolle">{person.rolle}</div>
+                <p className="beskrivelse">{person.beskrivelse}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
       

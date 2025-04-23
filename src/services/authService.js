@@ -211,4 +211,47 @@ export const registrerBruker = async (email, password) => {
     console.error('Error registering user:', error.message);
     throw error;
   }
+};
+
+export const opprettBrukerMedRolle = async (email, password, navn, rolle = 'bruker', klasse = null) => {
+  try {
+    // Registrer brukeren i auth systemet
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    
+    if (authError) throw authError;
+
+    // Opprett brukerprofil i profiles-tabellen
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .insert([
+        {
+          id: authData.user.id,
+          email: email,
+          navn: navn,
+          rolle: rolle,
+          godkjent: true, // Automatisk godkjent siden vi oppretter med spesifikk rolle
+          klasse: klasse
+        }
+      ]);
+
+    if (profileError) throw profileError;
+
+    return {
+      success: true,
+      bruker: {
+        id: authData.user.id,
+        email: email,
+        navn: navn,
+        rolle: rolle,
+        godkjent: true,
+        klasse: klasse
+      }
+    };
+  } catch (error) {
+    console.error('Error creating user with role:', error.message);
+    return { success: false, error: error.message };
+  }
 }; 

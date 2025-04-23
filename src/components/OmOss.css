@@ -5,75 +5,103 @@
 }
 
 .om-oss h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: 2.5rem;
+  color: #333;
   margin-bottom: 2rem;
-  color: var(--primary-color);
   text-align: center;
-  border-bottom: 2px solid var(--primary-color);
-  padding-bottom: 1rem;
 }
 
 .om-oss-seksjon {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-  margin-bottom: 2rem;
-  line-height: 1.6;
+  margin-bottom: 3rem;
 }
 
 .om-oss-seksjon h3 {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.8rem;
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  color: var(--primary-color);
+  color: #444;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 0.5rem;
 }
 
 .om-oss-seksjon p {
+  line-height: 1.6;
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.redaksjon-liste {
+  margin-top: 2rem;
+}
+
+.redaksjon-liste h4 {
+  color: #555;
   margin-bottom: 1.5rem;
-  font-size: 1.1rem;
+  text-align: center;
+}
+
+.medarbeider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.medarbeider-kort {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.medarbeider-kort:hover {
+  transform: translateY(-5px);
+}
+
+.medarbeider-kort h5 {
   color: #333;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
 }
 
-.medarbeider-tabell {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
+.medarbeider-kort .rolle {
+  color: #007bff;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
 }
 
-.medarbeider-tabell th,
-.medarbeider-tabell td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-}
-
-.medarbeider-tabell th {
-  background-color: #f8f9fa;
-  font-weight: 600;
+.medarbeider-kort .beskrivelse {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .bli-med-knapper {
   display: flex;
   gap: 1rem;
+  justify-content: center;
   margin-top: 1.5rem;
 }
 
 .bli-med-knapp {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background-color: var(--primary-color);
+  background-color: #007bff;
   color: white;
-  text-decoration: none;
+  padding: 0.75rem 1.5rem;
   border-radius: 4px;
-  font-weight: 500;
+  text-decoration: none;
   transition: background-color 0.2s;
 }
 
 .bli-med-knapp:hover {
-  background-color: var(--primary-color-dark);
+  background-color: #0056b3;
+}
+
+a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {
@@ -89,7 +117,7 @@
     padding: 1.5rem;
   }
   
-  .bli-med-knapper {
+  .bli-med-knappers {
     flex-direction: column;
   }
   

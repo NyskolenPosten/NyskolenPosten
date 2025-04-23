@@ -29,6 +29,7 @@ import {
   godkjennArtikkel as godkjennArtikkelService 
 } from './services/artikkelService';
 import logo from './assets/images/logo.svg';
+import LeggTilTekniskLeder from './components/LeggTilTekniskLeder';
 
 function App() {
   const [innloggetBruker, setInnloggetBruker] = useState(null);
@@ -503,111 +504,54 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Hjem artikler={artikler.filter(a => a.godkjent)} />} />
                   <Route path="/om-oss" element={<OmOss />} />
-                  <Route 
-                    path="/artikkel/:id" 
-                    element={
-                      <ArtikkelVisning 
-                        artikler={artikler} 
+                  <Route path="/ny-artikkel" element={
+                    innloggetBruker ? (
+                      innloggetBruker.godkjent ? <NyArtikkel leggTilArtikkel={handleNyArtikkel} kategoriliste={kategoriliste} /> : 
+                      <div className="ikke-godkjent">
+                        <h2>Venter på godkjenning</h2>
+                        <p>Kontoen din må godkjennes av en administrator før du kan skrive artikler.</p>
+                      </div>
+                    ) : <Innlogging onLogin={handleLogin} melding="Du må logge inn for å skrive artikler" />
+                  } />
+                  <Route path="/artikkel/:id" element={<ArtikkelVisning artikler={artikler} innloggetBruker={innloggetBruker} onSlettArtikkel={handleSlettArtikkel} onRedigerArtikkel={handleRedigerArtikkel} />} />
+                  <Route path="/mine-artikler" element={
+                    innloggetBruker ? 
+                      <MineArtikler 
                         innloggetBruker={innloggetBruker} 
+                        artikler={artikler.filter(a => a.forfatterID === innloggetBruker?.id)} 
                         onSlettArtikkel={handleSlettArtikkel} 
-                        onRedigerArtikkel={handleRedigerArtikkel} 
-                      />
-                    } 
-                  />
-
-                  {/* Ruter som krever innlogging og ikke er påvirket av lockdown */}
-                  <Route 
-                    path="/logg-inn" 
-                    element={<Innlogging onLogin={handleLogin} />} 
-                  />
-                  <Route 
-                    path="/registrer" 
-                    element={<Registrering />} 
-                  />
-                  <Route 
-                    path="/profil" 
-                    element={
-                      <Profil 
-                        innloggetBruker={innloggetBruker} 
-                        onOppdaterBruker={oppdaterBruker} 
-                      />
-                    } 
-                  />
-                  
-                  {/* Ruter som påvirkes av lockdown */}
-                  {!websiteSettings.lockdown && (
-                    <>
-                      <Route 
-                        path="/ny-artikkel" 
-                        element={
-                          <NyArtikkel 
-                            innloggetBruker={innloggetBruker} 
-                            onLeggTilArtikkel={handleNyArtikkel} 
-                            kategoriliste={kategoriliste}
-                          />
-                        } 
-                      />
-                      <Route 
-                        path="/mine-artikler" 
-                        element={
-                          <MineArtikler 
-                            innloggetBruker={innloggetBruker} 
-                            artikler={artikler.filter(a => a.forfatterID === innloggetBruker?.id)} 
-                            onSlettArtikkel={handleSlettArtikkel} 
-                            onOppdaterArtikkel={handleOppdaterArtikkel} 
-                          />
-                        } 
-                      />
-                      <Route 
-                        path="/admin" 
-                        element={
-                          <AdminPanel 
-                            innloggetBruker={innloggetBruker} 
-                            artikler={artikler} 
-                            brukere={brukere} 
-                            jobbliste={jobbliste} 
-                            kategoriliste={kategoriliste}
-                            onDeleteArticle={handleSlettArtikkel}
-                            onUpdateArticle={handleOppdaterArtikkel}
-                            onUpdateUser={oppdaterBruker}
-                            onDeleteUser={slettBruker}
-                            onApproveArticle={handleGodkjennArtikkel}
-                            onUpdateJobbliste={setJobbliste}
-                            onUpdateKategoriliste={setKategoriliste}
-                            onEndreRolleBruker={handleEndreRolleBruker}
-                          />
-                        } 
-                      />
-                    </>
-                  )}
-                  
-                  {/* WebsitePanel, tilgjengelig kun for teknisk leder */}
-                  <Route 
-                    path="/website-panel" 
-                    element={
-                      <WebsitePanel 
-                        innloggetBruker={innloggetBruker}
-                        currentSettings={websiteSettings}
-                        onUpdateSettings={handleUpdateWebsiteSettings}
-                      />
-                    } 
-                  />
-                  
-                  {/* DataPanel for import/export av data */}
-                  <Route 
-                    path="/data-panel" 
-                    element={
-                      <DataPanel 
-                        innloggetBruker={innloggetBruker}
-                      />
-                    } 
-                  />
-                  
-                  {/* Debug-panel for Cache-monitoring */}
-                  <Route 
-                    path="/cache-monitor" 
-                    element={<CacheMonitor />} 
-                  />
+                        onOppdaterArtikkel={handleOppdaterArtikkel} 
+                      /> : 
+                      <Innlogging onLogin={handleLogin} melding="Du må logge inn for å se dine artikler" />
+                  } />
+                  <Route path="/admin" element={
+                    innloggetBruker && (innloggetBruker.rolle === 'admin' || innloggetBruker.rolle === 'redaktør') ? 
+                      <>
+                        <AdminPanel 
+                          innloggetBruker={innloggetBruker} 
+                          artikler={artikler} 
+                          brukere={brukere} 
+                          jobbliste={jobbliste} 
+                          kategoriliste={kategoriliste}
+                          onDeleteArticle={handleSlettArtikkel}
+                          onUpdateArticle={handleOppdaterArtikkel}
+                          onUpdateUser={oppdaterBruker}
+                          onDeleteUser={slettBruker}
+                          onApproveArticle={handleGodkjennArtikkel}
+                          onUpdateJobbliste={setJobbliste}
+                          onUpdateKategoriliste={setKategoriliste}
+                          onEndreRolleBruker={handleEndreRolleBruker}
+                        />
+                        {innloggetBruker.rolle === 'admin' && <LeggTilTekniskLeder />}
+                      </> : 
+                      <Navigate to="/" replace />
+                  } />
+                  <Route path="/login" element={<Innlogging onLogin={handleLogin} brukere={brukere} />} />
+                  <Route path="/register" element={<Registrering />} />
+                  <Route path="/profil" element={<Profil innloggetBruker={innloggetBruker} onOppdaterBruker={oppdaterBruker} />} />
+                  <Route path="/website-panel" element={<WebsitePanel innloggetBruker={innloggetBruker} currentSettings={websiteSettings} onUpdateSettings={handleUpdateWebsiteSettings} />} />
+                  <Route path="/data-panel" element={<DataPanel innloggetBruker={innloggetBruker} />} />
+                  <Route path="/cache-monitor" element={<CacheMonitor />} />
                 </Routes>
               </main>
               
