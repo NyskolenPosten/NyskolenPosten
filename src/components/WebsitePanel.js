@@ -95,10 +95,7 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
   // Oppdater settings både lokalt og i Supabase
   const updateSettings = async (newSettings) => {
     try {
-      // Oppdater lokalt state
-      setLocalSettings(newSettings);
-      
-      // Oppdater i Supabase
+      // Oppdater i Supabase først
       const { error } = await supabase
         .from('website_settings')
         .update({
@@ -107,21 +104,22 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
           note: newSettings.note,
           updated_by: innloggetBruker.id
         })
-        .eq('id', 1); // Vi bruker alltid ID 1 siden vi bare har én rad med innstillinger
+        .eq('id', 1);
       
       if (error) throw error;
       
-      // Oppdater globalt (i App.js og i localStorage)
-      const result = onUpdateSettings(newSettings);
+      // Oppdater lokalt state
+      setLocalSettings(newSettings);
       
-      if (result.success) {
-        setMelding('Innstillingene ble oppdatert');
-      } else {
-        setFeilmelding(`Feil ved oppdatering av innstillinger: ${result.error || 'Ukjent feil'}`);
-      }
+      // Oppdater globalt (i App.js)
+      onUpdateSettings(newSettings);
+      
+      setMelding('Innstillingene ble oppdatert');
+      setFeilmelding('');
     } catch (error) {
       console.error('Feil ved oppdatering av innstillinger:', error);
       setFeilmelding('Kunne ikke oppdatere innstillinger i databasen');
+      setMelding('');
     }
   };
   

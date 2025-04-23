@@ -445,14 +445,24 @@ function App() {
     return handleOppdaterArtikkel(artikkelID, oppdatertArtikkel);
   };
   
-  // Funksjon for å oppdatere websiteSettings
+  // Håndterer oppdatering av website-innstillinger
   const handleUpdateWebsiteSettings = async (newSettings) => {
     try {
+      // Oppdater i Supabase
+      const { error } = await supabase
+        .from('website_settings')
+        .update({
+          lockdown: newSettings.lockdown,
+          full_lockdown: newSettings.fullLockdown,
+          note: newSettings.note,
+          updated_by: innloggetBruker?.id
+        })
+        .eq('id', 1);
+      
+      if (error) throw error;
+      
       // Oppdater lokalt state
       setWebsiteSettings(newSettings);
-      
-      // Oppdater i localStorage
-      localStorage.setItem('websiteSettings', JSON.stringify(newSettings));
       
       return { success: true };
     } catch (error) {

@@ -88,6 +88,12 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
     if (source === 'user') {
       const html = editor.getHTML();
       setInnhold(html);
+      
+      // Oppdater også state med ren tekst for validering
+      const tekst = editor.getText();
+      if (tekst.trim()) {
+        setFeilmelding('');
+      }
     }
   };
 

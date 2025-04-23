@@ -38,21 +38,51 @@
       color: red;
       font-weight: bold;
     }
+    .password-form {
+      margin: 20px 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+    }
+    .password-form input {
+      padding: 8px;
+      margin-right: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .password-form button {
+      background-color: #2196F3;
+    }
+    .password-form button:hover {
+      background-color: #0b7dda;
+    }
   </style>
 </head>
 <body>
   <h1>Fikse NyskolenPosten Lockdown</h1>
   <p>Dette verktøyet vil deaktivere WEBSITE LOCKDOWN og normale LOCKDOWN for NyskolenPosten.</p>
   
-  <div>
-    <button id="fixLockdown">Deaktiver WEBSITE LOCKDOWN</button>
-    <button id="checkSettings">Sjekk nåværende innstillinger</button>
-    <button id="toggleNote">Fjern/Legg til NOTE</button>
+  <div id="passwordForm" class="password-form">
+    <h2>Tilgangskontroll</h2>
+    <p>Skriv inn passordet for å få tilgang til lockdown-verktøyet.</p>
+    <input type="password" id="passwordInput" placeholder="Skriv inn passord">
+    <button id="submitPassword">Bekreft passord</button>
+    <div id="passwordError" class="error" style="display: none;"></div>
   </div>
   
-  <div id="result"></div>
+  <div id="controls" style="display: none;">
+    <div>
+      <button id="fixLockdown">Deaktiver WEBSITE LOCKDOWN</button>
+      <button id="checkSettings">Sjekk nåværende innstillinger</button>
+      <button id="toggleNote">Fjern/Legg til NOTE</button>
+    </div>
+    
+    <div id="result"></div>
+  </div>
   
   <script>
+    const PASSWORD = 'Nyskolen2024'; // Samme passord som website panelet
+    
     function displayResult(message, isError = false) {
       const resultDiv = document.getElementById('result');
       const pre = document.createElement('pre');
@@ -81,6 +111,21 @@
     function saveSettings(settings) {
       localStorage.setItem('websiteSettings', JSON.stringify(settings));
     }
+    
+    // Passord-sjekk
+    document.getElementById('submitPassword').addEventListener('click', function() {
+      const passwordInput = document.getElementById('passwordInput').value;
+      const passwordError = document.getElementById('passwordError');
+      
+      if (passwordInput === PASSWORD) {
+        document.getElementById('passwordForm').style.display = 'none';
+        document.getElementById('controls').style.display = 'block';
+        passwordError.style.display = 'none';
+      } else {
+        passwordError.textContent = 'Feil passord. Prøv igjen.';
+        passwordError.style.display = 'block';
+      }
+    });
     
     document.getElementById('fixLockdown').addEventListener('click', function() {
       try {
