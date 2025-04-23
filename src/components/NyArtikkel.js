@@ -83,7 +83,26 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
 
   const quillRef = useRef();
 
-  // Flytt useEffect til toppen av komponenten
+  // Håndterer endringer i editor-innhold
+  const handleInnholdEndring = (content, delta, source, editor) => {
+    if (source === 'user') {
+      const html = editor.getHTML();
+      setInnhold(html);
+    }
+  };
+
+  // Håndterer feil i Quill editor
+  useEffect(() => {
+    const handleEditorError = (error) => {
+      console.error('Quill editor feil:', error);
+      setEditorFeil('Det oppstod en feil i editoren. Vennligst kontakt teknisk leder: mattis.tollefsen@nionett.no');
+    };
+
+    window.addEventListener('error', handleEditorError);
+    return () => window.removeEventListener('error', handleEditorError);
+  }, []);
+
+  // Håndterer bildestørrelser i editoren
   useEffect(() => {
     if (quillRef.current) {
       const quill = quillRef.current.getEditor();
@@ -111,17 +130,6 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
         observer.disconnect();
       };
     }
-  }, []);
-
-  // Håndterer feil i Quill editor
-  useEffect(() => {
-    const handleEditorError = (error) => {
-      console.error('Quill editor feil:', error);
-      setEditorFeil('Det oppstod en feil i editoren. Vennligst kontakt teknisk leder: mattis.tollefsen@nionett.no');
-    };
-
-    window.addEventListener('error', handleEditorError);
-    return () => window.removeEventListener('error', handleEditorError);
   }, []);
 
   const formats = [
@@ -296,7 +304,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
             <ReactQuill
               ref={quillRef}
               value={innhold}
-              onChange={setInnhold}
+              onChange={handleInnholdEndring}
               modules={modules}
               formats={formats}
               className="quill-editor"
