@@ -176,14 +176,41 @@ function App() {
     // Hent website-innstillinger fra Supabase
     const hentWebsiteInnstillinger = async () => {
       try {
+        // Sjekk først om brukeren er autentisert
+        const { data: { session } } = await supabase.auth.getSession();
+        
         const { data, error } = await supabase
           .from('website_settings')
           .select('*')
           .single();
         
-        if (error) throw error;
-        
-        if (data) {
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // Hvis tabellen er tom, opprett standardinnstillinger
+            const { data: newData, error: insertError } = await supabase
+              .from('website_settings')
+              .insert([{
+                lockdown: false,
+                full_lockdown: false,
+                note: "",
+                updated_by: innloggetBruker?.id || null
+              }])
+              .select()
+              .single();
+            
+            if (insertError) throw insertError;
+            
+            if (newData) {
+              setWebsiteSettings({
+                lockdown: newData.lockdown,
+                fullLockdown: newData.full_lockdown,
+                note: newData.note || ""
+              });
+            }
+          } else {
+            throw error;
+          }
+        } else if (data) {
           setWebsiteSettings({
             lockdown: data.lockdown,
             fullLockdown: data.full_lockdown,
@@ -192,10 +219,20 @@ function App() {
         }
       } catch (error) {
         console.error('Feil ved henting av website-innstillinger:', error);
+        // Bruk standardinnstillinger hvis det oppstår en feil
+        setWebsiteSettings({
+          lockdown: false,
+          fullLockdown: false,
+          note: ""
+        });
       }
     };
 
-    hentWebsiteInnstillinger();
+    useEffect(() => {
+      if (innloggetBruker) {
+        hentWebsiteInnstillinger();
+      }
+    }, [innloggetBruker]);
 
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);

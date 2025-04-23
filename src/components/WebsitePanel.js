@@ -17,10 +17,27 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
     note: ""
   });
   
+  // Sjekk om brukeren er teknisk leder
+  if (!innloggetBruker || innloggetBruker.rolle !== 'teknisk_leder') {
+    return (
+      <div className="admin-container">
+        <h1>Tilgang nektet</h1>
+        <p>Du har ikke tilgang til denne siden. Kun teknisk leder har tilgang til Website Panel.</p>
+        <p>Hvis du mener dette er feil, kontakt systemadministrator på <a href="mailto:mattis.tollefsen@nionett.no">mattis.tollefsen@nionett.no</a></p>
+      </div>
+    );
+  }
+  
   // Hent innstillinger fra Supabase
   useEffect(() => {
     const hentInnstillinger = async () => {
       try {
+        // Sjekk først om brukeren er autentisert
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('Ikke autentisert');
+        }
+
         const { data, error } = await supabase
           .from('website_settings')
           .select('*')
@@ -68,18 +85,10 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
       }
     };
 
-    hentInnstillinger();
-  }, [innloggetBruker?.id]);
-  
-  // Sjekk om brukeren er teknisk leder
-  if (!innloggetBruker || innloggetBruker.rolle !== 'teknisk_leder') {
-    return (
-      <div className="admin-container">
-        <h1>Tilgang nektet</h1>
-        <p>Du har ikke tilgang til denne siden. Kun teknisk leder har tilgang til Website Panel.</p>
-      </div>
-    );
-  }
+    if (innloggetBruker && innloggetBruker.rolle === 'teknisk_leder') {
+      hentInnstillinger();
+    }
+  }, [innloggetBruker]);
   
   // Passordsjekk
   const handlePassordSubmit = (e) => {
