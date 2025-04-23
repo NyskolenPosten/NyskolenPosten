@@ -4,22 +4,36 @@
   <meta charset="utf-8">
   <title>Nyskolen Posten - Omdirigerer...</title>
   <script type="text/javascript">
-    // GitHub Pages SPA hack
+    // Single Page Apps for GitHub Pages
     // https://github.com/rafgraph/spa-github-pages
-    var pathSegmentsToKeep = 1;
+    // Copyright (c) 2016 Rafael Pedicini, licensed under the MIT License
+    
+    // Dette scriptet sjekker om en redirect er nødvendig og utfører den
+    (function(l) {
+      if (l.search) {
+        var q = {};
+        l.search.slice(1).split('&').forEach(function(v) {
+          var a = v.split('=');
+          q[a[0]] = a.slice(1).join('=').replace(/~and~/g, '&');
+        });
+        if (q.p !== undefined) {
+          window.history.replaceState(null, null,
+            l.pathname.slice(0, -1) + (q.p || '') +
+            (q.q ? ('?' + q.q) : '') +
+            l.hash
+          );
+        }
+      }
+    }(window.location));
 
-    var l = window.location;
-    l.replace(
-      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
-      l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-      l.hash
-    );
+    // Hvis vi er på en underside, redirect til hovedsiden med riktig path
+    if (!window.location.pathname.includes('/NyskolenPosten')) {
+      window.location.href = '/NyskolenPosten' + window.location.pathname;
+    }
   </script>
 </head>
 <body>
   <h1>Omdirigerer...</h1>
-  <p>Hvis du ikke blir omdirigert automatisk, <a href="https://nyskolenposten.github.io/NyskolenPosten">klikk her for å gå til forsiden</a>.</p>
+  <p>Hvis du ikke blir omdirigert automatisk, <a href="/NyskolenPosten">klikk her for å gå til forsiden</a>.</p>
 </body>
 </html> 
