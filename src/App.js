@@ -30,6 +30,7 @@ import {
 } from './services/artikkelService';
 import logo from './assets/images/logo.svg';
 import LeggTilTekniskLeder from './components/LeggTilTekniskLeder';
+import { supabase } from './config/supabase';
 
 // Hjelpefunksjon for å sjekke om vi er på GitHub Pages
 const isGitHubPages = window.location.hostname.includes('github.io');
@@ -41,22 +42,10 @@ function App() {
   const [jobbliste, setJobbliste] = useState([]);
   const [kategoriliste, setKategoriliste] = useState([]);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [websiteSettings, setWebsiteSettings] = useState(() => {
-    try {
-      const savedSettings = localStorage.getItem('websiteSettings');
-      // Hvis det finnes lagrede innstillinger, bruk dem, ellers bruk standardverdier
-      if (savedSettings) {
-        return JSON.parse(savedSettings);
-      }
-    } catch (e) {
-      console.error("Feil ved lasting av websiteSettings:", e);
-    }
-    // Standardverdier (alltid tilgjengelig)
-    return {
-      lockdown: false,
-      fullLockdown: false,
-      note: ""
-    };
+  const [websiteSettings, setWebsiteSettings] = useState({
+    lockdown: false,
+    fullLockdown: false,
+    note: ""
   });
   
   // Admin e-postliste for automatisk godkjenning og admin-rolle
@@ -184,11 +173,29 @@ function App() {
       localStorage.setItem('kategoriliste', JSON.stringify(standardKategoriliste));
     }
 
-    // Last inn websiteSettings
-    const lagretSettings = localStorage.getItem('websiteSettings');
-    if (lagretSettings) {
-      setWebsiteSettings(JSON.parse(lagretSettings));
-    }
+    // Hent website-innstillinger fra Supabase
+    const hentWebsiteInnstillinger = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('website_settings')
+          .select('*')
+          .single();
+        
+        if (error) throw error;
+        
+        if (data) {
+          setWebsiteSettings({
+            lockdown: data.lockdown,
+            fullLockdown: data.full_lockdown,
+            note: data.note || ""
+          });
+        }
+      } catch (error) {
+        console.error('Feil ved henting av website-innstillinger:', error);
+      }
+    };
+
+    hentWebsiteInnstillinger();
 
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -439,21 +446,38 @@ function App() {
   };
   
   // Funksjon for å oppdatere websiteSettings
-  const handleUpdateWebsiteSettings = (newSettings) => {
+  const handleUpdateWebsiteSettings = async (newSettings) => {
     try {
-      // Oppdater state
+      // Oppdater lokalt state
       setWebsiteSettings(newSettings);
       
-      // Lagre i localStorage
+      // Oppdater i localStorage
       localStorage.setItem('websiteSettings', JSON.stringify(newSettings));
-      
-      // Her kunne vi hatt en API-kall til en server for å lagre innstillingene globalt
-      // I en produktivsetting ville dette lagres i en sentral database
       
       return { success: true };
     } catch (error) {
-      console.error("Feil ved oppdatering av websiteSettings:", error);
+      console.error('Feil ved oppdatering av website-innstillinger:', error);
       return { success: false, error: error.message };
+    }
+  };
+  
+  // Funksjon for å fikse lockdown
+  const fixLockdown = () => {
+    const passord = prompt('Skriv inn passordet for å fikse lockdown:');
+    if (passord === 'Tveita16') {
+      setWebsiteSettings({
+        lockdown: false,
+        fullLockdown: false,
+        note: ""
+      });
+      localStorage.setItem('websiteSettings', JSON.stringify({
+        lockdown: false,
+        fullLockdown: false,
+        note: ""
+      }));
+      alert('Lockdown er nå deaktivert!');
+    } else {
+      alert('Feil passord!');
     }
   };
   

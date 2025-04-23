@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import './AdminPanel.css'; // Bruker samme CSS som AdminPanel
 import { useLanguage } from '../utils/LanguageContext';
+import { supabase } from '../config/supabase';
 
 function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
   const { translations } = useLanguage();
@@ -16,6 +17,33 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
     note: ""
   });
   
+  // Hent innstillinger fra Supabase
+  useEffect(() => {
+    const hentInnstillinger = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('website_settings')
+          .select('*')
+          .single();
+        
+        if (error) throw error;
+        
+        if (data) {
+          setLocalSettings({
+            lockdown: data.lockdown,
+            fullLockdown: data.full_lockdown,
+            note: data.note || ""
+          });
+        }
+      } catch (error) {
+        console.error('Feil ved henting av innstillinger:', error);
+        setFeilmelding('Kunne ikke hente innstillinger fra databasen');
+      }
+    };
+
+    hentInnstillinger();
+  }, []);
+  
   // Sjekk om brukeren er teknisk leder
   if (!innloggetBruker || innloggetBruker.rolle !== 'teknisk_leder') {
     return <Navigate to="/" replace />;
@@ -24,7 +52,6 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
   // Passordsjekk
   const handlePassordSubmit = (e) => {
     e.preventDefault();
-    // Bruk det hemmelige passordet i stedet for brukerens passord
     if (passordInput === 'Tveita16') {
       setErAutentisert(true);
       setFeilmelding('');
@@ -33,22 +60,40 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
     }
   };
   
-  // Oppdater settings både lokalt og globalt
-  const updateSettings = (newSettings) => {
-    // Oppdater lokalt state
-    setLocalSettings(newSettings);
-    
-    // Oppdater globalt (i App.js og i localStorage)
-    const result = onUpdateSettings(newSettings);
-    
-    if (result.success) {
-      setMelding('Innstillingene ble oppdatert');
-    } else {
-      setFeilmelding(`Feil ved oppdatering av innstillinger: ${result.error || 'Ukjent feil'}`);
+  // Oppdater settings både lokalt og i Supabase
+  const updateSettings = async (newSettings) => {
+    try {
+      // Oppdater lokalt state
+      setLocalSettings(newSettings);
+      
+      // Oppdater i Supabase
+      const { error } = await supabase
+        .from('website_settings')
+        .update({
+          lockdown: newSettings.lockdown,
+          full_lockdown: newSettings.fullLockdown,
+          note: newSettings.note,
+          updated_by: innloggetBruker.id
+        })
+        .eq('id', 1); // Vi bruker alltid ID 1 siden vi bare har én rad med innstillinger
+      
+      if (error) throw error;
+      
+      // Oppdater globalt (i App.js og i localStorage)
+      const result = onUpdateSettings(newSettings);
+      
+      if (result.success) {
+        setMelding('Innstillingene ble oppdatert');
+      } else {
+        setFeilmelding(`Feil ved oppdatering av innstillinger: ${result.error || 'Ukjent feil'}`);
+      }
+    } catch (error) {
+      console.error('Feil ved oppdatering av innstillinger:', error);
+      setFeilmelding('Kunne ikke oppdatere innstillinger i databasen');
     }
   };
   
-  // Toggle LOCKDOWN mode (bare lesing, ingen redigering)
+  // Toggle LOCKDOWN mode
   const toggleLockdown = () => {
     const newSettings = {
       ...localSettings,
@@ -59,7 +104,7 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
     setMelding(`LOCKDOWN modus er nå ${newSettings.lockdown ? 'aktivert' : 'deaktivert'}`);
   };
   
-  // Toggle WEBSITE LOCKDOWN mode (ingen tilgang)
+  // Toggle WEBSITE LOCKDOWN mode
   const toggleWebsiteLockdown = () => {
     const newSettings = {
       ...localSettings,
