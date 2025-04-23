@@ -60,8 +60,8 @@ function Header({ innloggetBruker, onLogout, isLockdown }) {
           </>
         ) : (
           <>
-            <Link to="/logg-inn" className="login-button">{navigation.login}</Link>
-            <Link to="/registrer" className="register-button">{navigation.register}</Link>
+            <Link to="/login" className="login-button">{navigation.login}</Link>
+            <Link to="/register" className="register-button">{navigation.register}</Link>
           </>
         )}
         

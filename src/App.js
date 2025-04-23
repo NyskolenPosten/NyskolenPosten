@@ -512,14 +512,14 @@ function App() {
                       innloggetBruker.godkjent ? 
                         <NyArtikkel 
                           innloggetBruker={innloggetBruker}
-                          leggTilArtikkel={handleNyArtikkel} 
+                          onLeggTilArtikkel={handleNyArtikkel} 
                           kategoriliste={kategoriliste} 
                         /> : 
                         <div className="ikke-godkjent">
                           <h2>Venter på godkjenning</h2>
                           <p>Kontoen din må godkjennes av en administrator før du kan skrive artikler.</p>
                         </div>
-                    ) : <Innlogging onLogin={handleLogin} melding="Du må logge inn for å skrive artikler" />
+                    ) : <Navigate to="/login" state={{ from: "/ny-artikkel" }} replace />
                   } />
                   <Route path="/artikkel/:id" element={<ArtikkelVisning artikler={artikler} innloggetBruker={innloggetBruker} onSlettArtikkel={handleSlettArtikkel} onRedigerArtikkel={handleRedigerArtikkel} />} />
                   <Route path="/mine-artikler" element={
