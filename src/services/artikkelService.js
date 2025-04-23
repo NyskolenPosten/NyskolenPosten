@@ -202,8 +202,7 @@ export const leggTilArtikkel = async (artikkelData, bilde) => {
       artikkelID,
       ...artikkelData,
       bilde: bildeURL,
-      dato: serverTimestamp(),
-      godkjent: false
+      dato: serverTimestamp()
     };
     
     artikler.push(nyArtikkel);

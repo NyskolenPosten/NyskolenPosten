@@ -243,8 +243,10 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
             <li><code>### Overskrift</code> for overskrifter</li>
           </ul>
           <p className="info-tekst">
-            {innloggetBruker.rolle === 'admin' || innloggetBruker.rolle === 'redaktør'
-              ? 'Som redaktør vil artikkelen din publiseres umiddelbart.' 
+            {innloggetBruker.rolle === 'admin' || 
+             innloggetBruker.rolle === 'redaktør' ||
+             innloggetBruker.rolle === 'teknisk_leder'
+              ? 'Som redaktør/teknisk leder vil artikkelen din publiseres umiddelbart.' 
               : 'Artikkelen din må godkjennes før den publiseres.'}
           </p>
         </div>
