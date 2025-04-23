@@ -73,7 +73,12 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
   
   // Sjekk om brukeren er teknisk leder
   if (!innloggetBruker || innloggetBruker.rolle !== 'teknisk_leder') {
-    return <Navigate to="/" replace />;
+    return (
+      <div className="admin-container">
+        <h1>Tilgang nektet</h1>
+        <p>Du har ikke tilgang til denne siden. Kun teknisk leder har tilgang til Website Panel.</p>
+      </div>
+    );
   }
   
   // Passordsjekk
