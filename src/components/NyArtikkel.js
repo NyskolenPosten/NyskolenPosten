@@ -113,7 +113,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
     
     try {
       // Legg til artikkel
-      const id = await onLeggTilArtikkel(nyArtikkel);
+      const id = await onLeggTilArtikkel(nyArtikkel, bildeData);
       
       if (id) {
         // Sjekk om brukeren er admin eller redaktør
