@@ -1,5 +1,5 @@
 // components/NyArtikkel.js
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -19,28 +19,38 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   const [laster, setLaster] = useState(false);
 
   const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['link', 'image'],
-      ['clean']
-    ],
-    imageHandler: {
-      upload: (file) => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            resolve(e.target.result);
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['link', 'image'],
+        ['clean']
+      ],
+      handlers: {
+        image: () => {
+          const input = document.createElement('input');
+          input.setAttribute('type', 'file');
+          input.setAttribute('accept', 'image/*');
+          input.click();
+
+          input.onchange = async () => {
+            const file = input.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const range = quillRef.current.getEditor().getSelection(true);
+                quillRef.current.getEditor().insertEmbed(range.index, 'image', e.target.result);
+              };
+              reader.readAsDataURL(file);
+            }
           };
-          reader.onerror = (error) => {
-            reject('Bildeopplasting feilet');
-          };
-          reader.readAsDataURL(file);
-        });
+        }
       }
     }
   };
+
+  const quillRef = useRef();
 
   const formats = [
     'header',
@@ -116,10 +126,12 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
       const id = await onLeggTilArtikkel(nyArtikkel, bildeData);
       
       if (id) {
-        // Sjekk om brukeren er admin eller redaktør
-        const erRedaktør = innloggetBruker.rolle === 'admin' || innloggetBruker.rolle === 'redaktør';
+        // Sjekk om brukeren er admin, redaktør eller teknisk leder
+        const erGodkjentRolle = innloggetBruker.rolle === 'admin' || 
+                               innloggetBruker.rolle === 'redaktør' ||
+                               innloggetBruker.rolle === 'teknisk_leder';
         
-        setMelding('Artikkel opprettet! ' + (erRedaktør ? 'Artikkelen er publisert.' : 'Artikkelen venter på godkjenning.'));
+        setMelding('Artikkel opprettet! ' + (erGodkjentRolle ? 'Artikkelen er publisert.' : 'Artikkelen venter på godkjenning.'));
         setArtikkelID(id);
         
         // Tøm skjema
@@ -204,6 +216,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
           <label>Innhold:</label>
           <div className="quill-container">
             <ReactQuill
+              ref={quillRef}
               value={innhold}
               onChange={setInnhold}
               modules={modules}
