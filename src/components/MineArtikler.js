@@ -9,7 +9,13 @@ function MineArtikler({ innloggetBruker, artikler = [], onDeleteArticle, onUpdat
   
   // Sjekk om brukeren er logget inn
   if (!innloggetBruker) {
-    return <Navigate to="/login" replace />;
+    return (
+      <div className="ikke-godkjent">
+        <h2>Du må være logget inn</h2>
+        <p>Du må logge inn for å se dine artikler.</p>
+        <Link to="/login">Logg inn</Link>
+      </div>
+    );
   }
   
   // Filtrer artikler som tilhører den innloggede brukeren

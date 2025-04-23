@@ -32,6 +32,8 @@ function ArtikkelVisning({ artikler = [], innloggetBruker, onSlettArtikkel, onRe
   const [laster, setLaster] = useState(true);
   const [feilmelding, setFeilmelding] = useState('');
   const [bekreftSletting, setBekreftSletting] = useState(false);
+  const [erRedigering, setErRedigering] = useState(false);
+  const [erSletting, setErSletting] = useState(false);
   
   useEffect(() => {
     // Scroll til toppen når komponenten lastes
@@ -123,19 +125,37 @@ function ArtikkelVisning({ artikler = [], innloggetBruker, onSlettArtikkel, onRe
     );
   }
   
-  // Hvis artikkelen ikke finnes, redirect til forsiden
+  // Sjekk om artikkelen finnes
   if (!artikkel) {
-    return <Navigate to="/" replace />;
+    return (
+      <div className="ikke-godkjent">
+        <h2>Artikkel ikke funnet</h2>
+        <p>Artikkelen du leter etter finnes ikke.</p>
+        <Link to="/">Tilbake til forsiden</Link>
+      </div>
+    );
   }
-  
-  // Hvis artikkelen ikke er godkjent og brukeren ikke er admin eller forfatter, redirect til forsiden
-  if (!artikkel.godkjent && 
-      (!innloggetBruker || 
-       (innloggetBruker.rolle !== 'admin' && 
-        innloggetBruker.rolle !== 'redaktør' &&
-        innloggetBruker.rolle !== 'teknisk_leder' &&
-        innloggetBruker.id !== artikkel.forfatterID))) {
-    return <Navigate to="/" replace />;
+
+  // Sjekk om brukeren har tilgang til å redigere
+  if (erRedigering && (!innloggetBruker || innloggetBruker.id !== artikkel.forfatterID)) {
+    return (
+      <div className="ikke-godkjent">
+        <h2>Tilgang nektet</h2>
+        <p>Du har ikke tilgang til å redigere denne artikkelen.</p>
+        <Link to={`/artikkel/${id}`}>Se artikkel</Link>
+      </div>
+    );
+  }
+
+  // Sjekk om brukeren har tilgang til å slette
+  if (erSletting && (!innloggetBruker || innloggetBruker.id !== artikkel.forfatterID)) {
+    return (
+      <div className="ikke-godkjent">
+        <h2>Tilgang nektet</h2>
+        <p>Du har ikke tilgang til å slette denne artikkelen.</p>
+        <Link to={`/artikkel/${id}`}>Se artikkel</Link>
+      </div>
+    );
   }
   
   // Formater dato

@@ -1,6 +1,6 @@
 // components/NyArtikkel.js
 import React, { useState, useRef, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import './NyArtikkel.css';
@@ -141,7 +141,13 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
 
   // Sjekk om brukeren er logget inn
   if (!innloggetBruker) {
-    return <Navigate to="/login" replace />;
+    return (
+      <div className="ikke-godkjent">
+        <h2>Du må være logget inn</h2>
+        <p>Du må logge inn for å skrive artikler.</p>
+        <Link to="/login">Logg inn</Link>
+      </div>
+    );
   }
 
   // Sjekk om brukeren er godkjent

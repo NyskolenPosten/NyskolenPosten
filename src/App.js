@@ -1,6 +1,6 @@
 // App.js - Hovedkomponenten for Nyskolen Posten
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import './App.css';
 import Hjem from './components/Hjem';
@@ -543,7 +543,13 @@ function App() {
                           <h2>Venter på godkjenning</h2>
                           <p>Kontoen din må godkjennes av en administrator før du kan skrive artikler.</p>
                         </div>
-                    ) : <Navigate to="/login" state={{ from: "/ny-artikkel" }} replace />
+                    ) : (
+                      <div className="ikke-godkjent">
+                        <h2>Du må være logget inn</h2>
+                        <p>Du må logge inn for å skrive artikler.</p>
+                        <Link to="/login">Logg inn</Link>
+                      </div>
+                    )
                   } />
                   <Route path="/artikkel/:id" element={<ArtikkelVisning artikler={artikler} innloggetBruker={innloggetBruker} onSlettArtikkel={handleSlettArtikkel} onRedigerArtikkel={handleRedigerArtikkel} />} />
                   <Route path="/mine-artikler" element={
@@ -554,7 +560,11 @@ function App() {
                         onSlettArtikkel={handleSlettArtikkel} 
                         onOppdaterArtikkel={handleOppdaterArtikkel} 
                       /> : 
-                      <Innlogging onLogin={handleLogin} melding="Du må logge inn for å se dine artikler" />
+                      <div className="ikke-godkjent">
+                        <h2>Du må være logget inn</h2>
+                        <p>Du må logge inn for å se dine artikler.</p>
+                        <Link to="/login">Logg inn</Link>
+                      </div>
                   } />
                   <Route path="/admin" element={
                     innloggetBruker && (innloggetBruker.rolle === 'admin' || innloggetBruker.rolle === 'redaktør') ? 
@@ -576,7 +586,10 @@ function App() {
                         />
                         {innloggetBruker.rolle === 'admin' && <LeggTilTekniskLeder />}
                       </> : 
-                      <Navigate to="/" replace />
+                      <div className="ikke-godkjent">
+                        <h2>Tilgang nektet</h2>
+                        <p>Kun administratorer og redaktører har tilgang til admin-panelet.</p>
+                      </div>
                   } />
                   <Route path="/login" element={<Innlogging onLogin={handleLogin} brukere={brukere} />} />
                   <Route path="/register" element={<Registrering />} />
