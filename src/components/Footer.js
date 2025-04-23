@@ -13,6 +13,9 @@ function Footer() {
         <div className="footer-info">
           <p>&copy; {år} {translations.footer.copyright}</p>
           <p><strong>{translations.footer.contact}:</strong> <a href="mailto:redaksjonenyskolenposten@nionett.no" aria-label={translations.footer.contactAriaLabel}>redaksjonenyskolenposten@nionett.no</a></p>
+          <p className="teknisk-stotte">
+            <strong>Teknisk støtte:</strong> <a href="mailto:mattis.tollefsen@nionett.no">mattis.tollefsen@nionett.no</a>
+          </p>
         </div>
         
         <div className="footer-lenker">

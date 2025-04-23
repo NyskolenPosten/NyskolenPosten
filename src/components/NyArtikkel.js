@@ -1,5 +1,5 @@
 // components/NyArtikkel.js
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -45,12 +45,13 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
                 
                 const observer = new MutationObserver((mutations) => {
                   mutations.forEach((mutation) => {
-                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                      const addedNode = mutation.addedNodes[0];
-                      if (addedNode.tagName === 'IMG') {
-                        addedNode.style.maxWidth = '100%';
-                        addedNode.style.height = 'auto';
-                      }
+                    if (mutation.type === 'childList') {
+                      mutation.addedNodes.forEach((node) => {
+                        if (node.tagName === 'IMG') {
+                          node.style.maxWidth = '100%';
+                          node.style.height = 'auto';
+                        }
+                      });
                     }
                   });
                 });
@@ -190,6 +191,38 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   if (redirect && artikkelID) {
     return <Navigate to={`/artikkel/${artikkelID}`} replace />;
   }
+
+  useEffect(() => {
+    if (quillRef.current) {
+      const quill = quillRef.current.getEditor();
+      
+      // Erstatt DOMNodeInserted med MutationObserver
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList') {
+            mutation.addedNodes.forEach((node) => {
+              if (node.tagName === 'IMG') {
+                node.style.maxWidth = '100%';
+                node.style.height = 'auto';
+              }
+            });
+          }
+        });
+      });
+
+      // Observer endringer i editor-innholdet
+      const editorContent = quill.root;
+      observer.observe(editorContent, {
+        childList: true,
+        subtree: true
+      });
+
+      // Cleanup observer når komponenten unmounts
+      return () => {
+        observer.disconnect();
+      };
+    }
+  }, []);
 
   return (
     <div className="ny-artikkel">

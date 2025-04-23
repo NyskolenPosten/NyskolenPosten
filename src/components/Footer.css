@@ -1,102 +1,72 @@
 /* Footer.css - Styling for bunnteksten */
 
 .footer {
-  background-color: var(--primary-color);
-  color: white;
-  padding: 2.5rem 0;
+  background-color: #f8f9fa;
+  padding: 2rem 0;
   margin-top: 3rem;
-  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+  border-top: 1px solid #e9ecef;
 }
 
 .footer-innhold {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+  gap: 2rem;
 }
 
 .footer-info {
-  margin-bottom: 1rem;
+  flex: 1;
+  min-width: 250px;
 }
 
 .footer-info p {
   margin: 0.5rem 0;
-  font-size: 1.05rem;
-  line-height: 1.6;
-  color: white;
-}
-
-.footer-info p:first-child {
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  font-size: 1.1rem;
-  color: white;
+  color: #6c757d;
 }
 
 .footer-info a {
-  color: #ffffff;
-  font-weight: 600;
+  color: #007bff;
   text-decoration: none;
-  background-color: var(--secondary-color);
-  padding: 0.3rem 0.8rem;
-  border-radius: 20px;
-  transition: all 0.3s ease;
-  display: inline-block;
-  margin-left: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: color 0.2s ease;
 }
 
-.footer-info a:hover, .footer-info a:focus {
-  background-color: #ff7d54;
-  transform: translateY(-2px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+.footer-info a:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+.teknisk-stotte {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
 }
 
 .footer-lenker {
   display: flex;
-  gap: 1.8rem;
+  gap: 1.5rem;
 }
 
 .footer-lenker a {
-  color: white;
+  color: #6c757d;
   text-decoration: none;
-  transition: all 0.3s ease;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  font-weight: 500;
+  transition: color 0.2s ease;
 }
 
-.footer-lenker a:hover, .footer-lenker a:focus {
-  background-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-  color: white;
+.footer-lenker a:hover {
+  color: #007bff;
 }
 
 @media (max-width: 768px) {
-  .footer {
-    padding: 2rem 0;
-  }
-  
   .footer-innhold {
     flex-direction: column;
     text-align: center;
-    gap: 1.5rem;
   }
-  
-  .footer-info {
-    margin-bottom: 1.5rem;
-  }
-  
-  .footer-info a {
-    margin: 0.5rem auto;
-    display: table;
-  }
-  
+
   .footer-lenker {
-    margin-top: 0.5rem;
     justify-content: center;
   }
 } 
