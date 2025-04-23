@@ -17,6 +17,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   const [redirect, setRedirect] = useState(false);
   const [artikkelID, setArtikkelID] = useState(null);
   const [laster, setLaster] = useState(false);
+  const [editorFeil, setEditorFeil] = useState(null);
 
   const modules = {
     toolbar: {
@@ -110,6 +111,17 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
         observer.disconnect();
       };
     }
+  }, []);
+
+  // Håndterer feil i Quill editor
+  useEffect(() => {
+    const handleEditorError = (error) => {
+      console.error('Quill editor feil:', error);
+      setEditorFeil('Det oppstod en feil i editoren. Vennligst kontakt teknisk leder: mattis.tollefsen@nionett.no');
+    };
+
+    window.addEventListener('error', handleEditorError);
+    return () => window.removeEventListener('error', handleEditorError);
   }, []);
 
   const formats = [
@@ -225,6 +237,12 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   return (
     <div className="ny-artikkel">
       <h2>Skriv ny artikkel</h2>
+      
+      {editorFeil && (
+        <div className="editor-feil">
+          <p>{editorFeil}</p>
+        </div>
+      )}
       
       {melding && <div className="melding-boks">{melding}</div>}
       {feilmelding && <div className="feilmelding">{feilmelding}</div>}

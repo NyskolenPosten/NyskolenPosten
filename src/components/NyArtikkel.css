@@ -281,3 +281,28 @@
   color: #666;
   line-height: 1.6;
 }
+
+.editor-feil {
+  background-color: #fff3f3;
+  border: 1px solid #ffcdd2;
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 1rem 0;
+  color: #d32f2f;
+}
+
+.editor-feil p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.editor-feil a {
+  color: #d32f2f;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.editor-feil a:hover {
+  color: #b71c1c;
+}
