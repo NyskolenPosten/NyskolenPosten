@@ -51,7 +51,17 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
 
   // Sjekk om brukeren er logget inn
   if (!innloggetBruker) {
-    return <Navigate to="/logg-inn" replace />;
+    return <Navigate to="/login" replace />;
+  }
+
+  // Sjekk om brukeren er godkjent
+  if (!innloggetBruker.godkjent) {
+    return (
+      <div className="ikke-godkjent">
+        <h2>Venter på godkjenning</h2>
+        <p>Kontoen din må godkjennes av en administrator før du kan skrive artikler.</p>
+      </div>
+    );
   }
 
   // Håndterer opplasting av bilde

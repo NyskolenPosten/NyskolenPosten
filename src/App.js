@@ -506,11 +506,16 @@ function App() {
                   <Route path="/om-oss" element={<OmOss />} />
                   <Route path="/ny-artikkel" element={
                     innloggetBruker ? (
-                      innloggetBruker.godkjent ? <NyArtikkel leggTilArtikkel={handleNyArtikkel} kategoriliste={kategoriliste} /> : 
-                      <div className="ikke-godkjent">
-                        <h2>Venter på godkjenning</h2>
-                        <p>Kontoen din må godkjennes av en administrator før du kan skrive artikler.</p>
-                      </div>
+                      innloggetBruker.godkjent ? 
+                        <NyArtikkel 
+                          innloggetBruker={innloggetBruker}
+                          leggTilArtikkel={handleNyArtikkel} 
+                          kategoriliste={kategoriliste} 
+                        /> : 
+                        <div className="ikke-godkjent">
+                          <h2>Venter på godkjenning</h2>
+                          <p>Kontoen din må godkjennes av en administrator før du kan skrive artikler.</p>
+                        </div>
                     ) : <Innlogging onLogin={handleLogin} melding="Du må logge inn for å skrive artikler" />
                   } />
                   <Route path="/artikkel/:id" element={<ArtikkelVisning artikler={artikler} innloggetBruker={innloggetBruker} onSlettArtikkel={handleSlettArtikkel} onRedigerArtikkel={handleRedigerArtikkel} />} />
