@@ -110,8 +110,12 @@ function ArtikkelVisning({ artikler = [], innloggetBruker, onSlettArtikkel, onRe
   if (feilmelding) {
     return (
       <div className="feilmelding-container">
-        <h2>Det oppstod en feil</h2>
+        <h2>Noe gikk galt</h2>
         <p>{feilmelding}</p>
+        <div className="teknisk-stotte">
+          <p>Fant du en feil/bug? Kontakt teknisk leder i NyskolenPosten: <a href="mailto:mattis.tollefsen@nionett.no">mattis.tollefsen@nionett.no</a></p>
+          <p>Jeg fikser det så fort som mulig!</p>
+        </div>
         <Link to="/" className="tilbake-lenke">
           &larr; Tilbake til forsiden
         </Link>

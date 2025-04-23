@@ -39,8 +39,37 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
             if (file) {
               const reader = new FileReader();
               reader.onload = (e) => {
-                const range = quillRef.current.getEditor().getSelection(true);
-                quillRef.current.getEditor().insertEmbed(range.index, 'image', e.target.result);
+                const editor = quillRef.current.getEditor();
+                const range = editor.getSelection(true);
+                const currentContent = editor.getContents();
+                
+                const observer = new MutationObserver((mutations) => {
+                  mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                      const addedNode = mutation.addedNodes[0];
+                      if (addedNode.tagName === 'IMG') {
+                        addedNode.style.maxWidth = '100%';
+                        addedNode.style.height = 'auto';
+                      }
+                    }
+                  });
+                });
+
+                observer.observe(editor.root, {
+                  childList: true,
+                  subtree: true
+                });
+
+                editor.insertEmbed(range.index, 'image', e.target.result);
+                setInnhold(editor.root.innerHTML);
+                
+                setTimeout(() => {
+                  observer.disconnect();
+                  // Sikre at innholdet er bevart
+                  if (!editor.root.innerHTML) {
+                    editor.setContents(currentContent);
+                  }
+                }, 1000);
               };
               reader.readAsDataURL(file);
             }

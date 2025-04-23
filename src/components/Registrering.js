@@ -112,7 +112,15 @@ function Registrering() {
         <h2>{translations.registration.title}</h2>
         <StegIndikator />
         
-        {feilmelding && <div className="feilmelding" role="alert">{feilmelding}</div>}
+        {feilmelding && (
+          <div className="feilmelding" role="alert">
+            {feilmelding}
+            <div className="teknisk-stotte">
+              <p>Fant du en feil/bug? Kontakt teknisk leder i NyskolenPosten: <a href="mailto:mattis.tollefsen@nionett.no">mattis.tollefsen@nionett.no</a></p>
+              <p>Jeg fikser det så fort som mulig!</p>
+            </div>
+          </div>
+        )}
         {suksessmelding && <div className="suksessmelding" role="status">{suksessmelding}</div>}
         
         <form onSubmit={handleSubmit} autoComplete="on">

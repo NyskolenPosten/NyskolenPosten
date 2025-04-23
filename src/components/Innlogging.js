@@ -71,7 +71,15 @@ function Innlogging({ onLogin }) {
     <div className="innlogging-container">
       <h2>{translations.login.title}</h2>
       
-      {feilmelding && <div className="feilmelding" role="alert">{feilmelding}</div>}
+      {feilmelding && (
+        <div className="feilmelding" role="alert">
+          {feilmelding}
+          <div className="teknisk-stotte">
+            <p>Fant du en feil/bug? Kontakt teknisk leder i NyskolenPosten: <a href="mailto:mattis.tollefsen@nionett.no">mattis.tollefsen@nionett.no</a></p>
+            <p>Jeg fikser det så fort som mulig!</p>
+          </div>
+        </div>
+      )}
       {suksessmelding && <div className="suksessmelding" role="status">{suksessmelding}</div>}
       
       <form onSubmit={handleSubmit}>
