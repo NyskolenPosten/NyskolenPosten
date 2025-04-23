@@ -471,7 +471,7 @@ function App() {
     <HelmetProvider>
       <LanguageProvider>
         <AuthProvider>
-          <Router basename="/NyskolenPosten">
+          <Router basename={process.env.PUBLIC_URL}>
             <div className="app-container">
               <Helmet>
                 <title>Nyskolen Posten</title>
