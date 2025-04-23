@@ -26,9 +26,36 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
           .select('*')
           .single();
         
-        if (error) throw error;
-        
-        if (data) {
+        if (error) {
+          console.error('Supabase feil:', error);
+          // Hvis tabellen er tom, opprett standardinnstillinger
+          if (error.code === 'PGRST116') {
+            const { data: newData, error: insertError } = await supabase
+              .from('website_settings')
+              .insert([
+                {
+                  lockdown: false,
+                  full_lockdown: false,
+                  note: "",
+                  updated_by: innloggetBruker?.id
+                }
+              ])
+              .select()
+              .single();
+            
+            if (insertError) throw insertError;
+            
+            if (newData) {
+              setLocalSettings({
+                lockdown: newData.lockdown,
+                fullLockdown: newData.full_lockdown,
+                note: newData.note || ""
+              });
+            }
+          } else {
+            throw error;
+          }
+        } else if (data) {
           setLocalSettings({
             lockdown: data.lockdown,
             fullLockdown: data.full_lockdown,
@@ -37,12 +64,12 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
         }
       } catch (error) {
         console.error('Feil ved henting av innstillinger:', error);
-        setFeilmelding('Kunne ikke hente innstillinger fra databasen');
+        setFeilmelding('Kunne ikke hente innstillinger fra databasen. Prøv å oppdatere siden.');
       }
     };
 
     hentInnstillinger();
-  }, []);
+  }, [innloggetBruker?.id]);
   
   // Sjekk om brukeren er teknisk leder
   if (!innloggetBruker || innloggetBruker.rolle !== 'teknisk_leder') {
