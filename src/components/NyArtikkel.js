@@ -1,6 +1,7 @@
 // components/NyArtikkel.js
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import './NyArtikkel.css';
 
 function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) {
@@ -15,6 +16,23 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   const [redirect, setRedirect] = useState(false);
   const [artikkelID, setArtikkelID] = useState(null);
   const [laster, setLaster] = useState(false);
+
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['link', 'image'],
+      ['clean']
+    ],
+  };
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'link', 'image'
+  ];
 
   // Sjekk om brukeren er logget inn
   if (!innloggetBruker) {
@@ -158,15 +176,13 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
         </div>
         
         <div className="form-gruppe">
-          <label htmlFor="innhold">Innhold: <span className="obligatorisk">*</span></label>
-          <textarea 
-            id="innhold" 
-            value={innhold} 
-            onChange={(e) => setInnhold(e.target.value)} 
-            required 
-            rows="10"
-            placeholder="Skriv artikkelteksten her. Du kan bruke enkel formatering: **fet tekst**, *kursiv tekst*, ### overskrift"
-            disabled={laster}
+          <label>Innhold:</label>
+          <ReactQuill
+            value={innhold}
+            onChange={setInnhold}
+            modules={modules}
+            formats={formats}
+            className="quill-editor"
           />
         </div>
         
