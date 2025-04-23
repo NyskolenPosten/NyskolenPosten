@@ -26,6 +26,20 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
       ['link', 'image'],
       ['clean']
     ],
+    imageHandler: {
+      upload: (file) => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            resolve(e.target.result);
+          };
+          reader.onerror = (error) => {
+            reject('Bildeopplasting feilet');
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    }
   };
 
   const formats = [
@@ -178,13 +192,17 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
         
         <div className="form-gruppe">
           <label>Innhold:</label>
-          <ReactQuill
-            value={innhold}
-            onChange={setInnhold}
-            modules={modules}
-            formats={formats}
-            className="quill-editor"
-          />
+          <div className="quill-container">
+            <ReactQuill
+              value={innhold}
+              onChange={setInnhold}
+              modules={modules}
+              formats={formats}
+              className="quill-editor"
+              theme="snow"
+              placeholder="Skriv artikkelteksten her..."
+            />
+          </div>
         </div>
         
         <div className="form-gruppe">
