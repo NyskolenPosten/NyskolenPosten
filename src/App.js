@@ -1,6 +1,6 @@
 // App.js - Hovedkomponenten for Nyskolen Posten
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import './App.css';
 import Hjem from './components/Hjem';
@@ -30,6 +30,9 @@ import {
 } from './services/artikkelService';
 import logo from './assets/images/logo.svg';
 import LeggTilTekniskLeder from './components/LeggTilTekniskLeder';
+
+// Hjelpefunksjon for å sjekke om vi er på GitHub Pages
+const isGitHubPages = window.location.hostname.includes('github.io');
 
 function App() {
   const [innloggetBruker, setInnloggetBruker] = useState(null);
@@ -471,7 +474,7 @@ function App() {
     <HelmetProvider>
       <LanguageProvider>
         <AuthProvider>
-          <Router basename={process.env.PUBLIC_URL}>
+          <Router basename={isGitHubPages ? '/NyskolenPosten' : '/'}>
             <div className="app-container">
               <Helmet>
                 <title>Nyskolen Posten</title>

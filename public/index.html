@@ -40,7 +40,15 @@
               l.pathname.slice(0, -1) + decoded + l.hash
           );
         }
-      }(window.location))
+      }(window.location));
+
+      // Sjekk om vi er på GitHub Pages og håndter routing
+      if (window.location.hostname.includes('github.io')) {
+        var path = window.location.pathname;
+        if (!path.includes('/NyskolenPosten')) {
+          window.location.href = '/NyskolenPosten' + path;
+        }
+      }
     </script>
     <!-- End Single Page Apps for GitHub Pages -->
   </head>
