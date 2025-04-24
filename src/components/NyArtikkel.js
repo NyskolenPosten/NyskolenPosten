@@ -50,6 +50,8 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
                         if (node.tagName === 'IMG') {
                           node.style.maxWidth = '100%';
                           node.style.height = 'auto';
+                          node.style.display = 'block';
+                          node.style.margin = '1rem auto';
                         }
                       });
                     }
@@ -106,7 +108,6 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   useEffect(() => {
     if (quillRef.current) {
       const quill = quillRef.current.getEditor();
-      
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (mutation.type === 'childList') {
@@ -114,6 +115,8 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
               if (node.tagName === 'IMG') {
                 node.style.maxWidth = '100%';
                 node.style.height = 'auto';
+                node.style.display = 'block';
+                node.style.margin = '1rem auto';
               }
             });
           }
