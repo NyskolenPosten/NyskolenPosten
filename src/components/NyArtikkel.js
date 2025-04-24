@@ -1,15 +1,19 @@
 // components/NyArtikkel.js
 import React, { useState, useRef, useEffect } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, Link, useNavigate } from 'react-router-dom';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { supabase } from '../config/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import './NyArtikkel.css';
 
 function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [tittel, setTittel] = useState('');
   const [ingress, setIngress] = useState('');
   const [innhold, setInnhold] = useState('');
-  const [kategori, setKategori] = useState('');
+  const [kategori, setKategori] = useState('nyheter');
   const [bildeForhåndsvisning, setBildeForhåndsvisning] = useState(null);
   const [bildeData, setBildeData] = useState(null);
   const [melding, setMelding] = useState('');
@@ -18,26 +22,34 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   const [artikkelID, setArtikkelID] = useState(null);
   const [laster, setLaster] = useState(false);
   const [editorFeil, setEditorFeil] = useState(null);
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Legg til quillRef
+  const quillRef = useRef();
 
-  // Forenklet Quill-konfigurasjon
+  // Oppdatert Quill-konfigurasjon
   const modules = {
     toolbar: [
-      [{ 'header': '1' }, { 'header': '2' }],
-      ['bold', 'italic'],
-      [{ 'list': 'bullet' }],
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
       ['link', 'image'],
       ['clean']
-    ]
+    ],
+    clipboard: {
+      matchVisual: false
+    }
   };
 
   const formats = [
     'header',
-    'bold', 'italic',
+    'bold', 'italic', 'underline', 'strike',
     'list', 'bullet',
     'link', 'image'
   ];
 
-  // Enkel bildehåndtering
+  // Forbedret bildehåndtering
   useEffect(() => {
     if (quillRef.current) {
       const quill = quillRef.current.getEditor();
@@ -63,7 +75,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
         };
       });
 
-      // Observer for bildestørrelser
+      // Observer for bildestørrelser og innhold
       const observer = new MutationObserver((mutations) => {
         mutations.forEach(mutation => {
           mutation.addedNodes.forEach(node => {
@@ -82,12 +94,26 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
         subtree: true
       });
 
-      return () => observer.disconnect();
+      // Håndterer endringer i editor-innhold
+      quill.on('text-change', () => {
+        const content = quill.root.innerHTML;
+        setInnhold(content);
+      });
+
+      return () => {
+        observer.disconnect();
+        quill.off('text-change');
+      };
     }
   }, []);
 
   // Håndterer endringer i editor-innhold
   const handleInnholdEndring = (content) => {
+    if (quillRef.current) {
+      const quill = quillRef.current.getEditor();
+      const delta = quill.clipboard.convert(content);
+      quill.setContents(delta, 'silent');
+    }
     setInnhold(content);
     if (content.trim()) {
       setFeilmelding('');
@@ -148,64 +174,34 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   // Håndterer innsending av skjema
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validering
-    if (!tittel.trim() || !innhold.trim() || !kategori) {
-      setFeilmelding('Alle påkrevde feltene må fylles ut');
-      return;
-    }
-    
-    setLaster(true);
-    setFeilmelding('');
-    setMelding('');
-    
-    // Hvis ingress ikke er fylt ut, lager vi en automatisk basert på første setning
-    const automatiskIngress = !ingress.trim() 
-      ? innhold.split('.')[0] + '.' 
-      : ingress;
-    
-    // Opprett artikkel-objekt
-    const nyArtikkel = {
-      tittel,
-      ingress: automatiskIngress,
-      innhold,
-      kategori,
-      bilde: bildeData
-    };
-    
+    setError('');
+    setIsSubmitting(true);
+
     try {
-      // Legg til artikkel
-      const id = await onLeggTilArtikkel(nyArtikkel, bildeData);
-      
-      if (id) {
-        // Sjekk om brukeren er admin, redaktør eller teknisk leder
-        const erGodkjentRolle = innloggetBruker.rolle === 'admin' || 
-                               innloggetBruker.rolle === 'redaktør' ||
-                               innloggetBruker.rolle === 'teknisk_leder';
-        
-        setMelding('Artikkel opprettet! ' + (erGodkjentRolle ? 'Artikkelen er publisert.' : 'Artikkelen venter på godkjenning.'));
-        setArtikkelID(id);
-        
-        // Tøm skjema
-        setTittel('');
-        setIngress('');
-        setInnhold('');
-        setKategori('');
-        setBildeForhåndsvisning(null);
-        setBildeData(null);
-        
-        // Redirect etter 2 sekunder
-        setTimeout(() => {
-          setRedirect(true);
-        }, 2000);
-      } else {
-        setFeilmelding('Noe gikk galt ved oppretting av artikkel');
+      if (!tittel || !ingress || !innhold || !kategori) {
+        setError('Alle felt må fylles ut');
+        setIsSubmitting(false);
+        return;
       }
-    } catch (error) {
-      console.error("Feil ved oppretting av artikkel:", error);
-      setFeilmelding('En feil oppstod: ' + (error.message || 'Ukjent feil'));
+
+      const nyArtikkel = {
+        tittel,
+        ingress,
+        innhold,
+        kategori,
+        forfatter: user?.email || 'Anonym',
+        godkjent: false,
+        opprettet: new Date().toISOString(),
+        sistEndret: new Date().toISOString()
+      };
+
+      await onLeggTilArtikkel(nyArtikkel);
+      navigate('/mine-artikler');
+    } catch (err) {
+      setError('Det oppstod en feil ved lagring av artikkelen');
+      console.error('Feil ved lagring av artikkel:', err);
     } finally {
-      setLaster(false);
+      setIsSubmitting(false);
     }
   };
   

@@ -17,7 +17,7 @@ import Innlogging from './components/Innlogging';
 import Registrering from './components/Registrering';
 import CacheMonitor from './components/CacheMonitor';
 import { LanguageProvider } from './utils/LanguageContext';
-import { AuthProvider } from './utils/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Profil from './components/Profil';
 import { loggUt, hentAlleBrukere } from './services/authService';
 import { autoMigratePasswords } from './utils/migratePasswords';
@@ -35,7 +35,11 @@ import { supabase } from './config/supabase';
 // Hjelpefunksjon for å sjekke om vi er på GitHub Pages
 const isGitHubPages = window.location.hostname.includes('github.io');
 
-function App() {
+// Hjelpefunksjon for å sjekke om vi kjører lokalt
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+function AppContent() {
+  const { user } = useAuth();
   const [innloggetBruker, setInnloggetBruker] = useState(null);
   const [artikler, setArtikler] = useState([]);
   const [brukere, setBrukere] = useState([]);
@@ -71,7 +75,7 @@ function App() {
               lockdown: false,
               full_lockdown: false,
               note: "",
-              updated_by: innloggetBruker?.id || null
+              updated_by: user?.id || null
             }])
             .select()
             .single();
@@ -177,14 +181,14 @@ function App() {
       }
     };
     lastInnData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Effekt for å hente website-innstillinger når brukeren endres
   useEffect(() => {
-    if (innloggetBruker) {
+    if (user) {
       hentWebsiteInnstillinger();
     }
-  }, [innloggetBruker]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Effekt for å håndtere online/offline status
   useEffect(() => {
@@ -252,7 +256,7 @@ function App() {
     localStorage.setItem('brukere', JSON.stringify(oppdatertBrukere));
     
     // Oppdater også innlogget bruker hvis det er samme bruker
-    if (innloggetBruker && innloggetBruker.id === oppdatertBruker.id) {
+    if (user && user.id === oppdatertBruker.id) {
       setInnloggetBruker(oppdatertBruker);
     }
   };
@@ -287,7 +291,7 @@ function App() {
   
   // Funksjon for å legge til ny artikkel
   const handleNyArtikkel = async (artikkelData) => {
-    if (!innloggetBruker) {
+    if (!user) {
       console.error("Bruker må være logget inn for å opprette artikkel");
       return null;
     }
@@ -295,12 +299,12 @@ function App() {
     // Legg til forfatterinformasjon
     const kompletArtikkelData = {
       ...artikkelData,
-      forfatterID: innloggetBruker.id,
-      forfatterNavn: innloggetBruker.navn,
+      forfatterID: user.id,
+      forfatterNavn: user.navn,
       // Hvis brukeren er admin, redaktør eller teknisk leder, godkjenn artikkelen automatisk
-      godkjent: innloggetBruker.rolle === 'admin' || 
-                innloggetBruker.rolle === 'redaktør' || 
-                innloggetBruker.rolle === 'teknisk_leder'
+      godkjent: user.rolle === 'admin' || 
+                user.rolle === 'redaktør' || 
+                user.rolle === 'teknisk_leder'
     };
     
     try {
@@ -440,20 +444,16 @@ function App() {
   const handleUpdateWebsiteSettings = async (newSettings) => {
     try {
       // Oppdater i Supabase
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('website_settings')
-        .update({
-          lockdown: newSettings.lockdown,
-          full_lockdown: newSettings.fullLockdown,
-          note: newSettings.note,
-          updated_by: innloggetBruker?.id
-        })
-        .eq('id', 1);
+        .upsert([{ ...newSettings, updated_by: user?.id }])
+        .select()
+        .single();
       
       if (error) throw error;
       
       // Oppdater lokalt state
-      setWebsiteSettings(newSettings);
+      setWebsiteSettings(data);
       
       return { success: true };
     } catch (error) {
@@ -496,97 +496,105 @@ function App() {
   }
 
   return (
-    <HelmetProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          <Router basename={isGitHubPages ? '/NyskolenPosten' : '/'}>
-            <div className="app-container">
-              <Helmet>
-                <title>Nyskolen Posten</title>
-                <meta name="description" content="Nyskolen Posten - Skoleavisen for Nyskolen i Oslo" />
-                <meta name="keywords" content="skoleavis, nyskolen, oslo, elever, artikler" />
-                <meta property="og:title" content="Nyskolen Posten" />
-                <meta property="og:description" content="Skoleavisen for Nyskolen i Oslo" />
-                <meta property="og:type" content="website" />
-              </Helmet>
-              
-              {websiteSettings.note && (
-                <div className="site-notification">
-                  <div className="note-content">{websiteSettings.note}</div>
-                </div>
-              )}
-              
-              <Header 
-                innloggetBruker={innloggetBruker} 
-                onLogout={handleLogout}
-                isLockdown={websiteSettings.lockdown}
+    <div className="app-container">
+      <Helmet>
+        <title>Nyskolen Posten</title>
+        <meta name="description" content="Nyskolen Posten - Skoleavisen for Nyskolen i Oslo" />
+        <meta name="keywords" content="skoleavis, nyskolen, oslo, elever, artikler" />
+        <meta property="og:title" content="Nyskolen Posten" />
+        <meta property="og:description" content="Skoleavisen for Nyskolen i Oslo" />
+        <meta property="og:type" content="website" />
+      </Helmet>
+      
+      {websiteSettings.note && (
+        <div className="site-notification">
+          <div className="note-content">{websiteSettings.note}</div>
+        </div>
+      )}
+      
+      <Header 
+        innloggetBruker={user} 
+        onLogout={handleLogout}
+        isLockdown={websiteSettings.lockdown}
+      />
+      
+      <main className="main-content">
+        {!isOnline && (
+          <div className="offline-warning">
+            Du er offline. Noen funksjoner kan være begrenset.
+          </div>
+        )}
+        
+        <Routes>
+          <Route path="/" element={<Hjem artikler={artikler.filter(a => a.godkjent)} />} />
+          <Route path="/om-oss" element={<OmOss />} />
+          <Route path="/ny-artikkel" element={
+            user ? (
+              <NyArtikkel 
+                onLeggTilArtikkel={handleNyArtikkel}
               />
-              
-              <main className="main-content">
-                {!isOnline && (
-                  <div className="offline-warning">
-                    Du er offline. Noen funksjoner kan være begrenset.
-                  </div>
-                )}
-                
-                <Routes>
-                  <Route path="/" element={<Hjem artikler={artikler.filter(a => a.godkjent)} />} />
-                  <Route path="/om-oss" element={<OmOss />} />
-                  <Route path="/ny-artikkel" element={
-                    <NyArtikkel 
-                      innloggetBruker={innloggetBruker}
-                      onLeggTilArtikkel={handleNyArtikkel} 
-                      kategoriliste={kategoriliste} 
-                    />
-                  } />
-                  <Route path="/artikkel/:id" element={<ArtikkelVisning artikler={artikler} innloggetBruker={innloggetBruker} onSlettArtikkel={handleSlettArtikkel} onRedigerArtikkel={handleRedigerArtikkel} />} />
-                  <Route path="/mine-artikler" element={
-                    <MineArtikler 
-                      innloggetBruker={innloggetBruker} 
-                      artikler={artikler.filter(a => a.forfatterID === innloggetBruker?.id)} 
-                      onSlettArtikkel={handleSlettArtikkel} 
-                      onOppdaterArtikkel={handleOppdaterArtikkel} 
-                    />
-                  } />
-                  <Route path="/admin" element={
-                    <AdminPanel 
-                      innloggetBruker={innloggetBruker} 
-                      artikler={artikler} 
-                      brukere={brukere} 
-                      jobbliste={jobbliste} 
-                      kategoriliste={kategoriliste}
-                      onDeleteArticle={handleSlettArtikkel}
-                      onUpdateArticle={handleOppdaterArtikkel}
-                      onUpdateUser={oppdaterBruker}
-                      onDeleteUser={slettBruker}
-                      onApproveArticle={handleGodkjennArtikkel}
-                      onUpdateJobbliste={setJobbliste}
-                      onUpdateKategoriliste={setKategoriliste}
-                      onEndreRolleBruker={handleEndreRolleBruker}
-                    />
-                  } />
-                  <Route path="/login" element={<Innlogging onLogin={handleLogin} brukere={brukere} />} />
-                  <Route path="/register" element={<Registrering />} />
-                  <Route path="/profil" element={<Profil innloggetBruker={innloggetBruker} onOppdaterBruker={oppdaterBruker} />} />
-                  <Route path="/website-panel" element={<WebsitePanel innloggetBruker={innloggetBruker} currentSettings={websiteSettings} onUpdateSettings={handleUpdateWebsiteSettings} />} />
-                  <Route path="/data-panel" element={<DataPanel innloggetBruker={innloggetBruker} />} />
-                  <Route path="/cache-monitor" element={<CacheMonitor />} />
-                  <Route path="*" element={
-                    <div className="ikke-funnet">
-                      <h1>Side ikke funnet</h1>
-                      <p>Beklager, men siden du leter etter finnes ikke.</p>
-                      <Link to="/" className="tilbake-link">Gå til forsiden</Link>
-                    </div>
-                  } />
-                </Routes>
-              </main>
-              
-              <Footer />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          } />
+          <Route path="/artikkel/:id" element={<ArtikkelVisning artikler={artikler} innloggetBruker={innloggetBruker} onSlettArtikkel={handleSlettArtikkel} onRedigerArtikkel={handleRedigerArtikkel} />} />
+          <Route path="/mine-artikler" element={
+            <MineArtikler 
+              innloggetBruker={innloggetBruker} 
+              artikler={artikler.filter(a => a.forfatterID === innloggetBruker?.id)} 
+              onSlettArtikkel={handleSlettArtikkel} 
+              onOppdaterArtikkel={handleOppdaterArtikkel} 
+            />
+          } />
+          <Route path="/admin" element={
+            <AdminPanel 
+              innloggetBruker={innloggetBruker} 
+              artikler={artikler} 
+              brukere={brukere} 
+              jobbliste={jobbliste} 
+              kategoriliste={kategoriliste}
+              onDeleteArticle={handleSlettArtikkel}
+              onUpdateArticle={handleOppdaterArtikkel}
+              onUpdateUser={oppdaterBruker}
+              onDeleteUser={slettBruker}
+              onApproveArticle={handleGodkjennArtikkel}
+              onUpdateJobbliste={setJobbliste}
+              onUpdateKategoriliste={setKategoriliste}
+              onEndreRolleBruker={handleEndreRolleBruker}
+            />
+          } />
+          <Route path="/login" element={<Innlogging onLogin={handleLogin} brukere={brukere} />} />
+          <Route path="/register" element={<Registrering />} />
+          <Route path="/profil" element={<Profil innloggetBruker={innloggetBruker} onOppdaterBruker={oppdaterBruker} />} />
+          <Route path="/website-panel" element={<WebsitePanel innloggetBruker={innloggetBruker} currentSettings={websiteSettings} onUpdateSettings={handleUpdateWebsiteSettings} />} />
+          <Route path="/data-panel" element={<DataPanel innloggetBruker={innloggetBruker} />} />
+          <Route path="/cache-monitor" element={<CacheMonitor />} />
+          <Route path="*" element={
+            <div className="ikke-funnet">
+              <h1>Side ikke funnet</h1>
+              <p>Beklager, men siden du leter etter finnes ikke.</p>
+              <Link to="/" className="tilbake-link">Gå til forsiden</Link>
             </div>
+          } />
+        </Routes>
+      </main>
+      
+      <Footer />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <HelmetProvider>
+        <LanguageProvider>
+          <Router basename={isGitHubPages ? '/NyskolenPosten' : '/'}>
+            <AppContent />
           </Router>
-        </AuthProvider>
-      </LanguageProvider>
-    </HelmetProvider>
+        </LanguageProvider>
+      </HelmetProvider>
+    </AuthProvider>
   );
 }
 

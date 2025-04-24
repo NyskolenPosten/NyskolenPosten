@@ -2,7 +2,7 @@
   "name": "nyskolen-posten",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://NyskolenPosten.github.io/NyskolenPosten",
+  "homepage": "https://nyskolenposten.github.io/NyskolenPosten",
   "dependencies": {
     "@prisma/client": "^5.10.2",
     "@supabase/supabase-js": "^2.49.4",
