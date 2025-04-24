@@ -1,34 +1,48 @@
--- Opprett tabell for website-innstillinger
+-- Create website_settings table
 CREATE TABLE IF NOT EXISTS public.website_settings (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    id BIGINT PRIMARY KEY DEFAULT 1,
     lockdown BOOLEAN DEFAULT false,
     full_lockdown BOOLEAN DEFAULT false,
-    note TEXT,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    note TEXT DEFAULT '',
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
     updated_by UUID REFERENCES auth.users(id)
 );
 
--- Opprett RLS (Row Level Security) policies
+-- Add RLS policies
 ALTER TABLE public.website_settings ENABLE ROW LEVEL SECURITY;
 
--- Tillat lesing for alle
-CREATE POLICY "Allow public read access" ON public.website_settings
-    FOR SELECT USING (true);
+-- Allow public read access
+CREATE POLICY "Allow public read access"
+ON public.website_settings
+FOR SELECT
+TO public
+USING (true);
 
--- Tillat oppdatering kun for teknisk leder
-CREATE POLICY "Allow technical leader to update settings" ON public.website_settings
-    FOR UPDATE USING (
-        auth.uid() IN (
-            SELECT id FROM auth.users 
-            WHERE raw_user_meta_data->>'rolle' = 'teknisk_leder'
-        )
-    );
+-- Allow technical leader to update settings
+CREATE POLICY "Allow technical leader to update settings"
+ON public.website_settings
+FOR UPDATE
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM public.brukere
+        WHERE id = auth.uid()
+        AND rolle = 'teknisk_leder'
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM public.brukere
+        WHERE id = auth.uid()
+        AND rolle = 'teknisk_leder'
+    )
+);
 
--- Opprett trigger for å oppdatere updated_at
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+-- Create updated_at trigger
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
+    NEW.updated_at = now();
     RETURN NEW;
 END;
 $$ language 'plpgsql';
@@ -36,9 +50,9 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_website_settings_updated_at
     BEFORE UPDATE ON public.website_settings
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION public.update_updated_at_column();
 
--- Sett inn standardinnstillinger
-INSERT INTO public.website_settings (lockdown, full_lockdown, note)
-VALUES (false, false, '')
-ON CONFLICT DO NOTHING; 
+-- Insert default row
+INSERT INTO public.website_settings (id, lockdown, full_lockdown, note)
+VALUES (1, false, false, '')
+ON CONFLICT (id) DO NOTHING; 
