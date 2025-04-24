@@ -533,64 +533,37 @@ function App() {
                   <Route path="/" element={<Hjem artikler={artikler.filter(a => a.godkjent)} />} />
                   <Route path="/om-oss" element={<OmOss />} />
                   <Route path="/ny-artikkel" element={
-                    innloggetBruker ? (
-                      innloggetBruker.godkjent ? 
-                        <NyArtikkel 
-                          innloggetBruker={innloggetBruker}
-                          onLeggTilArtikkel={handleNyArtikkel} 
-                          kategoriliste={kategoriliste} 
-                        /> : 
-                        <div className="ikke-godkjent">
-                          <h2>Venter på godkjenning</h2>
-                          <p>Kontoen din må godkjennes av en administrator før du kan skrive artikler.</p>
-                        </div>
-                    ) : (
-                      <div className="ikke-godkjent">
-                        <h2>Du må være logget inn</h2>
-                        <p>Du må logge inn for å skrive artikler.</p>
-                        <Link to="/login">Logg inn</Link>
-                      </div>
-                    )
+                    <NyArtikkel 
+                      innloggetBruker={innloggetBruker}
+                      onLeggTilArtikkel={handleNyArtikkel} 
+                      kategoriliste={kategoriliste} 
+                    />
                   } />
                   <Route path="/artikkel/:id" element={<ArtikkelVisning artikler={artikler} innloggetBruker={innloggetBruker} onSlettArtikkel={handleSlettArtikkel} onRedigerArtikkel={handleRedigerArtikkel} />} />
                   <Route path="/mine-artikler" element={
-                    innloggetBruker ? 
-                      <MineArtikler 
-                        innloggetBruker={innloggetBruker} 
-                        artikler={artikler.filter(a => a.forfatterID === innloggetBruker?.id)} 
-                        onSlettArtikkel={handleSlettArtikkel} 
-                        onOppdaterArtikkel={handleOppdaterArtikkel} 
-                      /> : 
-                      <div className="ikke-godkjent">
-                        <h2>Du må være logget inn</h2>
-                        <p>Du må logge inn for å se dine artikler.</p>
-                        <Link to="/login">Logg inn</Link>
-                      </div>
+                    <MineArtikler 
+                      innloggetBruker={innloggetBruker} 
+                      artikler={artikler.filter(a => a.forfatterID === innloggetBruker?.id)} 
+                      onSlettArtikkel={handleSlettArtikkel} 
+                      onOppdaterArtikkel={handleOppdaterArtikkel} 
+                    />
                   } />
                   <Route path="/admin" element={
-                    innloggetBruker && (innloggetBruker.rolle === 'admin' || innloggetBruker.rolle === 'redaktør') ? 
-                      <>
-                        <AdminPanel 
-                          innloggetBruker={innloggetBruker} 
-                          artikler={artikler} 
-                          brukere={brukere} 
-                          jobbliste={jobbliste} 
-                          kategoriliste={kategoriliste}
-                          onDeleteArticle={handleSlettArtikkel}
-                          onUpdateArticle={handleOppdaterArtikkel}
-                          onUpdateUser={oppdaterBruker}
-                          onDeleteUser={slettBruker}
-                          onApproveArticle={handleGodkjennArtikkel}
-                          onUpdateJobbliste={setJobbliste}
-                          onUpdateKategoriliste={setKategoriliste}
-                          onEndreRolleBruker={handleEndreRolleBruker}
-                        />
-                        {innloggetBruker.rolle === 'admin' && <LeggTilTekniskLeder />}
-                      </> : 
-                      <div className="ikke-godkjent">
-                        <h2>Tilgang nektet</h2>
-                        <p>Kun administratorer og redaktører har tilgang til admin-panelet.</p>
-                      </div>
+                    <AdminPanel 
+                      innloggetBruker={innloggetBruker} 
+                      artikler={artikler} 
+                      brukere={brukere} 
+                      jobbliste={jobbliste} 
+                      kategoriliste={kategoriliste}
+                      onDeleteArticle={handleSlettArtikkel}
+                      onUpdateArticle={handleOppdaterArtikkel}
+                      onUpdateUser={oppdaterBruker}
+                      onDeleteUser={slettBruker}
+                      onApproveArticle={handleGodkjennArtikkel}
+                      onUpdateJobbliste={setJobbliste}
+                      onUpdateKategoriliste={setKategoriliste}
+                      onEndreRolleBruker={handleEndreRolleBruker}
+                    />
                   } />
                   <Route path="/login" element={<Innlogging onLogin={handleLogin} brukere={brukere} />} />
                   <Route path="/register" element={<Registrering />} />
@@ -598,6 +571,13 @@ function App() {
                   <Route path="/website-panel" element={<WebsitePanel innloggetBruker={innloggetBruker} currentSettings={websiteSettings} onUpdateSettings={handleUpdateWebsiteSettings} />} />
                   <Route path="/data-panel" element={<DataPanel innloggetBruker={innloggetBruker} />} />
                   <Route path="/cache-monitor" element={<CacheMonitor />} />
+                  <Route path="*" element={
+                    <div className="ikke-funnet">
+                      <h1>Side ikke funnet</h1>
+                      <p>Beklager, men siden du leter etter finnes ikke.</p>
+                      <Link to="/" className="tilbake-link">Gå til forsiden</Link>
+                    </div>
+                  } />
                 </Routes>
               </main>
               
