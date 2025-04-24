@@ -19,77 +19,78 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   const [laster, setLaster] = useState(false);
   const [editorFeil, setEditorFeil] = useState(null);
 
+  // Forenklet Quill-konfigurasjon
   const modules = {
-    toolbar: {
-      container: [
-        [{ 'header': [1, 2, 3, false] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        ['link', 'image'],
-        ['clean']
-      ],
-      handlers: {
-        image: () => {
-          const input = document.createElement('input');
-          input.setAttribute('type', 'file');
-          input.setAttribute('accept', 'image/*');
-          input.click();
-
-          input.onchange = async () => {
-            const file = input.files[0];
-            if (file) {
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                const editor = quillRef.current.getEditor();
-                const range = editor.getSelection(true);
-                
-                const observer = new MutationObserver((mutations) => {
-                  mutations.forEach((mutation) => {
-                    if (mutation.type === 'childList') {
-                      mutation.addedNodes.forEach((node) => {
-                        if (node.tagName === 'IMG') {
-                          node.style.maxWidth = '100%';
-                          node.style.height = 'auto';
-                          node.style.display = 'block';
-                          node.style.margin = '1rem auto';
-                        }
-                      });
-                    }
-                  });
-                });
-
-                observer.observe(editor.root, {
-                  childList: true,
-                  subtree: true
-                });
-
-                editor.insertEmbed(range.index, 'image', e.target.result);
-                
-                setTimeout(() => {
-                  observer.disconnect();
-                }, 1000);
-              };
-              reader.readAsDataURL(file);
-            }
-          };
-        }
-      }
-    }
+    toolbar: [
+      [{ 'header': '1' }, { 'header': '2' }],
+      ['bold', 'italic'],
+      [{ 'list': 'bullet' }],
+      ['link', 'image'],
+      ['clean']
+    ]
   };
 
-  const quillRef = useRef();
+  const formats = [
+    'header',
+    'bold', 'italic',
+    'list', 'bullet',
+    'link', 'image'
+  ];
+
+  // Enkel bildehåndtering
+  useEffect(() => {
+    if (quillRef.current) {
+      const quill = quillRef.current.getEditor();
+      
+      // Legg til bildehåndtering
+      const toolbar = quill.getModule('toolbar');
+      toolbar.addHandler('image', () => {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
+
+        input.onchange = () => {
+          const file = input.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const range = quill.getSelection(true);
+              quill.insertEmbed(range.index, 'image', e.target.result);
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+      });
+
+      // Observer for bildestørrelser
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach(mutation => {
+          mutation.addedNodes.forEach(node => {
+            if (node.tagName === 'IMG') {
+              node.style.maxWidth = '100%';
+              node.style.height = 'auto';
+              node.style.display = 'block';
+              node.style.margin = '1rem auto';
+            }
+          });
+        });
+      });
+
+      observer.observe(quill.root, {
+        childList: true,
+        subtree: true
+      });
+
+      return () => observer.disconnect();
+    }
+  }, []);
 
   // Håndterer endringer i editor-innhold
-  const handleInnholdEndring = (content, delta, source, editor) => {
-    if (source === 'user') {
-      const html = editor.getHTML();
-      setInnhold(html);
-      
-      // Oppdater også state med ren tekst for validering
-      const tekst = editor.getText();
-      if (tekst.trim()) {
-        setFeilmelding('');
-      }
+  const handleInnholdEndring = (content) => {
+    setInnhold(content);
+    if (content.trim()) {
+      setFeilmelding('');
     }
   };
 
@@ -103,43 +104,6 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
     window.addEventListener('error', handleEditorError);
     return () => window.removeEventListener('error', handleEditorError);
   }, []);
-
-  // Effekt for å håndtere bildestørrelser i editoren
-  useEffect(() => {
-    if (quillRef.current) {
-      const quill = quillRef.current.getEditor();
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.type === 'childList') {
-            mutation.addedNodes.forEach((node) => {
-              if (node.tagName === 'IMG') {
-                node.style.maxWidth = '100%';
-                node.style.height = 'auto';
-                node.style.display = 'block';
-                node.style.margin = '1rem auto';
-              }
-            });
-          }
-        });
-      });
-
-      observer.observe(quill.root, {
-        childList: true,
-        subtree: true
-      });
-
-      return () => {
-        observer.disconnect();
-      };
-    }
-  }, []);
-
-  const formats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet',
-    'link', 'image'
-  ];
 
   // Sjekk om brukeren er logget inn
   if (!innloggetBruker) {
@@ -307,7 +271,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
         </div>
         
         <div className="form-gruppe">
-          <label>Innhold:</label>
+          <label>Innhold: <span className="obligatorisk">*</span></label>
           <div className="quill-container">
             <ReactQuill
               ref={quillRef}
@@ -345,17 +309,12 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
         <div className="form-gruppe info-boks">
           <h4>Tips for formatering:</h4>
           <ul>
-            <li><code>**tekst**</code> for <strong>fet tekst</strong></li>
-            <li><code>*tekst*</code> for <em>kursiv tekst</em></li>
-            <li><code>### Overskrift</code> for overskrifter</li>
+            <li>Bruk <strong>Overskrift 1</strong> for hovedoverskrifter</li>
+            <li>Bruk <strong>Overskrift 2</strong> for underoverskrifter</li>
+            <li>Marker tekst og klikk på <strong>B</strong> for fet tekst</li>
+            <li>Bruk punktliste for å liste opp ting</li>
+            <li>Last opp bilder ved å klikke på bildeknappen</li>
           </ul>
-          <p className="info-tekst">
-            {innloggetBruker.rolle === 'admin' || 
-             innloggetBruker.rolle === 'redaktør' ||
-             innloggetBruker.rolle === 'teknisk_leder'
-              ? 'Som redaktør/teknisk leder vil artikkelen din publiseres umiddelbart.' 
-              : 'Artikkelen din må godkjennes før den publiseres.'}
-          </p>
         </div>
         
         <button type="submit" className="send-knapp" disabled={laster}>
