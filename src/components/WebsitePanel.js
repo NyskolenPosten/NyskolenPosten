@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import './AdminPanel.css'; // Bruker samme CSS som AdminPanel
 import { useLanguage } from '../utils/LanguageContext';
-import { supabase } from '../config/supabase';
+import { supabase, sjekkAuth, initialiserWebsiteSettings } from '../config/supabase';
 
 function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
   const { translations } = useLanguage();
@@ -17,66 +17,23 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
     note: ""
   });
   
-  // Sjekk om brukeren er teknisk leder
-  if (!innloggetBruker || innloggetBruker.rolle !== 'teknisk_leder') {
-    return (
-      <div className="admin-container">
-        <h1>Tilgang nektet</h1>
-        <p>Du har ikke tilgang til denne siden. Kun teknisk leder har tilgang til Website Panel.</p>
-        <p>Hvis du mener dette er feil, kontakt systemadministrator på <a href="mailto:mattis.tollefsen@nionett.no">mattis.tollefsen@nionett.no</a></p>
-      </div>
-    );
-  }
-  
   // Hent innstillinger fra Supabase
   useEffect(() => {
     const hentInnstillinger = async () => {
       try {
         // Sjekk først om brukeren er autentisert
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = await sjekkAuth();
         if (!session) {
           throw new Error('Ikke autentisert');
         }
 
-        const { data, error } = await supabase
-          .from('website_settings')
-          .select('*')
-          .single();
-        
-        if (error) {
-          console.error('Supabase feil:', error);
-          // Hvis tabellen er tom, opprett standardinnstillinger
-          if (error.code === 'PGRST116') {
-            const { data: newData, error: insertError } = await supabase
-              .from('website_settings')
-              .insert([
-                {
-                  lockdown: false,
-                  full_lockdown: false,
-                  note: "",
-                  updated_by: innloggetBruker?.id
-                }
-              ])
-              .select()
-              .single();
-            
-            if (insertError) throw insertError;
-            
-            if (newData) {
-              setLocalSettings({
-                lockdown: newData.lockdown,
-                fullLockdown: newData.full_lockdown,
-                note: newData.note || ""
-              });
-            }
-          } else {
-            throw error;
-          }
-        } else if (data) {
+        // Initialiser eller hent website_settings
+        const settings = await initialiserWebsiteSettings();
+        if (settings) {
           setLocalSettings({
-            lockdown: data.lockdown,
-            fullLockdown: data.full_lockdown,
-            note: data.note || ""
+            lockdown: settings.lockdown,
+            fullLockdown: settings.full_lockdown,
+            note: settings.note || ""
           });
         }
       } catch (error) {
@@ -89,6 +46,17 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
       hentInnstillinger();
     }
   }, [innloggetBruker]);
+  
+  // Sjekk om brukeren er teknisk leder
+  if (!innloggetBruker || innloggetBruker.rolle !== 'teknisk_leder') {
+    return (
+      <div className="admin-container">
+        <h1>Tilgang nektet</h1>
+        <p>Du har ikke tilgang til denne siden. Kun teknisk leder har tilgang til Website Panel.</p>
+        <p>Hvis du mener dette er feil, kontakt systemadministrator på <a href="mailto:mattis.tollefsen@nionett.no">mattis.tollefsen@nionett.no</a></p>
+      </div>
+    );
+  }
   
   // Passordsjekk
   const handlePassordSubmit = (e) => {

@@ -42,7 +42,6 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
               reader.onload = (e) => {
                 const editor = quillRef.current.getEditor();
                 const range = editor.getSelection(true);
-                const currentContent = editor.getContents();
                 
                 const observer = new MutationObserver((mutations) => {
                   mutations.forEach((mutation) => {
@@ -63,14 +62,9 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
                 });
 
                 editor.insertEmbed(range.index, 'image', e.target.result);
-                setInnhold(editor.root.innerHTML);
                 
                 setTimeout(() => {
                   observer.disconnect();
-                  // Sikre at innholdet er bevart
-                  if (!editor.root.innerHTML) {
-                    editor.setContents(currentContent);
-                  }
                 }, 1000);
               };
               reader.readAsDataURL(file);
@@ -108,7 +102,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
     return () => window.removeEventListener('error', handleEditorError);
   }, []);
 
-  // Håndterer bildestørrelser i editoren
+  // Effekt for å håndtere bildestørrelser i editoren
   useEffect(() => {
     if (quillRef.current) {
       const quill = quillRef.current.getEditor();
@@ -126,8 +120,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
         });
       });
 
-      const editorContent = quill.root;
-      observer.observe(editorContent, {
+      observer.observe(quill.root, {
         childList: true,
         subtree: true
       });

@@ -51,7 +51,62 @@ function App() {
   // Admin e-postliste for automatisk godkjenning og admin-rolle
   const adminEpostliste = ['mattis.tollefsen@nionett.no', 'admin@nyskolen.no'];
   
-  // Last inn data fra localStorage ved oppstart
+  // Hent website-innstillinger fra Supabase
+  const hentWebsiteInnstillinger = async () => {
+    try {
+      // Sjekk først om brukeren er autentisert
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const { data, error } = await supabase
+        .from('website_settings')
+        .select('*')
+        .single();
+      
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // Hvis tabellen er tom, opprett standardinnstillinger
+          const { data: newData, error: insertError } = await supabase
+            .from('website_settings')
+            .insert([{
+              lockdown: false,
+              full_lockdown: false,
+              note: "",
+              updated_by: innloggetBruker?.id || null
+            }])
+            .select()
+            .single();
+          
+          if (insertError) throw insertError;
+          
+          if (newData) {
+            setWebsiteSettings({
+              lockdown: newData.lockdown,
+              fullLockdown: newData.full_lockdown,
+              note: newData.note || ""
+            });
+          }
+        } else {
+          throw error;
+        }
+      } else if (data) {
+        setWebsiteSettings({
+          lockdown: data.lockdown,
+          fullLockdown: data.full_lockdown,
+          note: data.note || ""
+        });
+      }
+    } catch (error) {
+      console.error('Feil ved henting av website-innstillinger:', error);
+      // Bruk standardinnstillinger hvis det oppstår en feil
+      setWebsiteSettings({
+        lockdown: false,
+        fullLockdown: false,
+        note: ""
+      });
+    }
+  };
+
+  // Effekt for å laste inn data ved oppstart
   useEffect(() => {
     // Kjør migrering av passord til kryptert format
     autoMigratePasswords();
@@ -79,161 +134,60 @@ function App() {
     };
     lastArtikler();
     
-    // Last inn brukere
-    const lagredeBrukere = localStorage.getItem('brukere');
-    if (lagredeBrukere) {
-      setBrukere(JSON.parse(lagredeBrukere));
-    } else {
-      // Opprett admin-bruker hvis ingen brukere finnes
-      const adminBruker = {
-        id: 'admin-' + Date.now(),
-        navn: 'Administrator',
-        email: 'admin@nyskolen.no',
-        password: 'admin123',
-        rolle: 'admin',
-        godkjent: true,
-        opprettet: new Date().toISOString()
-      };
-      setBrukere([adminBruker]);
-      localStorage.setItem('brukere', JSON.stringify([adminBruker]));
-    }
-    
-    // Last inn jobbliste
-    const lagretJobbliste = localStorage.getItem('jobbliste');
-    if (lagretJobbliste) {
-      setJobbliste(JSON.parse(lagretJobbliste));
-    } else {
-      // Opprett standard jobbliste hvis ingen finnes
-      const standardJobbliste = [
-        {
-          id: 'jobb-1',
+    // Last inn brukere og kategoriliste
+    const lastInnData = () => {
+      // Last inn brukere
+      const lagredeBrukere = localStorage.getItem('brukere');
+      if (lagredeBrukere) {
+        setBrukere(JSON.parse(lagredeBrukere));
+      } else {
+        // Opprett admin-bruker hvis ingen finnes
+        const adminBruker = {
+          id: 'admin-' + Date.now(),
           navn: 'Administrator',
-          rolle: 'Redaktør',
-          dato: new Date().toISOString()
-        }
-      ];
-      setJobbliste(standardJobbliste);
-      localStorage.setItem('jobbliste', JSON.stringify(standardJobbliste));
-    }
-    
-    // Last inn kategoriliste
-    const lagretKategoriliste = localStorage.getItem('kategoriliste');
-    if (lagretKategoriliste) {
-      setKategoriliste(JSON.parse(lagretKategoriliste));
-    } else {
-      // Opprett standard kategoriliste hvis ingen finnes
-      const standardKategoriliste = [
-        {
-          id: 'kat-1',
-          kategori: 'Nyheter',
-          ansvarlig: 'Administrator'
-        },
-        {
-          id: 'kat-2',
-          kategori: 'Kultur',
-          ansvarlig: 'Administrator'
-        },
-        {
-          id: 'kat-3',
-          kategori: 'Sport',
-          ansvarlig: 'Administrator'
-        },
-        {
-          id: 'kat-4',
-          kategori: 'Skole',
-          ansvarlig: 'Administrator'
-        },
-        {
-          id: 'kat-5',
-          kategori: 'Saksmøtet',
-          ansvarlig: 'Administrator'
-        },
-        {
-          id: 'kat-6',
-          kategori: 'Meninger',
-          ansvarlig: 'Administrator'
-        },
-        {
-          id: 'kat-7',
-          kategori: 'Heureka',
-          ansvarlig: 'Administrator'
-        },
-        {
-          id: 'kat-8',
-          kategori: 'Klassen',
-          ansvarlig: 'Administrator'
-        },
-        {
-          id: 'kat-9',
-          kategori: 'Annet',
-          ansvarlig: 'Administrator'
-        }
-      ];
-      setKategoriliste(standardKategoriliste);
-      localStorage.setItem('kategoriliste', JSON.stringify(standardKategoriliste));
-    }
+          email: 'admin@nyskolen.no',
+          password: 'admin123',
+          rolle: 'admin',
+          godkjent: true,
+          opprettet: new Date().toISOString()
+        };
+        setBrukere([adminBruker]);
+        localStorage.setItem('brukere', JSON.stringify([adminBruker]));
+      }
 
-    // Hent website-innstillinger fra Supabase
-    const hentWebsiteInnstillinger = async () => {
-      try {
-        // Sjekk først om brukeren er autentisert
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        const { data, error } = await supabase
-          .from('website_settings')
-          .select('*')
-          .single();
-        
-        if (error) {
-          if (error.code === 'PGRST116') {
-            // Hvis tabellen er tom, opprett standardinnstillinger
-            const { data: newData, error: insertError } = await supabase
-              .from('website_settings')
-              .insert([{
-                lockdown: false,
-                full_lockdown: false,
-                note: "",
-                updated_by: innloggetBruker?.id || null
-              }])
-              .select()
-              .single();
-            
-            if (insertError) throw insertError;
-            
-            if (newData) {
-              setWebsiteSettings({
-                lockdown: newData.lockdown,
-                fullLockdown: newData.full_lockdown,
-                note: newData.note || ""
-              });
-            }
-          } else {
-            throw error;
-          }
-        } else if (data) {
-          setWebsiteSettings({
-            lockdown: data.lockdown,
-            fullLockdown: data.full_lockdown,
-            note: data.note || ""
-          });
-        }
-      } catch (error) {
-        console.error('Feil ved henting av website-innstillinger:', error);
-        // Bruk standardinnstillinger hvis det oppstår en feil
-        setWebsiteSettings({
-          lockdown: false,
-          fullLockdown: false,
-          note: ""
-        });
+      // Last inn kategoriliste
+      const lagretKategoriliste = localStorage.getItem('kategoriliste');
+      if (lagretKategoriliste) {
+        setKategoriliste(JSON.parse(lagretKategoriliste));
+      } else {
+        // Opprett standard kategoriliste
+        const standardKategoriliste = [
+          { id: 'kat-1', kategori: 'Nyheter', ansvarlig: 'Administrator' },
+          { id: 'kat-2', kategori: 'Kultur', ansvarlig: 'Administrator' },
+          { id: 'kat-3', kategori: 'Sport', ansvarlig: 'Administrator' },
+          { id: 'kat-4', kategori: 'Skole', ansvarlig: 'Administrator' },
+          { id: 'kat-5', kategori: 'Saksmøtet', ansvarlig: 'Administrator' },
+          { id: 'kat-6', kategori: 'Meninger', ansvarlig: 'Administrator' },
+          { id: 'kat-7', kategori: 'Heureka', ansvarlig: 'Administrator' },
+          { id: 'kat-8', kategori: 'Klassen', ansvarlig: 'Administrator' },
+          { id: 'kat-9', kategori: 'Annet', ansvarlig: 'Administrator' }
+        ];
+        setKategoriliste(standardKategoriliste);
+        localStorage.setItem('kategoriliste', JSON.stringify(standardKategoriliste));
       }
     };
+    lastInnData();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    useEffect(() => {
-      if (innloggetBruker) {
-        hentWebsiteInnstillinger();
-      }
-    }, [innloggetBruker]);
+  // Effekt for å hente website-innstillinger når brukeren endres
+  useEffect(() => {
+    if (innloggetBruker) {
+      hentWebsiteInnstillinger();
+    }
+  }, [innloggetBruker]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Effekt for å håndtere online/offline status
+  useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
@@ -245,8 +199,8 @@ function App() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-  
-  // Lytter etter endringer i brukerdatabasen
+
+  // Effekt for å lytte etter endringer i brukerdatabasen
   useEffect(() => {
     const handleStorageChange = async (e) => {
       if (e.key === 'brukere') {
@@ -264,9 +218,9 @@ function App() {
     
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-  
-  // Lytt etter endringer i websiteSettings
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Effekt for å lytte etter endringer i websiteSettings
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'websiteSettings') {
