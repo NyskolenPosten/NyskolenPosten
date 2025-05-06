@@ -1,10 +1,9 @@
 // components/NyArtikkel.js
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import { useAuth } from '../context/AuthContext';
 import { supabase } from '../config/supabase';
-import { useAuth } from '../contexts/AuthContext';
+import { Editor } from 'react-simple-wysiwyg';
 import './NyArtikkel.css';
 
 function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) {
@@ -21,115 +20,23 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   const [redirect, setRedirect] = useState(false);
   const [artikkelID, setArtikkelID] = useState(null);
   const [laster, setLaster] = useState(false);
-  const [editorFeil, setEditorFeil] = useState(null);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Legg til quillRef
-  const quillRef = useRef();
 
-  // Oppdatert Quill-konfigurasjon
-  const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['link', 'image'],
-      ['clean']
-    ],
-    clipboard: {
-      matchVisual: false
-    }
-  };
-
-  const formats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet',
-    'link', 'image'
-  ];
-
-  // Forbedret bildehåndtering
   useEffect(() => {
-    if (quillRef.current) {
-      const quill = quillRef.current.getEditor();
-      
-      // Legg til bildehåndtering
-      const toolbar = quill.getModule('toolbar');
-      toolbar.addHandler('image', () => {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'file');
-        input.setAttribute('accept', 'image/*');
-        input.click();
-
-        input.onchange = () => {
-          const file = input.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              const range = quill.getSelection(true);
-              quill.insertEmbed(range.index, 'image', e.target.result);
-            };
-            reader.readAsDataURL(file);
-          }
-        };
-      });
-
-      // Observer for bildestørrelser og innhold
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach(mutation => {
-          mutation.addedNodes.forEach(node => {
-            if (node.tagName === 'IMG') {
-              node.style.maxWidth = '100%';
-              node.style.height = 'auto';
-              node.style.display = 'block';
-              node.style.margin = '1rem auto';
-            }
-          });
-        });
-      });
-
-      observer.observe(quill.root, {
-        childList: true,
-        subtree: true
-      });
-
-      // Håndterer endringer i editor-innhold
-      quill.on('text-change', () => {
-        const content = quill.root.innerHTML;
-        setInnhold(content);
-      });
-
-      return () => {
-        observer.disconnect();
-        quill.off('text-change');
-      };
+    if (!user) {
+      navigate('/login');
     }
-  }, []);
+  }, [user, navigate]);
 
   // Håndterer endringer i editor-innhold
-  const handleInnholdEndring = (content) => {
-    if (quillRef.current) {
-      const quill = quillRef.current.getEditor();
-      const delta = quill.clipboard.convert(content);
-      quill.setContents(delta, 'silent');
-    }
-    setInnhold(content);
-    if (content.trim()) {
+  const handleInnholdEndring = (e) => {
+    setInnhold(e.target.value);
+    if (e.target.value.trim()) {
       setFeilmelding('');
     }
   };
-
-  // Håndterer feil i Quill editor
-  useEffect(() => {
-    const handleEditorError = (error) => {
-      console.error('Quill editor feil:', error);
-      setEditorFeil('Det oppstod en feil i editoren. Vennligst kontakt teknisk leder: mattis.tollefsen@nionett.no');
-    };
-
-    window.addEventListener('error', handleEditorError);
-    return () => window.removeEventListener('error', handleEditorError);
-  }, []);
 
   // Sjekk om brukeren er logget inn
   if (!innloggetBruker) {
@@ -175,6 +82,7 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setIsSubmitting(true);
 
     try {
@@ -189,17 +97,30 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
         ingress,
         innhold,
         kategori,
-        forfatter: user?.email || 'Anonym',
+        forfatter: user.email,
         godkjent: false,
         opprettet: new Date().toISOString(),
-        sistEndret: new Date().toISOString()
+        sist_endret: new Date().toISOString()
       };
 
-      await onLeggTilArtikkel(nyArtikkel);
-      navigate('/mine-artikler');
+      const { data, error } = await supabase
+        .from('artikler')
+        .insert([nyArtikkel])
+        .select();
+
+      if (error) throw error;
+
+      if (onLeggTilArtikkel) {
+        onLeggTilArtikkel(data[0]);
+      }
+
+      setSuccess('Artikkelen ble lagret og venter på godkjenning');
+      setTittel('');
+      setIngress('');
+      setInnhold('');
+      setKategori('nyheter');
     } catch (err) {
-      setError('Det oppstod en feil ved lagring av artikkelen');
-      console.error('Feil ved lagring av artikkel:', err);
+      setError(err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -214,107 +135,80 @@ function NyArtikkel({ innloggetBruker, onLeggTilArtikkel, kategoriliste = [] }) 
     <div className="ny-artikkel">
       <h2>Skriv ny artikkel</h2>
       
-      {editorFeil && (
-        <div className="editor-feil">
-          <p>{editorFeil}</p>
-        </div>
-      )}
-      
-      {melding && <div className="melding-boks">{melding}</div>}
-      {feilmelding && <div className="feilmelding">{feilmelding}</div>}
+      {error && <div className="feilmelding">{error}</div>}
+      {success && <div className="melding">{success}</div>}
       
       <form onSubmit={handleSubmit}>
         <div className="form-gruppe">
-          <label htmlFor="tittel">Tittel: <span className="obligatorisk">*</span></label>
-          <input 
-            type="text" 
-            id="tittel" 
-            value={tittel} 
-            onChange={(e) => setTittel(e.target.value)} 
-            required 
-            placeholder="Skriv en kort og fengende tittel"
+          <label htmlFor="tittel">Tittel:</label>
+          <input
+            type="text"
+            id="tittel"
+            value={tittel}
+            onChange={(e) => setTittel(e.target.value)}
+            required
             disabled={laster}
           />
         </div>
-        
+
         <div className="form-gruppe">
-          <label htmlFor="kategori">Kategori: <span className="obligatorisk">*</span></label>
-          <select 
-            id="kategori" 
-            value={kategori} 
-            onChange={(e) => setKategori(e.target.value)} 
+          <label htmlFor="kategori">Kategori:</label>
+          <select
+            id="kategori"
+            value={kategori}
+            onChange={(e) => setKategori(e.target.value)}
             required
             disabled={laster}
           >
-            <option value="">Velg kategori</option>
-            {kategoriliste.map(kat => (
+            {kategoriliste.map((kat) => (
               <option key={kat.id} value={kat.kategori}>
                 {kat.kategori}
               </option>
             ))}
           </select>
         </div>
-        
+
         <div className="form-gruppe">
           <label htmlFor="ingress">Ingress:</label>
-          <textarea 
-            id="ingress" 
-            value={ingress} 
-            onChange={(e) => setIngress(e.target.value)} 
-            placeholder="Skriv en kort introduksjon (valgfritt - lages automatisk hvis tom)"
+          <textarea
+            id="ingress"
+            value={ingress}
+            onChange={(e) => setIngress(e.target.value)}
+            required
             disabled={laster}
           />
         </div>
-        
+
         <div className="form-gruppe">
-          <label>Innhold: <span className="obligatorisk">*</span></label>
-          <div className="quill-container">
-            <ReactQuill
-              ref={quillRef}
-              value={innhold}
-              onChange={handleInnholdEndring}
-              modules={modules}
-              formats={formats}
-              className="quill-editor"
-              theme="snow"
-              placeholder="Skriv artikkelteksten her..."
-            />
-          </div>
+          <label htmlFor="innhold">Innhold:</label>
+          <Editor
+            value={innhold}
+            onChange={handleInnholdEndring}
+            containerProps={{ style: { minHeight: '300px' } }}
+          />
         </div>
-        
+
         <div className="form-gruppe">
           <label htmlFor="bilde">Bilde:</label>
-          <input 
-            type="file" 
-            id="bilde" 
-            accept="image/*" 
-            onChange={handleBildeEndring} 
+          <input
+            type="file"
+            id="bilde"
+            accept="image/*"
+            onChange={handleBildeEndring}
             disabled={laster}
           />
-          
           {bildeForhåndsvisning && (
             <div className="bilde-forhåndsvisning">
               <img src={bildeForhåndsvisning} alt="Forhåndsvisning" />
-              <button type="button" onClick={fjernBilde} className="fjern-bilde" disabled={laster}>
+              <button type="button" onClick={fjernBilde} disabled={laster}>
                 Fjern bilde
               </button>
             </div>
           )}
         </div>
-        
-        <div className="form-gruppe info-boks">
-          <h4>Tips for formatering:</h4>
-          <ul>
-            <li>Bruk <strong>Overskrift 1</strong> for hovedoverskrifter</li>
-            <li>Bruk <strong>Overskrift 2</strong> for underoverskrifter</li>
-            <li>Marker tekst og klikk på <strong>B</strong> for fet tekst</li>
-            <li>Bruk punktliste for å liste opp ting</li>
-            <li>Last opp bilder ved å klikke på bildeknappen</li>
-          </ul>
-        </div>
-        
-        <button type="submit" className="send-knapp" disabled={laster}>
-          {laster ? 'Sender inn...' : 'Send inn artikkel'}
+
+        <button type="submit" disabled={laster || isSubmitting}>
+          {isSubmitting ? 'Lagrer...' : 'Publiser artikkel'}
         </button>
       </form>
     </div>

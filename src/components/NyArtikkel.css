@@ -2,7 +2,7 @@
 .ny-artikkel {
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 2rem;
   background-color: var(--card-bg);
   border-radius: var(--border-radius);
   box-shadow: var(--container-shadow);
@@ -71,12 +71,12 @@
 }
 
 .form-gruppe {
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
 }
 
 .form-gruppe label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 0.5rem;
   font-weight: bold;
 }
 
@@ -84,10 +84,15 @@
 .form-gruppe textarea,
 .form-gruppe select {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 1rem;
+}
+
+.form-gruppe textarea {
+  min-height: 100px;
+  resize: vertical;
 }
 
 .obligatorisk {
@@ -104,14 +109,13 @@
 }
 
 .bilde-forhåndsvisning {
-  margin: 10px 0;
-  position: relative;
+  margin-top: 1rem;
 }
 
 .bilde-forhåndsvisning img {
   max-width: 100%;
-  max-height: 300px;
-  object-fit: contain;
+  height: auto;
+  margin-bottom: 0.5rem;
 }
 
 .fjern-bilde {
@@ -219,28 +223,110 @@
 .ny-artikkel-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 20px;
 }
 
-.artikkel-skjema {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.skjema-gruppe {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.skjema-gruppe label {
-  font-weight: 600;
+.ny-artikkel-container h2 {
+  margin-bottom: 20px;
   color: #333;
 }
 
-.skjema-gruppe input[type="file"] {
-  padding: 0.5rem;
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-group select {
+  background-color: white;
+}
+
+.error-message {
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.success-message {
+  color: #28a745;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+button[type="submit"]:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Stiler for react-simple-wysiwyg editor */
+.rsw-editor {
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  min-height: 300px !important;
+}
+
+.rsw-toolbar {
+  border-bottom: 1px solid #ddd !important;
+  padding: 5px !important;
+}
+
+.rsw-btn {
+  margin: 0 2px !important;
+  padding: 5px 10px !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  background-color: white !important;
+  cursor: pointer !important;
+}
+
+.rsw-btn:hover {
+  background-color: #f8f9fa !important;
+}
+
+.rsw-content {
+  padding: 10px !important;
+  min-height: 200px !important;
 }
 
 /* Quill editor overrides */
@@ -401,4 +487,85 @@
 .ikke-godkjent p {
   color: #6c757d;
   margin-bottom: 1rem;
+}
+
+/* Editor styles */
+.rsw-editor {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.rsw-toolbar {
+  border-bottom: 1px solid #ccc;
+  padding: 0.5rem;
+  background-color: #f5f5f5;
+}
+
+.rsw-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+.rsw-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.rsw-ce {
+  padding: 1rem;
+  min-height: 300px;
+}
+
+/* Bildehåndtering */
+.bilde-forhåndsvisning {
+  margin-top: 1rem;
+}
+
+.bilde-forhåndsvisning img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 0.5rem;
+}
+
+/* Feilmeldinger */
+.feilmelding {
+  color: #dc3545;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+.melding {
+  color: #28a745;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+}
+
+/* Liste-stiler */
+.rsw-ce ul {
+  list-style: disc;
+  padding-left: 2em;
+}
+
+.rsw-ce ol {
+  list-style: decimal;
+  padding-left: 2em;
+}
+
+/* Lenke-stiler */
+.rsw-ce a {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.rsw-ce a:hover {
+  color: #0056b3;
 }
