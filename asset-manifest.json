@@ -1,18 +1,18 @@
 {
   "files": {
-    "main.css": "/NyskolenPosten/static/css/main.13f15a10.css",
-    "main.js": "/NyskolenPosten/static/js/main.ea6e40dd.js",
-    "static/js/198.d0e65e27.chunk.js": "/NyskolenPosten/static/js/198.d0e65e27.chunk.js",
-    "static/js/453.029c0120.chunk.js": "/NyskolenPosten/static/js/453.029c0120.chunk.js",
+    "main.css": "/NyskolenPosten/static/css/main.4781d946.css",
+    "main.js": "/NyskolenPosten/static/js/main.6af37ced.js",
+    "static/js/198.10b313bb.chunk.js": "/NyskolenPosten/static/js/198.10b313bb.chunk.js",
+    "static/js/453.36515fcc.chunk.js": "/NyskolenPosten/static/js/453.36515fcc.chunk.js",
     "static/media/logo.svg": "/NyskolenPosten/static/media/logo.d77d36ce87a4d74ded24ede7de08d50b.svg",
     "index.html": "/NyskolenPosten/index.html",
-    "main.13f15a10.css.map": "/NyskolenPosten/static/css/main.13f15a10.css.map",
-    "main.ea6e40dd.js.map": "/NyskolenPosten/static/js/main.ea6e40dd.js.map",
-    "198.d0e65e27.chunk.js.map": "/NyskolenPosten/static/js/198.d0e65e27.chunk.js.map",
-    "453.029c0120.chunk.js.map": "/NyskolenPosten/static/js/453.029c0120.chunk.js.map"
+    "main.4781d946.css.map": "/NyskolenPosten/static/css/main.4781d946.css.map",
+    "main.6af37ced.js.map": "/NyskolenPosten/static/js/main.6af37ced.js.map",
+    "198.10b313bb.chunk.js.map": "/NyskolenPosten/static/js/198.10b313bb.chunk.js.map",
+    "453.36515fcc.chunk.js.map": "/NyskolenPosten/static/js/453.36515fcc.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.13f15a10.css",
-    "static/js/main.ea6e40dd.js"
+    "static/css/main.4781d946.css",
+    "static/js/main.6af37ced.js"
   ]
 }
