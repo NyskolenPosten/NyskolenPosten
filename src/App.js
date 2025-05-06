@@ -17,7 +17,7 @@ import Innlogging from './components/Innlogging';
 import Registrering from './components/Registrering';
 import CacheMonitor from './components/CacheMonitor';
 import { LanguageProvider } from './utils/LanguageContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Profil from './components/Profil';
 import { loggUt, hentAlleBrukere } from './services/authService';
 import { autoMigratePasswords } from './utils/migratePasswords';
