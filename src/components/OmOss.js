@@ -21,19 +21,19 @@ const NO = {
 };
 
 const EN = {
-  title: 'About Us',
-  intro: 'Nyskolen Posten is a student-run online newspaper for Nyskolen in Oslo. The newspaper was started in 2025 as a project to give students a voice and a platform to share news, opinions, and creative content.',
-  vision: 'Our vision is to create a vibrant and engaging newspaper that reflects the school's values of democracy, participation, and creativity.',
-  editorial: 'Editorial Team\nNyskolen Posten is run by students, for students. The editorial team consists of students from different grades who collaborate to write, edit, and publish content.',
-  staff: 'Our Staff',
-  mattis: 'Mattis B Tøllefsen',
-  techlead: 'Technical Manager',
-  techdesc: 'Responsible for technical development and maintenance of the online newspaper.',
-  join: 'Join Us!\nWould you like to join the editorial team? We are always looking for new writers, photographers, and idea creators!\nTo join, register as a user on the website and send a message to the editor. You can also write your first article and submit it for review.',
-  register: 'Register',
-  write: 'Write an article',
-  contact: 'Contact Us',
-  contactdesc: 'Do you have questions, feedback, or story tips? Contact us at',
+  title: "About Us",
+  intro: "Nyskolen Posten is a student-run online newspaper for Nyskolen in Oslo. The newspaper was started in 2025 as a project to give students a voice and a platform to share news, opinions, and creative content.",
+  vision: "Our vision is to create a vibrant and engaging newspaper that reflects the school's values of democracy, participation, and creativity.",
+  editorial: "Editorial Team\nNyskolen Posten is run by students, for students. The editorial team consists of students from different grades who collaborate to write, edit, and publish content.",
+  staff: "Our Staff",
+  mattis: "Mattis B Tøllefsen",
+  techlead: "Technical Manager",
+  techdesc: "Responsible for technical development and maintenance of the online newspaper.",
+  join: "Join Us!\nWould you like to join the editorial team? We are always looking for new writers, photographers, and idea creators!\nTo join, register as a user on the website and send a message to the editor. You can also write your first article and submit it for review.",
+  register: "Register",
+  write: "Write an article",
+  contact: "Contact Us",
+  contactdesc: "Do you have questions, feedback, or story tips? Contact us at",
 };
 
 function OmOss() {

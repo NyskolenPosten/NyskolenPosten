@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../utils/LanguageContext';
-import { loggInn } from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 import './Innlogging.css';
 
 function Innlogging({ onLogin }) {
   const { translations } = useLanguage();
+  const { signIn, authError } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -40,16 +41,12 @@ function Innlogging({ onLogin }) {
     
     try {
       // Bruk authService for innlogging
-      const result = await loggInn(formData.email, formData.password);
+      const success = await signIn(formData.email, formData.password);
       
-      if (!result.success) {
-        setFeilmelding(result.error || translations.login.loginFailed);
+      if (!success) {
         setLoading(false);
         return;
       }
-      
-      // Utfør innlogging via callback
-      onLogin(result.bruker);
       
       // Vis suksessmelding
       setSuksessmelding(translations.login.loginSuccess);
@@ -61,7 +58,7 @@ function Innlogging({ onLogin }) {
       }, 1000);
       
     } catch (error) {
-      setFeilmelding(error.message || translations.login.loginFailed);
+      setFeilmelding(translations.login.loginFailed);
     } finally {
       setLoading(false);
     }
@@ -71,9 +68,9 @@ function Innlogging({ onLogin }) {
     <div className="innlogging-container">
       <h2>{translations.login.title}</h2>
       
-      {feilmelding && (
+      {(authError || feilmelding) && (
         <div className="feilmelding" role="alert">
-          {feilmelding}
+          {authError || feilmelding}
           <div className="teknisk-stotte">
             <p>Fant du en feil/bug? Kontakt teknisk leder i NyskolenPosten: <a href="mailto:mattis.tollefsen@nionett.no">mattis.tollefsen@nionett.no</a></p>
             <p>Jeg fikser det så fort som mulig!</p>
