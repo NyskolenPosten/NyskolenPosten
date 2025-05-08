@@ -1,6 +1,7 @@
 // services/artikkelService.js - Håndter artikler med lokal lagring
 
 import cacheManager, { invalidateArtikkelCache } from '../utils/cacheUtil';
+import { supabase } from '../config/supabase';
 
 // Cache-TTL-konstanter (i millisekunder)
 const CACHE_TTL = {
@@ -121,20 +122,18 @@ export const hentGodkjenteArtikler = async () => {
   }, CACHE_TTL.ARTICLES_LIST);
 };
 
-// Hent alle artikler (for admin/redaktør)
+// Hent alle artikler (for admin/redaktør og alle brukere)
 export const hentAlleArtikler = async () => {
-  // Bruk cachen hvis tilgjengelig
-  const cacheKey = 'artikkel:alle';
-  return cacheManager.getOrFetch(cacheKey, async () => {
-    try {
-      const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
-      const sorterteArtikler = artikler.sort((a, b) => new Date(b.dato) - new Date(a.dato));
-      
-      return { success: true, artikler: sorterteArtikler };
-    } catch (error) {
-      return { success: false, error: error.message || 'Kunne ikke hente artikler' };
-    }
-  }, CACHE_TTL.ARTICLES_LIST);
+  try {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) return { success: false, error: error.message };
+    return { success: true, artikler: data };
+  } catch (error) {
+    return { success: false, error: error.message || 'Kunne ikke hente artikler' };
+  }
 };
 
 // Hent artikler for en bestemt bruker

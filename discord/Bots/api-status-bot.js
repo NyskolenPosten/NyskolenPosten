@@ -6,8 +6,11 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const CHANNEL_ID = process.env.CHANNEL_ID;
 
+const SUPABASE_URL = process.env.SUPABASE_URL || 'http://localhost:54321';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || '';
+
 const API_URLS = [
-  { navn: 'Supabase', url: 'http://localhost:54321/rest/v1/' },
+  { navn: 'Supabase', url: `${SUPABASE_URL}/rest/v1/` },
   // Legg til flere API-er her hvis du vil
 ];
 
