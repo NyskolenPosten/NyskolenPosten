@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = 'https://lucbodhuwimhqnvtmdzg.supabase.co'
-export const supabaseKey = process.env.SUPABASE_KEY
+export const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Hjelpefunksjon for å sjekke autentisering
