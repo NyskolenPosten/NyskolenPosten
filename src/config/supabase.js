@@ -1,38 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// For lokal utvikling
-const supabaseUrl = 'http://127.0.0.1:54321'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
-
-// Opprett én enkelt Supabase-klient som singleton
-let supabaseInstance = null;
-
-const getSupabase = () => {
-  if (supabaseInstance) return supabaseInstance;
-
-  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-      storage: window.localStorage,
-      storageKey: 'nyskolen-posten-auth'
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 10
-      }
-    },
-    db: {
-      schema: 'public'
-    }
-  });
-
-  return supabaseInstance;
-};
-
-// Eksporter én enkelt instans
-export const supabase = getSupabase();
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_KEY
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 // Hjelpefunksjon for å sjekke autentisering
 export const sjekkAuth = async () => {
