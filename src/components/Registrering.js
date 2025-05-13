@@ -13,7 +13,7 @@ function Registrering() {
     email: '',
     password: '',
     bekreftPassword: '',
-    klasse: ''
+    klasse: 'Gul' // Standard verdi satt til Gul
   });
   const [feilmelding, setFeilmelding] = useState('');
   const [suksessmelding, setSuksessmelding] = useState('');
@@ -185,16 +185,19 @@ function Registrering() {
           
           <div className="form-group">
             <label htmlFor="klasse">{translations.registration.class}</label>
-            <input
-              type="text"
+            <select
               id="klasse"
               name="klasse"
               value={formData.klasse}
               onChange={handleChange}
-              placeholder={translations.registration.classPlaceholder}
-              autoComplete="organization-title"
               required
-            />
+            >
+              <option value="Gul">Gul</option>
+              <option value="Rød">Rød</option>
+              <option value="Blå">Blå</option>
+              <option value="Ungdomstrinnet">Ungdomstrinnet</option>
+              <option value="Ansatte">Ansatte</option>
+            </select>
           </div>
           
           <button 

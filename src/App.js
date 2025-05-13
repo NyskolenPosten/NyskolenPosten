@@ -38,6 +38,14 @@ const isGitHubPages = window.location.hostname.includes('github.io');
 // Hjelpefunksjon for å sjekke om vi kjører lokalt
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
+// Sett basename for router basert på om vi er på GitHub Pages eller ikke
+const getBasename = () => {
+  if (isGitHubPages) {
+    return '/NyskolenPosten';
+  }
+  return '/';
+};
+
 function AppContent() {
   const { user } = useAuth();
   const [innloggetBruker, setInnloggetBruker] = useState(null);
@@ -586,15 +594,15 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <HelmetProvider>
-        <LanguageProvider>
-          <Router basename={isGitHubPages ? '/NyskolenPosten' : '/'}>
+    <HelmetProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <Router basename={getBasename()}>
             <AppContent />
           </Router>
-        </LanguageProvider>
-      </HelmetProvider>
-    </AuthProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </HelmetProvider>
   );
 }
 

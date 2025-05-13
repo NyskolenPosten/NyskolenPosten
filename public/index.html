@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
-      content="Nyskolen Posten - Skoleavisen for Nyskolen i Oslo"
+      content="Nyskolen Posten - skoleavisen for Nyskolen i Oslo"
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
@@ -26,31 +26,20 @@
     -->
     <title>Nyskolen Posten</title>
     
-    <!-- Start Single Page Apps for GitHub Pages -->
+    <!-- Skript for håndtering av GitHub Pages routing -->
     <script type="text/javascript">
-      // Single Page Apps for GitHub Pages
-      // MIT License
-      // https://github.com/rafgraph/spa-github-pages
+      // Denne koden håndterer rutingparametrene som kommer fra 404.html
       (function(l) {
         if (l.search[1] === '/' ) {
           var decoded = l.search.slice(1).split('&').map(function(s) { 
             return s.replace(/~and~/g, '&')
           }).join('?');
           window.history.replaceState(null, null,
-              l.pathname.slice(0, -1) + decoded + l.hash
+            l.pathname.slice(0, -1) + decoded + l.hash
           );
         }
-      }(window.location));
-
-      // Sjekk om vi er på GitHub Pages og håndter routing
-      if (window.location.hostname.includes('github.io')) {
-        var path = window.location.pathname;
-        if (!path.includes('/NyskolenPosten')) {
-          window.location.href = '/NyskolenPosten' + path;
-        }
-      }
+      }(window.location))
     </script>
-    <!-- End Single Page Apps for GitHub Pages -->
   </head>
   <body>
     <noscript>Du må aktivere JavaScript for å kjøre denne appen.</noscript>
