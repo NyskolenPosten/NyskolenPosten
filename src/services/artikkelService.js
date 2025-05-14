@@ -2,6 +2,10 @@
 
 import cacheManager, { invalidateArtikkelCache } from '../utils/cacheUtil';
 import { supabase } from '../config/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// Sjekk om vi kjører lokalt
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 // Cache-TTL-konstanter (i millisekunder)
 const CACHE_TTL = {
@@ -125,13 +129,96 @@ export const hentGodkjenteArtikler = async () => {
 // Hent alle artikler (for admin/redaktør og alle brukere)
 export const hentAlleArtikler = async () => {
   try {
-    const { data, error } = await supabase
+    console.log('Henter artikler fra Supabase...');
+    console.log('URL:', supabase.supabaseUrl);
+    
+    // Prøv først med standardspørringen
+    let { data, error } = await supabase
       .from('artikler')
       .select('*')
       .order('created_at', { ascending: false });
-    if (error) return { success: false, error: error.message };
-    return { success: true, artikler: data };
+    
+    // Håndter skjema-feil
+    if (error && error.message && error.message.includes('The schema must be one of the following: api')) {
+      console.log('Fikk skjema-feil, prøver direkte REST API-kall...');
+      
+      // Bruk fetch API direkte mot REST-endepunktet
+      const apiUrl = `${supabase.supabaseUrl}/rest/v1/artikler?select=*`;
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`REST API-kall feilet med status ${response.status}`);
+      }
+      
+      data = await response.json();
+      error = null;
+      
+      // Sorter manuelt
+      if (data) {
+        data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      }
+    } 
+    // Hvis vi får en 406-feil, prøv med en enklere spørring
+    else if (error && (error.status === 406 || error.message.includes('Not Acceptable'))) {
+      console.log('Fikk 406-feil, prøver enklere spørring...');
+      
+      // Prøv uten sortering
+      const simpleQuery = await supabase
+        .from('artikler')
+        .select('*');
+      
+      data = simpleQuery.data;
+      error = simpleQuery.error;
+      
+      // Sorter manuelt hvis vi fikk data
+      if (data && !error) {
+        data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      }
+    }
+    
+    if (error) {
+      console.error('Feil ved henting av artikler:', error);
+      
+      // Logg detaljert diagnostikk
+      if (error.status) {
+        console.error(`HTTP-status: ${error.status}`);
+      }
+      if (error.details) {
+        console.error(`Detaljer: ${error.details}`);
+      }
+      
+      // Prøv siste utvei - localhost
+      if (!isLocalhost && supabaseUrl.includes('lucbodhuwimhqnvtmdzg')) {
+        console.log('Prøver localhost som siste utvei...');
+        const localSupabase = createClient(
+          'http://127.0.0.1:54321',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+        );
+        
+        const localResult = await localSupabase
+          .from('artikler')
+          .select('*');
+          
+        if (!localResult.error) {
+          return { success: true, artikler: localResult.data || [] };
+        }
+      }
+      
+      return { success: false, error: error.message || 'Kunne ikke hente artikler' };
+    }
+    
+    console.log(`Hentet ${data?.length || 0} artikler fra Supabase`);
+    return { success: true, artikler: data || [] };
   } catch (error) {
+    console.error('Uventet feil ved henting av artikler:', error);
     return { success: false, error: error.message || 'Kunne ikke hente artikler' };
   }
 };

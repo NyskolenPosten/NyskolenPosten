@@ -10,7 +10,7 @@ export const signUp = async (email, password) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error signing up:', error.message);
+    console.error('Feil ved registrering:', error.message);
     throw error;
   }
 };
@@ -24,7 +24,7 @@ export const signIn = async (email, password) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error signing in:', error.message);
+    console.error('Feil ved innlogging:', error.message);
     throw error;
   }
 };
@@ -34,7 +34,7 @@ export const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   } catch (error) {
-    console.error('Error signing out:', error.message);
+    console.error('Feil ved utlogging:', error.message);
     throw error;
   }
 };
@@ -45,7 +45,7 @@ export const getCurrentUser = async () => {
     if (error) throw error;
     return user;
   } catch (error) {
-    console.error('Error getting current user:', error.message);
+    console.error('Feil ved henting av gjeldende bruker:', error.message);
     throw error;
   }
 };
@@ -55,7 +55,7 @@ export const resetPassword = async (email) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) throw error;
   } catch (error) {
-    console.error('Error resetting password:', error.message);
+    console.error('Feil ved tilbakestilling av passord:', error.message);
     throw error;
   }
 };
@@ -70,7 +70,7 @@ export const updateUserProfile = async (userId, updates) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error updating user profile:', error.message);
+    console.error('Feil ved oppdatering av brukerprofil:', error.message);
     throw error;
   }
 };
@@ -85,7 +85,7 @@ export const getUserProfile = async (userId) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error getting user profile:', error.message);
+    console.error('Feil ved henting av brukerprofil:', error.message);
     throw error;
   }
 };
@@ -98,7 +98,7 @@ export const hentAlleBrukere = async () => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error getting all users:', error.message);
+    console.error('Feil ved henting av brukere:', error.message);
     throw error;
   }
 };
@@ -108,7 +108,7 @@ export const loggUt = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   } catch (error) {
-    console.error('Error logging out:', error.message);
+    console.error('Feil ved utlogging:', error.message);
     throw error;
   }
 };
@@ -150,7 +150,7 @@ export const loggInn = async (email, password) => {
         ]);
         
       if (insertError) {
-        console.error('Error creating user profile:', insertError);
+        console.error('Feil ved opprettelse av brukerprofil:', insertError);
         return { success: false, error: 'Kunne ikke opprette brukerprofil' };
       }
       
@@ -175,7 +175,7 @@ export const loggInn = async (email, password) => {
     }
     
     if (userError) {
-      console.error('Error fetching user data:', userError);
+      console.error('Feil ved henting av brukerdata:', userError);
       return { success: false, error: 'Kunne ikke hente brukerdata' };
     }
     
@@ -194,7 +194,7 @@ export const loggInn = async (email, password) => {
       bruker 
     };
   } catch (error) {
-    console.error('Error logging in:', error);
+    console.error('Feil ved innlogging:', error);
     return { success: false, error: error.message || 'Innlogging feilet' };
   }
 };
@@ -231,7 +231,7 @@ export const registrerBruker = async (email, password, navn, klasse) => {
       .single();
     
     if (brukerError) {
-      console.error('Error creating user profile:', brukerError);
+      console.error('Feil ved opprettelse av brukerprofil:', brukerError);
       return { success: false, error: 'Kunne ikke opprette brukerprofil' };
     }
     
@@ -247,7 +247,7 @@ export const registrerBruker = async (email, password, navn, klasse) => {
       }
     };
   } catch (error) {
-    console.error('Error registering user:', error.message);
+    console.error('Feil ved registrering av bruker:', error.message);
     return { success: false, error: error.message };
   }
 };
@@ -290,7 +290,7 @@ export const opprettBrukerMedRolle = async (email, password, navn, rolle = 'bruk
       }
     };
   } catch (error) {
-    console.error('Error creating user with role:', error.message);
+    console.error('Feil ved opprettelse av bruker med rolle:', error.message);
     return { success: false, error: error.message };
   }
 }; 

@@ -11,19 +11,28 @@ let supabaseInstance = null;
 const getSupabase = () => {
   if (supabaseInstance) return supabaseInstance;
   
+  // Definere headers for å håndtere 406-feil
+  const customHeaders = {
+    'X-Client-Info': 'NyskolenPosten',
+    'Content-Type': 'application/json',
+    'Accept': '*/*',
+    'Prefer': 'return=representation'
+  };
+  
   supabaseInstance = createClient(supabaseUrl, supabaseKey, {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      storageKey: 'nyskolenposten-auth'
     },
     global: {
-      headers: {
-        'x-my-custom-header': 'NyskolenPosten'
-      }
+      headers: customHeaders
     },
-    db: {
-      schema: 'public'
+    realtime: {
+      params: {
+        eventsPerSecond: 10
+      }
     }
   });
   

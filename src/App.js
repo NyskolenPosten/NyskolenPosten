@@ -137,11 +137,36 @@ function AppContent() {
     
     // Last inn artikler
     const lastArtikler = async () => {
-      const resultat = await hentAlleArtikler();
-      if (resultat.success) {
-        setArtikler(resultat.artikler);
-      } else {
-        console.error("Kunne ikke laste artikler:", resultat.error);
+      try {
+        console.log("Starter henting av artikler...");
+        const resultat = await hentAlleArtikler();
+        
+        if (resultat.success) {
+          console.log(`Lastet ${resultat.artikler?.length || 0} artikler`);
+          setArtikler(resultat.artikler || []);
+        } else {
+          console.error("Kunne ikke laste artikler:", resultat.error);
+          
+          // Alternativ håndtering: Bruk lokal lagring som fallback
+          console.log("Prøver å bruke lokalt lagrede artikler som fallback...");
+          const lokaleLagrede = localStorage.getItem('artikler');
+          if (lokaleLagrede) {
+            try {
+              const parsedeArtikler = JSON.parse(lokaleLagrede);
+              setArtikler(parsedeArtikler);
+              console.log(`Lastet ${parsedeArtikler.length} artikler fra lokal lagring`);
+            } catch (parseError) {
+              console.error("Kunne ikke parse lokalt lagrede artikler:", parseError);
+              setArtikler([]);
+            }
+          } else {
+            console.log("Ingen lokalt lagrede artikler funnet");
+            setArtikler([]);
+          }
+        }
+      } catch (error) {
+        console.error("Uventet feil ved lasting av artikler:", error);
+        setArtikler([]);
       }
     };
     lastArtikler();
