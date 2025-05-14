@@ -572,7 +572,9 @@ function AppContent() {
             />
           } />
           <Route path="/login" element={<Innlogging onLogin={handleLogin} brukere={brukere} />} />
+          <Route path="/logg-inn" element={<Innlogging onLogin={handleLogin} brukere={brukere} />} />
           <Route path="/register" element={<Registrering />} />
+          <Route path="/registrer" element={<Registrering />} />
           <Route path="/profil" element={<Profil innloggetBruker={innloggetBruker} onOppdaterBruker={oppdaterBruker} />} />
           <Route path="/website-panel" element={<WebsitePanel innloggetBruker={innloggetBruker} currentSettings={websiteSettings} onUpdateSettings={handleUpdateWebsiteSettings} />} />
           <Route path="/data-panel" element={<DataPanel innloggetBruker={innloggetBruker} />} />

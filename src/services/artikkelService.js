@@ -126,7 +126,7 @@ export const hentGodkjenteArtikler = async () => {
 export const hentAlleArtikler = async () => {
   try {
     const { data, error } = await supabase
-      .from('articles')
+      .from('artikler')
       .select('*')
       .order('created_at', { ascending: false });
     if (error) return { success: false, error: error.message };

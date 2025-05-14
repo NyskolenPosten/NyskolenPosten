@@ -1,8 +1,37 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://lucbodhuwimhqnvtmdzg.supabase.co'
+// Bestem URL basert på miljø - lokal eller produksjon
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const supabaseUrl = isLocalhost ? 'http://127.0.0.1:54321' : 'https://lucbodhuwimhqnvtmdzg.supabase.co';
 export const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY
-export const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Lag en singleton-instans for å unngå "Multiple GoTrueClient instances" advarsel
+let supabaseInstance = null;
+
+const getSupabase = () => {
+  if (supabaseInstance) return supabaseInstance;
+  
+  supabaseInstance = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    },
+    global: {
+      headers: {
+        'x-my-custom-header': 'NyskolenPosten'
+      }
+    },
+    db: {
+      schema: 'public'
+    }
+  });
+  
+  return supabaseInstance;
+};
+
+// Eksporter én enkelt instans
+export const supabase = getSupabase();
 
 // Hjelpefunksjon for å sjekke autentisering
 export const sjekkAuth = async () => {
@@ -83,7 +112,7 @@ export const db = {
   // Artikler
   getArticles: async () => {
     const { data, error } = await supabase
-      .from('articles')
+      .from('artikler')
       .select('*')
       .order('created_at', { ascending: false });
     return { data, error };
@@ -91,7 +120,7 @@ export const db = {
 
   createArticle: async (article) => {
     const { data, error } = await supabase
-      .from('articles')
+      .from('artikler')
       .insert([article])
       .select();
     return { data, error };
@@ -99,7 +128,7 @@ export const db = {
 
   updateArticle: async (id, updates) => {
     const { data, error } = await supabase
-      .from('articles')
+      .from('artikler')
       .update(updates)
       .eq('id', id)
       .select();
@@ -108,7 +137,7 @@ export const db = {
 
   deleteArticle: async (id) => {
     const { error } = await supabase
-      .from('articles')
+      .from('artikler')
       .delete()
       .eq('id', id);
     return { error };
@@ -117,14 +146,14 @@ export const db = {
   // Brukere
   getUsers: async () => {
     const { data, error } = await supabase
-      .from('users')
+      .from('brukere')
       .select('*');
     return { data, error };
   },
 
   updateUser: async (id, updates) => {
     const { data, error } = await supabase
-      .from('users')
+      .from('brukere')
       .update(updates)
       .eq('id', id)
       .select();

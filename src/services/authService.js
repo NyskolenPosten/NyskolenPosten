@@ -1,4 +1,4 @@
-import { supabase } from './supabaseConfig';
+import { supabase } from '../config/supabase';
 
 // Autentiseringsfunksjoner
 export const signUp = async (email, password) => {
@@ -199,17 +199,56 @@ export const loggInn = async (email, password) => {
   }
 };
 
-export const registrerBruker = async (email, password) => {
+export const registrerBruker = async (email, password, navn, klasse) => {
   try {
+    // Registrer brukeren i auth systemet
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
-    if (error) throw error;
-    return data;
+    
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    if (!data.user) {
+      return { success: false, error: 'Kunne ikke opprette brukeren' };
+    }
+    
+    // Opprett brukerprofil i brukere-tabellen
+    const { data: brukerData, error: brukerError } = await supabase
+      .from('brukere')
+      .insert([
+        {
+          id: data.user.id,
+          navn: navn,
+          rolle: 'bruker',
+          godkjent: false,
+          klasse: klasse
+        }
+      ])
+      .select()
+      .single();
+    
+    if (brukerError) {
+      console.error('Error creating user profile:', brukerError);
+      return { success: false, error: 'Kunne ikke opprette brukerprofil' };
+    }
+    
+    return {
+      success: true,
+      bruker: {
+        id: data.user.id,
+        email: email,
+        navn: navn,
+        rolle: 'bruker',
+        godkjent: false,
+        klasse: klasse
+      }
+    };
   } catch (error) {
     console.error('Error registering user:', error.message);
-    throw error;
+    return { success: false, error: error.message };
   }
 };
 
