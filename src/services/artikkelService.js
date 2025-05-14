@@ -1,11 +1,13 @@
 // services/artikkelService.js - Håndter artikler med lokal lagring
 
 import cacheManager, { invalidateArtikkelCache } from '../utils/cacheUtil';
-import { supabase } from '../config/supabase';
+import { supabase, supabaseKey, supabaseUrl as configUrl } from '../config/supabase';
 import { createClient } from '@supabase/supabase-js';
 
 // Sjekk om vi kjører lokalt
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+// Hent supabase URL - bruk en sikker fallback
+const supabaseUrl = supabase.supabaseUrl || configUrl || (isLocalhost ? 'http://127.0.0.1:54321' : 'https://lucbodhuwimhqnvtmdzg.supabase.co');
 
 // Cache-TTL-konstanter (i millisekunder)
 const CACHE_TTL = {
