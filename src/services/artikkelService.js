@@ -132,7 +132,20 @@ export const hentGodkjenteArtikler = async () => {
 export const hentAlleArtikler = async () => {
   try {
     console.log('Henter artikler fra Supabase...');
-    console.log('URL:', supabase.supabaseUrl);
+    console.log('URL:', supabaseUrl);
+    
+    // Sjekk først om det er lokalt lagrede artikler
+    const lokaleLagrede = localStorage.getItem('artikler');
+    let lokalArtikler = [];
+    
+    if (lokaleLagrede) {
+      try {
+        lokalArtikler = JSON.parse(lokaleLagrede);
+        console.log(`Fant ${lokalArtikler.length} lokalt lagrede artikler som kan brukes som fallback`);
+      } catch (parseError) {
+        console.error("Kunne ikke parse lokalt lagrede artikler:", parseError);
+      }
+    }
     
     // Prøv først med standardspørringen
     let { data, error } = await supabase
@@ -140,87 +153,70 @@ export const hentAlleArtikler = async () => {
       .select('*')
       .order('created_at', { ascending: false });
     
+    // Sjekk om vi fikk data og ingen feil
+    if (data && data.length > 0 && !error) {
+      console.log(`Hentet ${data.length} artikler fra Supabase`);
+      return { success: true, artikler: data };
+    }
+    
     // Håndter skjema-feil
-    if (error && error.message && error.message.includes('The schema must be one of the following: api')) {
+    if (error && error.message && (error.message.includes('The schema must be one of the following: api') || error.status === 406)) {
       console.log('Fikk skjema-feil, prøver direkte REST API-kall...');
       
-      // Bruk fetch API direkte mot REST-endepunktet
-      const apiUrl = `${supabase.supabaseUrl}/rest/v1/artikler?select=*`;
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`REST API-kall feilet med status ${response.status}`);
-      }
-      
-      data = await response.json();
-      error = null;
-      
-      // Sorter manuelt
-      if (data) {
-        data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-      }
-    } 
-    // Hvis vi får en 406-feil, prøv med en enklere spørring
-    else if (error && (error.status === 406 || error.message.includes('Not Acceptable'))) {
-      console.log('Fikk 406-feil, prøver enklere spørring...');
-      
-      // Prøv uten sortering
-      const simpleQuery = await supabase
-        .from('artikler')
-        .select('*');
-      
-      data = simpleQuery.data;
-      error = simpleQuery.error;
-      
-      // Sorter manuelt hvis vi fikk data
-      if (data && !error) {
-        data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-      }
-    }
-    
-    if (error) {
-      console.error('Feil ved henting av artikler:', error);
-      
-      // Logg detaljert diagnostikk
-      if (error.status) {
-        console.error(`HTTP-status: ${error.status}`);
-      }
-      if (error.details) {
-        console.error(`Detaljer: ${error.details}`);
-      }
-      
-      // Prøv siste utvei - localhost
-      if (!isLocalhost && supabaseUrl.includes('lucbodhuwimhqnvtmdzg')) {
-        console.log('Prøver localhost som siste utvei...');
-        const localSupabase = createClient(
-          'http://127.0.0.1:54321',
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
-        );
+      try {
+        // Bruk fetch API direkte mot REST-endepunktet
+        const apiUrl = `${supabaseUrl}/rest/v1/artikler?select=*`;
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
         
-        const localResult = await localSupabase
-          .from('artikler')
-          .select('*');
-          
-        if (!localResult.error) {
-          return { success: true, artikler: localResult.data || [] };
+        // Sjekk om responsen er OK
+        if (response.ok) {
+          data = await response.json();
+          if (data && data.length > 0) {
+            console.log(`Hentet ${data.length} artikler via REST API`);
+            data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+            return { success: true, artikler: data };
+          }
+        } else {
+          console.error(`REST API-kall feilet med status ${response.status}`);
         }
+      } catch (fetchError) {
+        console.error("Feil ved REST API-kall:", fetchError);
       }
-      
-      return { success: false, error: error.message || 'Kunne ikke hente artikler' };
     }
     
-    console.log(`Hentet ${data?.length || 0} artikler fra Supabase`);
-    return { success: true, artikler: data || [] };
+    // Hvis vi ikke har fått data fra noen av metodene ovenfor, bruk lokalt lagrede artikler
+    if (lokalArtikler.length > 0) {
+      console.log(`Bruker ${lokalArtikler.length} lokalt lagrede artikler`);
+      return { success: true, artikler: lokalArtikler };
+    }
+    
+    // Hvis ingen data er funnet, returner en tom array
+    console.log("Ingen data funnet, returnerer tom array");
+    return { success: true, artikler: [] };
+    
   } catch (error) {
     console.error('Uventet feil ved henting av artikler:', error);
+    
+    // Prøv å bruke lokalt lagrede artikler som siste utvei
+    try {
+      const lokaleLagrede = localStorage.getItem('artikler');
+      if (lokaleLagrede) {
+        const artikler = JSON.parse(lokaleLagrede);
+        console.log(`Bruker ${artikler.length} lokalt lagrede artikler (etter feil)`);
+        return { success: true, artikler };
+      }
+    } catch (localError) {
+      console.error("Kunne ikke bruke lokalt lagrede artikler:", localError);
+    }
+    
     return { success: false, error: error.message || 'Kunne ikke hente artikler' };
   }
 };
