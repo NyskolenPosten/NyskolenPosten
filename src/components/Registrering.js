@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../utils/LanguageContext';
-import { registrerBruker } from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 import './Registrering.css';
 
 function Registrering() {
   const { translations } = useLanguage();
+  const { signUp, authError } = useAuth();
   const navigate = useNavigate();
   const [steg, setSteg] = useState(1); // 1: Skjema, 2: Fullført
   const [formData, setFormData] = useState({
@@ -58,16 +59,16 @@ function Registrering() {
     setLoading(true);
     
     try {
-      // Bruk authService for registrering
-      const result = await registrerBruker(
+      // Bruk AuthContext for registrering
+      const success = await signUp(
         formData.email, 
-        formData.password, 
-        formData.navn, 
+        formData.password,
+        formData.navn,
         formData.klasse
       );
       
-      if (!result.success) {
-        setFeilmelding(result.error || translations.registration.registrationFailed);
+      if (!success) {
+        setFeilmelding(authError || translations.registration.registrationFailed);
         setLoading(false);
         return;
       }
@@ -75,17 +76,11 @@ function Registrering() {
       // Viser brukeren at registreringen var vellykket
       setSuksessmelding(translations.registration.registrationSuccess);
       setSteg(2); // Gå til fullført-skjermen
-
-      // Viser detaljert informasjon om den nye brukeren (for debug-formål)
-      console.log('Registrert bruker:', result.bruker);
       
-      // Lagre i localStorage for å sikre at brukeren er tilgjengelig i hele appen
-      if (result.bruker) {
-        localStorage.setItem('currentUser', JSON.stringify({
-          uid: result.bruker.id,
-          email: result.bruker.email,
-          displayName: result.bruker.navn
-        }));
+      // På GitHub Pages burde brukeren nå være logget inn automatisk
+      // så vi kan gå direkte til forsiden
+      if (window.location.hostname.includes('github.io')) {
+        setTimeout(() => navigate('/'), 1500);
       }
 
     } catch (error) {
@@ -224,8 +219,8 @@ function Registrering() {
         
         <button 
           className="innlogging-knapp"
-          onClick={() => navigate('/logg-inn')}>
-          {translations.registration.goToLogin}
+          onClick={() => navigate('/')}>
+          {translations.registration.goToHome}
         </button>
       </div>
     );

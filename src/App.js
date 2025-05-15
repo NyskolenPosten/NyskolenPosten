@@ -47,8 +47,7 @@ const getBasename = () => {
 };
 
 function AppContent() {
-  const { user } = useAuth();
-  const [innloggetBruker, setInnloggetBruker] = useState(null);
+  const { user, signOut } = useAuth();
   const [artikler, setArtikler] = useState([]);
   const [brukere, setBrukere] = useState([]);
   const [jobbliste, setJobbliste] = useState([]);
@@ -122,18 +121,6 @@ function AppContent() {
   useEffect(() => {
     // Kjør migrering av passord til kryptert format
     autoMigratePasswords();
-    
-    // Last inn innlogget bruker
-    const lagretBruker = localStorage.getItem('currentUser');
-    if (lagretBruker) {
-      const brukerObj = JSON.parse(lagretBruker);
-      // Hent mer informasjon fra brukere-arrayet
-      const brukere = JSON.parse(localStorage.getItem('brukere')) || [];
-      const fullBruker = brukere.find(b => b.id === brukerObj.uid);
-      if (fullBruker) {
-        setInnloggetBruker(fullBruker);
-      }
-    }
     
     // Last inn artikler
     const lastArtikler = async () => {
@@ -269,29 +256,14 @@ function AppContent() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
   
-  // Funksjon for å logge inn
-  const handleLogin = (bruker) => {
-    setInnloggetBruker(bruker);
-  };
-  
-  // Funksjon for å logge ut
+  // Funksjon for å logge ut - bruk AuthContext istedenfor authService
   const handleLogout = async () => {
     try {
-      // Først, prøv å logge ut via Supabase
-      await loggUt();
-      
-      // Uansett hva som skjer med Supabase, sørg for å nullstille lokal brukerstate
-      setInnloggetBruker(null);
-      
-      // Vis tilbakemelding til brukeren
+      // Bruk signOut fra AuthContext
+      await signOut();
       console.log("Du har blitt logget ut");
-      
-      // Om vi har react-router, kan du omdirigere til hjemmesiden
-      // navigate('/');
     } catch (error) {
       console.error("Feil ved utlogging:", error);
-      // Likevel nullstille brukertilstanden
-      setInnloggetBruker(null);
     }
   };
   
@@ -302,11 +274,6 @@ function AppContent() {
     );
     setBrukere(oppdatertBrukere);
     localStorage.setItem('brukere', JSON.stringify(oppdatertBrukere));
-    
-    // Oppdater også innlogget bruker hvis det er samme bruker
-    if (user && user.id === oppdatertBruker.id) {
-      setInnloggetBruker(oppdatertBruker);
-    }
   };
   
   // Funksjon for å slette bruker
@@ -585,18 +552,18 @@ function AppContent() {
               <Navigate to="/" replace />
             )
           } />
-          <Route path="/artikkel/:id" element={<ArtikkelVisning artikler={artikler} innloggetBruker={innloggetBruker} onSlettArtikkel={handleSlettArtikkel} onRedigerArtikkel={handleRedigerArtikkel} />} />
+          <Route path="/artikkel/:id" element={<ArtikkelVisning artikler={artikler} innloggetBruker={user} onSlettArtikkel={handleSlettArtikkel} onRedigerArtikkel={handleRedigerArtikkel} />} />
           <Route path="/mine-artikler" element={
             <MineArtikler 
-              innloggetBruker={innloggetBruker} 
-              artikler={artikler.filter(a => a.forfatterID === innloggetBruker?.id)} 
+              innloggetBruker={user} 
+              artikler={artikler.filter(a => a.forfatterID === user?.id)} 
               onSlettArtikkel={handleSlettArtikkel} 
               onOppdaterArtikkel={handleOppdaterArtikkel} 
             />
           } />
           <Route path="/admin" element={
             <AdminPanel 
-              innloggetBruker={innloggetBruker} 
+              innloggetBruker={user} 
               artikler={artikler} 
               brukere={brukere} 
               jobbliste={jobbliste} 
@@ -611,13 +578,13 @@ function AppContent() {
               onEndreRolleBruker={handleEndreRolleBruker}
             />
           } />
-          <Route path="/login" element={<Innlogging onLogin={handleLogin} brukere={brukere} />} />
-          <Route path="/logg-inn" element={<Innlogging onLogin={handleLogin} brukere={brukere} />} />
+          <Route path="/login" element={<Innlogging />} />
+          <Route path="/logg-inn" element={<Innlogging />} />
           <Route path="/register" element={<Registrering />} />
           <Route path="/registrer" element={<Registrering />} />
-          <Route path="/profil" element={<Profil innloggetBruker={innloggetBruker} onOppdaterBruker={oppdaterBruker} />} />
-          <Route path="/website-panel" element={<WebsitePanel innloggetBruker={innloggetBruker} currentSettings={websiteSettings} onUpdateSettings={handleUpdateWebsiteSettings} />} />
-          <Route path="/data-panel" element={<DataPanel innloggetBruker={innloggetBruker} />} />
+          <Route path="/profil" element={<Profil innloggetBruker={user} onOppdaterBruker={oppdaterBruker} />} />
+          <Route path="/website-panel" element={<WebsitePanel innloggetBruker={user} currentSettings={websiteSettings} onUpdateSettings={handleUpdateWebsiteSettings} />} />
+          <Route path="/data-panel" element={<DataPanel innloggetBruker={user} />} />
           <Route path="/cache-monitor" element={<CacheMonitor />} />
           <Route path="*" element={
             <div className="ikke-funnet">

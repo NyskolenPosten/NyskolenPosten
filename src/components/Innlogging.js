@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../utils/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -6,7 +6,7 @@ import './Innlogging.css';
 
 function Innlogging({ onLogin }) {
   const { translations } = useLanguage();
-  const { signIn, authError } = useAuth();
+  const { signIn, authError, user } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -15,6 +15,13 @@ function Innlogging({ onLogin }) {
   const [feilmelding, setFeilmelding] = useState('');
   const [suksessmelding, setSuksessmelding] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Redirect hvis brukeren allerede er logget inn
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,10 +47,11 @@ function Innlogging({ onLogin }) {
     }
     
     try {
-      // Bruk authService for innlogging
+      // Bruk AuthContext for innlogging
       const success = await signIn(formData.email, formData.password);
       
       if (!success) {
+        setFeilmelding(authError || translations.login.loginFailed);
         setLoading(false);
         return;
       }
@@ -52,13 +60,18 @@ function Innlogging({ onLogin }) {
       setSuksessmelding(translations.login.loginSuccess);
       setFeilmelding('');
       
+      // Hvis onLogin-callback er tilgjengelig, kall den
+      if (onLogin && typeof onLogin === 'function') {
+        onLogin();
+      }
+      
       // Redirect til forsiden etter en kort pause
       setTimeout(() => {
         navigate('/');
       }, 1000);
       
     } catch (error) {
-      setFeilmelding(translations.login.loginFailed);
+      setFeilmelding(error.message || translations.login.loginFailed);
     } finally {
       setLoading(false);
     }
