@@ -173,30 +173,70 @@ export const hentAlleArtikler = async () => {
     
     // Lag en funksjon for å hente data
     const fetchDataPromise = async () => {
-      // Prøv først med standardspørringen
-      let { data, error } = await supabase
-        .from('artikler')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      // Sjekk om vi fikk data og ingen feil
-      if (data && data.length > 0 && !error) {
-        if (!isProd) {
-          console.log(`Hentet ${data.length} artikler fra Supabase`);
-        }
-        return { success: true, artikler: data };
-      }
-      
-      // Håndter skjema-feil med fallback til REST API
-      if (error) {
-        if (!isProd) {
-          console.log('Fikk API-feil, prøver direkte REST API-kall...');
+      try {
+        // Definer korrekte headers for API-kall
+        const headers = {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Prefer': 'return=representation'
+        };
+        
+        // Prøv direkte REST API-kall (mer pålitelig enn Supabase-klienten)
+        const apiUrl = `${supabaseUrl}/rest/v1/artikler`;
+        const response = await fetch(`${apiUrl}?select=*`, {
+          method: 'GET',
+          headers: headers,
+          // Sett en timeout for fetch-forespørselen
+          signal: AbortSignal.timeout(5000)
+        });
+        
+        // Sjekk om responsen er OK
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0) {
+            if (!isProd) {
+              console.log(`Hentet ${data.length} artikler via REST API`);
+            }
+            // Sorter artiklene etter dato
+            data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+            return { success: true, artikler: data };
+          }
+        } else {
+          // Hvis REST API-kallet feiler, prøv med Supabase-klienten
+          if (!isProd) {
+            console.log(`REST API-kall feilet med status ${response.status}, prøver Supabase-klienten...`);
+          }
+          
+          // Bruk Supabase-klienten som backup
+          let { data, error } = await supabase
+            .from('artikler')
+            .select('*');
+          
+          if (data && data.length > 0 && !error) {
+            if (!isProd) {
+              console.log(`Hentet ${data.length} artikler fra Supabase-klienten`);
+            }
+            // Sorter artiklene
+            data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+            return { success: true, artikler: data };
+          } else if (error) {
+            throw new Error(`Supabase-klient feilet: ${error.message}`);
+          }
         }
         
+        // Om vi kommer hit, har vi ikke klart å hente data
+        throw new Error('Ingen data funnet fra backend-tjenester');
+      } catch (error) {
+        // Prøv med en annen URL-struktur som fallback
         try {
-          // Bruk fetch API direkte mot REST-endepunktet
-          const apiUrl = `${supabaseUrl}/rest/v1/artikler?select=*`;
-          const response = await fetch(apiUrl, {
+          if (!isProd) {
+            console.log('Prøver alternativ API-endpoint...');
+          }
+          
+          const fallbackUrl = `${supabaseUrl}/api/rest/artikler`;
+          const fallbackResponse = await fetch(fallbackUrl, {
             method: 'GET',
             headers: {
               'apikey': supabaseKey,
@@ -204,31 +244,25 @@ export const hentAlleArtikler = async () => {
               'Content-Type': 'application/json',
               'Accept': 'application/json'
             },
-            // Sett en timeout for fetch-forespørselen
-            signal: AbortSignal.timeout(5000)
+            signal: AbortSignal.timeout(4000)
           });
           
-          // Sjekk om responsen er OK
-          if (response.ok) {
-            data = await response.json();
+          if (fallbackResponse.ok) {
+            const data = await fallbackResponse.json();
             if (data && data.length > 0) {
               if (!isProd) {
-                console.log(`Hentet ${data.length} artikler via REST API`);
+                console.log(`Hentet ${data.length} artikler via fallback API`);
               }
-              data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
               return { success: true, artikler: data };
             }
-          } else {
-            throw new Error(`REST API-kall feilet med status ${response.status}`);
           }
-        } catch (fetchError) {
-          handleError(fetchError, 'REST API-kall for artikler');
-          // Fortsett til fallback
+        } catch (fallbackError) {
+          handleError(fallbackError, 'Alternativ API-endpoint feiler også');
         }
+        
+        // Throw original error to signal we need to use local storage
+        throw error;
       }
-      
-      // Fallback til lokalt lagrede artikler om alt annet feiler
-      throw new Error('Kunne ikke hente artikler fra backend');
     };
     
     // Prøv å hente data med en timeout
@@ -237,7 +271,7 @@ export const hentAlleArtikler = async () => {
     } catch (error) {
       handleError(error, 'Henting av artikler (timeout eller API-feil)');
       
-      // Bruk lokalt lagrede artikler som fallback
+      // Bruker lokalt lagrede artikler som fallback
       if (lokalArtikler.length > 0) {
         if (!isProd) {
           console.log(`Bruker ${lokalArtikler.length} lokalt lagrede artikler som fallback`);
