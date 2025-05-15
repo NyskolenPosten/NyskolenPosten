@@ -276,8 +276,23 @@ function AppContent() {
   
   // Funksjon for å logge ut
   const handleLogout = async () => {
-    await loggUt();
-    setInnloggetBruker(null);
+    try {
+      // Først, prøv å logge ut via Supabase
+      await loggUt();
+      
+      // Uansett hva som skjer med Supabase, sørg for å nullstille lokal brukerstate
+      setInnloggetBruker(null);
+      
+      // Vis tilbakemelding til brukeren
+      console.log("Du har blitt logget ut");
+      
+      // Om vi har react-router, kan du omdirigere til hjemmesiden
+      // navigate('/');
+    } catch (error) {
+      console.error("Feil ved utlogging:", error);
+      // Likevel nullstille brukertilstanden
+      setInnloggetBruker(null);
+    }
   };
   
   // Funksjon for å oppdatere bruker

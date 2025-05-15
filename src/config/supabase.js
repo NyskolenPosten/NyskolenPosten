@@ -128,22 +128,50 @@ const createFallbackClient = () => {
         }, 
         error: null 
       }),
-      signOut: () => Promise.resolve({ error: null }),
+      signOut: () => {
+        // Fjern alle relaterte localStorage-data
+        localStorage.removeItem('nyskolenposten-auth');
+        localStorage.removeItem('innloggetBruker');
+        localStorage.removeItem('currentUser');
+        
+        // Utløs en auth-tilstandsendring etter timeout for å simulere reell oppførsel
+        setTimeout(() => {
+          // Finn alle onAuthStateChange-lyttere og gi dem beskjed om utlogging
+          if (typeof window._nyskolenAuthCallbacks === 'function') {
+            window._nyskolenAuthCallbacks('SIGNED_OUT', null);
+          }
+        }, 10);
+        
+        return Promise.resolve({ error: null });
+      },
       resetPasswordForEmail: () => Promise.resolve({ error: null }),
       // Legg til onAuthStateChange-funksjon
       onAuthStateChange: (callback) => {
-        // Kall callback med simulert påloggingsstatus
+        // Lagre callback-funksjonen for senere bruk (ved utlogging)
+        window._nyskolenAuthCallbacks = callback;
+        
+        // Sjekk om brukeren er "innlogget" i fallback-modus
+        const isAuthenticated = localStorage.getItem('innloggetBruker') || localStorage.getItem('currentUser');
+        
+        // Kall callback med simulert påloggingsstatus basert på lokale data
         setTimeout(() => {
-          callback('SIGNED_IN', { 
-            user: { id: 'offline-user', email: 'offline@example.com' }
-          });
+          if (isAuthenticated) {
+            callback('SIGNED_IN', { 
+              user: { id: 'offline-user', email: 'offline@example.com' }
+            });
+          } else {
+            callback('SIGNED_OUT', null);
+          }
         }, 10);
         
         // Returner et fiktivt abonnement
         return { 
           data: { 
             subscription: {
-              unsubscribe: () => {}, // Tom funksjon som ikke gjør noe
+              unsubscribe: () => {
+                // Fjern callback når abonnementet avsluttes
+                window._nyskolenAuthCallbacks = null;
+              }
             }
           }
         };

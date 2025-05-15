@@ -59,13 +59,22 @@ export const signIn = async (email, password) => {
 
 export const signOut = async () => {
   try {
+    // Sjekk om vi kjører på GitHub Pages
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    
+    // På GitHub Pages, hopp over Supabase-kall og gjør bare lokal utlogging
+    if (isGitHubPages) {
+      renseBrukerData();
+      return;
+    }
+    
     const { error } = await withTimeout(supabase.auth.signOut(), 5000, 'utlogging');
     if (error) throw error;
   } catch (error) {
     handleError(error, 'Utlogging');
     // Ikke kast feilen videre - bare la utloggingen skje uansett
     // Sørg for at lokale data blir slettet
-    localStorage.removeItem('nyskolenposten-auth');
+    renseBrukerData();
   }
 };
 
@@ -151,13 +160,46 @@ export const hentAlleBrukere = async () => {
 
 export const loggUt = async () => {
   try {
-    const { error } = await withTimeout(supabase.auth.signOut(), 5000, 'utlogging');
-    if (error) throw error;
+    // Sjekk om vi kjører på GitHub Pages
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    
+    // Prøv å logge ut via Supabase, men sett kort timeout på GitHub Pages
+    const timeoutMs = isGitHubPages ? 1000 : 5000; // Kortere timeout på GitHub Pages
+    
+    const { error } = await withTimeout(supabase.auth.signOut(), timeoutMs, 'utlogging');
+    
+    // Hvis vi får feil, eller kjører på GitHub Pages, sørg for manuell utlogging
+    if (error || isGitHubPages) {
+      // Manuell opprydding av lokal lagring
+      renseBrukerData();
+      return { success: true };
+    }
+    
+    return { success: true };
   } catch (error) {
     handleError(error, 'Utlogging');
-    // Bare for sikkerhets skyld, sørg for at localStorage-dataene blir renset
-    localStorage.removeItem('nyskolenposten-auth');
+    
+    // Garanterer at brukeren blir logget ut selv hvis Supabase-kallet feiler
+    renseBrukerData();
+    
+    // Returnerer suksess selv om det var en Supabase-feil
+    // siden brukeren effektivt er logget ut lokalt
+    return { success: true };
   }
+};
+
+// Hjelpefunksjon for å rense alle brukerdata fra lokale lagring
+const renseBrukerData = () => {
+  // Fjern all brukerrelatert data fra localStorage
+  localStorage.removeItem('nyskolenposten-auth');
+  localStorage.removeItem('innloggetBruker');
+  localStorage.removeItem('currentUser');
+  
+  // Utløs en event for å varsle andre faner om utlogging
+  window.dispatchEvent(new StorageEvent('storage', {
+    key: 'innloggetBruker',
+    newValue: null
+  }));
 };
 
 // Logg inn eksisterende bruker
