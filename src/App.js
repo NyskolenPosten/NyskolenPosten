@@ -62,6 +62,45 @@ function AppContent() {
   // Admin e-postliste for automatisk godkjenning og admin-rolle
   const adminEpostliste = ['mattis.tollefsen@nionett.no', 'admin@nyskolen.no'];
   
+  // Rens potensielt korrupte brukerdata ved oppstart
+  useEffect(() => {
+    const cleanupLocalStorage = () => {
+      // Sjekk innloggetBruker
+      try {
+        const innloggetBruker = localStorage.getItem('innloggetBruker');
+        if (innloggetBruker) {
+          const brukerData = JSON.parse(innloggetBruker);
+          // Hvis brukerobjektet mangler nødvendige felter, fjern det
+          if (!brukerData || !brukerData.id || !brukerData.email || typeof brukerData !== 'object') {
+            console.warn('Fjerner korrupte innloggetBruker-data');
+            localStorage.removeItem('innloggetBruker');
+          }
+        }
+      } catch (e) {
+        console.error('Feil ved parsing av innloggetBruker, fjerner data:', e);
+        localStorage.removeItem('innloggetBruker');
+      }
+      
+      // Sjekk currentUser
+      try {
+        const currentUser = localStorage.getItem('currentUser');
+        if (currentUser) {
+          const userData = JSON.parse(currentUser);
+          // Hvis brukerobjektet mangler nødvendige felter, fjern det
+          if (!userData || (!userData.id && !userData.uid) || typeof userData !== 'object') {
+            console.warn('Fjerner korrupte currentUser-data');
+            localStorage.removeItem('currentUser');
+          }
+        }
+      } catch (e) {
+        console.error('Feil ved parsing av currentUser, fjerner data:', e);
+        localStorage.removeItem('currentUser');
+      }
+    };
+    
+    cleanupLocalStorage();
+  }, []);
+  
   // Hent website-innstillinger fra Supabase
   const hentWebsiteInnstillinger = async () => {
     try {

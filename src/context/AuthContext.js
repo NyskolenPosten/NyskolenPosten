@@ -42,15 +42,37 @@ export function AuthProvider({ children }) {
       try {
         if (innloggetBruker) {
           const bruker = JSON.parse(innloggetBruker);
-          setUser(bruker);
-          hasLoadedLocalUser = true;
+          // Valider at brukerobjektet inneholder nødvendige felter
+          if (bruker && bruker.id && bruker.email && bruker.navn) {
+            setUser(bruker);
+            hasLoadedLocalUser = true;
+          } else {
+            // Fjern ugyldige brukerdata
+            localStorage.removeItem('innloggetBruker');
+            console.warn('Fjernet ugyldige brukerdata fra innloggetBruker');
+          }
         } else if (currentUser) {
           const bruker = JSON.parse(currentUser);
-          setUser(bruker);
-          hasLoadedLocalUser = true;
+          // Valider at brukerobjektet inneholder nødvendige felter
+          if (bruker && (bruker.id || bruker.uid) && (bruker.email || bruker.displayName || bruker.navn)) {
+            // Konverter til standard brukerformat
+            setUser({
+              id: bruker.id || bruker.uid,
+              email: bruker.email || '',
+              navn: bruker.navn || bruker.displayName || bruker.email?.split('@')[0] || 'Bruker'
+            });
+            hasLoadedLocalUser = true;
+          } else {
+            // Fjern ugyldige brukerdata
+            localStorage.removeItem('currentUser');
+            console.warn('Fjernet ugyldige brukerdata fra currentUser');
+          }
         }
       } catch (err) {
         console.error('Feil ved parsing av brukerdata:', err);
+        // Ved parse-feil, fjern lokale brukerdata
+        if (innloggetBruker) localStorage.removeItem('innloggetBruker');
+        if (currentUser) localStorage.removeItem('currentUser');
       }
     }
     

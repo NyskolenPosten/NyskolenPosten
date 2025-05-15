@@ -84,6 +84,52 @@
   background-color: rgba(255, 255, 255, 0.2);
 }
 
+/* Styling for knapper og varsler for ugyldige brukere */
+.logout-button.urgent {
+  background-color: #ff3b30;
+  border-color: #ff3b30;
+  color: white;
+  font-weight: bold;
+  animation: pulse 2s infinite;
+}
+
+.logout-button.urgent:hover {
+  background-color: #ff5146;
+}
+
+.invalid-user-warning {
+  background-color: #ff3b30;
+  color: white;
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  margin-right: 0.5rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.lockdown-indicator {
+  background-color: #ff3b30;
+  color: white;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
 .header-logo {
   height: 60px;
   width: auto;
