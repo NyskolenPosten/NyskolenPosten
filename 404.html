@@ -1,36 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="no">
 <head>
   <meta charset="utf-8">
-  <title>Nyskolen Posten</title>
-  <script type="text/javascript">
-    // Single-page apps for GitHub Pages
-    // Handles redirect to homepage for client-side routing
+  <title>Nyskolen Posten - Omdirigerer...</title>
+  <script>
+    // GitHub Pages SPA-omdirigering
     (function() {
-      // Denne skriptet tar URLen til gjeldende side, f.eks.
-      // https://nyskolenposten.github.io/NyskolenPosten/artikler/123
-      // og omdirigerer til index.html med routingsparametre i URL
-      var segmentCount = 1; // Antall segmenter i reponavnet
-      var l = window.location;
+      // Hent gjeldende URL-sti
+      var path = window.location.pathname;
+      var pathSegments = path.split('/');
       
-      // GitHub Pages URL-format: username.github.io/reponame/path
-      // Vi vil omdirigere til index.html og beholde rutingstien
-      var repoName = '/NyskolenPosten';
-      
-      // Omdiriger til index.html med ruten som søkeparameter
-      l.replace(
-        l.protocol + '//' + l.hostname + 
-        (l.port ? ':' + l.port : '') + 
-        repoName.split('/').slice(0, segmentCount + 1).join('/') + '/?p=/' +
-        l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
+      // Sjekk om vi allerede er i repoet
+      if (pathSegments.length >= 2 && pathSegments[1] === 'NyskolenPosten') {
+        // Lagre hele stien for gjenoppretting i hovedapp
+        sessionStorage.setItem('redirectPath', path);
+        
+        // Omdirigerer til hovedsiden med reponavnet
+        window.location.href = '/NyskolenPosten/';
+      } else {
+        // Hvis vi er utenfor repoet, gå til hovedsiden
+        window.location.href = '/NyskolenPosten/';
+      }
     })();
   </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+    }
+    p {
+      color: #666;
+      margin-bottom: 20px;
+    }
+    .loading {
+      display: inline-block;
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(0,0,0,.3);
+      border-radius: 50%;
+      border-top-color: #3498db;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-  <h1>Omdirigerer...</h1>
-  <p>Hvis du ikke blir omdirigert automatisk, <a href="https://nyskolenposten.github.io/NyskolenPosten/">klikk her</a>.</p>
+  <div class="container">
+    <h1>Nyskolen Posten</h1>
+    <p>Omdirigerer til hovedsiden...</p>
+    <div class="loading"></div>
+  </div>
 </body>
 </html> 
