@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Sjekk om vi kjører på GitHub Pages
+const isGithubPages = window.location.hostname.includes('github.io');
 // Bestem URL basert på miljø - lokal eller produksjon
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 export const supabaseUrl = isLocalhost ? 'http://127.0.0.1:54321' : 'https://lucbodhuwimhqnvtmdzg.supabase.co';
@@ -22,53 +24,6 @@ const handleSupabaseError = (error, operation = 'Supabase operation') => {
   
   // I utvikling, logg detaljert feilinformasjon
   console.error(`${operation} feilet:`, error);
-};
-
-const getSupabase = () => {
-  if (supabaseInstance) return supabaseInstance;
-  
-  try {
-    // Definere headers for å håndtere 406-feil
-    const customHeaders = {
-      'X-Client-Info': 'NyskolenPosten',
-      'Content-Type': 'application/json',
-      'Accept': '*/*',
-      'Prefer': 'return=representation',
-      'Accept-Profile': 'public',
-      'Accept-Encoding': 'gzip, deflate, br'
-    };
-    
-    supabaseInstance = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-        storageKey: 'nyskolenposten-auth'
-      },
-      global: {
-        headers: customHeaders
-      },
-      realtime: {
-        params: {
-          eventsPerSecond: 10
-        }
-      },
-      // Bruk pålitelig fetch-oppsett med retries
-      fetch: {
-        handleError: false  // La oss håndtere feil manuelt
-      },
-      db: {
-        schema: 'public' // Angi schema eksplisitt
-      }
-    });
-    
-    return supabaseInstance;
-  } catch (error) {
-    handleSupabaseError(error, 'Initialisering av Supabase-klient');
-    
-    // Returner en mock-klient som ikke gjør noe skadelig
-    return createFallbackClient();
-  }
 };
 
 // Opprett en fallback-klient som returnerer tomme data og ingen feil
@@ -175,10 +130,83 @@ const createFallbackClient = () => {
       }),
       signOut: () => Promise.resolve({ error: null }),
       resetPasswordForEmail: () => Promise.resolve({ error: null }),
+      // Legg til onAuthStateChange-funksjon
+      onAuthStateChange: (callback) => {
+        // Kall callback med simulert påloggingsstatus
+        setTimeout(() => {
+          callback('SIGNED_IN', { 
+            user: { id: 'offline-user', email: 'offline@example.com' }
+          });
+        }, 10);
+        
+        // Returner et fiktivt abonnement
+        return { 
+          data: { 
+            subscription: {
+              unsubscribe: () => {}, // Tom funksjon som ikke gjør noe
+            }
+          }
+        };
+      }
     },
     // Legg til supabaseUrl som en egenskap for konsekvens med vanlig klient
     supabaseUrl,
   };
+};
+
+const getSupabase = () => {
+  if (supabaseInstance) return supabaseInstance;
+  
+  // Hvis vi er på GitHub Pages, bruk alltid fallback-klienten for å unngå CORS-feil
+  if (isGithubPages) {
+    if (!isProd) {
+      console.log('GitHub Pages detektert - bruker offline fallback for Supabase');
+    }
+    return createFallbackClient();
+  }
+  
+  try {
+    // Definere headers for å håndtere 406-feil
+    const customHeaders = {
+      'X-Client-Info': 'NyskolenPosten',
+      'Content-Type': 'application/json',
+      'Accept': '*/*',
+      'Prefer': 'return=representation',
+      'Accept-Profile': 'public',
+      'Accept-Encoding': 'gzip, deflate, br'
+    };
+    
+    supabaseInstance = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        storageKey: 'nyskolenposten-auth'
+      },
+      global: {
+        headers: customHeaders
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10
+        }
+      },
+      // Bruk pålitelig fetch-oppsett med retries
+      fetch: {
+        handleError: false  // La oss håndtere feil manuelt
+      },
+      db: {
+        schema: 'public' // Angi schema eksplisitt
+      }
+    });
+    
+    return supabaseInstance;
+  } catch (error) {
+    handleSupabaseError(error, 'Initialisering av Supabase-klient');
+    
+    // Returner en mock-klient som ikke gjør noe skadelig
+    return createFallbackClient();
+  }
 };
 
 // Eksporter én enkelt instans

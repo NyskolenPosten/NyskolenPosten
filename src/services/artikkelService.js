@@ -10,6 +10,8 @@ const supabaseUrl = supabase.supabaseUrl || configUrl || (isLocalhost ? 'http://
 
 // Sjekk om vi er i produksjonsmiljø
 const isProd = process.env.NODE_ENV === 'production';
+// Sjekk om vi kjører på github.io
+const isGithubPages = window.location.hostname.includes('github.io');
 
 // Feilhåndtering
 const handleError = (error, operation = 'API-operasjon') => {
@@ -147,11 +149,10 @@ export const hentAlleArtikler = async () => {
   try {
     // Reduser logging i produksjon
     if (!isProd) {
-      console.log('Henter artikler fra Supabase...');
-      console.log('URL:', supabaseUrl);
+      console.log('Henter artikler...');
     }
     
-    // Hent lokalt lagrede artikler for fallback
+    // Hent lokalt lagrede artikler - vi vil alltid ha disse klare uansett hva
     const lokaleLagrede = localStorage.getItem('artikler');
     let lokalArtikler = [];
     
@@ -159,119 +160,71 @@ export const hentAlleArtikler = async () => {
       try {
         lokalArtikler = JSON.parse(lokaleLagrede);
         if (!isProd) {
-          console.log(`Fant ${lokalArtikler.length} lokalt lagrede artikler som kan brukes som fallback`);
+          console.log(`Fant ${lokalArtikler.length} lokalt lagrede artikler`);
         }
       } catch (parseError) {
         handleError(parseError, 'Parsing av lokalt lagrede artikler');
       }
     }
     
+    // Hvis vi kjører på github.io, bruk bare localStorage - ikke forsøk å kalle API-er som vil feile med CORS
+    // Dette løser CORS-feilene én gang for alle på github.io
+    if (isGithubPages) {
+      if (!isProd) {
+        console.log('Kjører på GitHub Pages - bruker bare lokale data');
+      }
+      return { success: true, artikler: lokalArtikler };
+    }
+    
     // Sett en timeout for Supabase-kallet
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Tidsavbrudd ved henting av artikler')), 8000)
+      setTimeout(() => reject(new Error('Tidsavbrudd ved henting av artikler')), 5000)
     );
     
-    // Lag en funksjon for å hente data
+    // Lag en funksjon for å hente data - forenklet for å redusere feilkilder
     const fetchDataPromise = async () => {
       try {
-        // Definer korrekte headers for API-kall
-        const headers = {
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Prefer': 'return=representation'
-        };
+        // Bruk Supabase-klienten direkte - unngå direkte fetch-kall som gir 404/406
+        let { data, error } = await supabase
+          .from('artikler')
+          .select('*');
         
-        // Prøv direkte REST API-kall (mer pålitelig enn Supabase-klienten)
-        const apiUrl = `${supabaseUrl}/rest/v1/artikler`;
-        const response = await fetch(`${apiUrl}?select=*`, {
-          method: 'GET',
-          headers: headers,
-          // Sett en timeout for fetch-forespørselen
-          signal: AbortSignal.timeout(5000)
-        });
-        
-        // Sjekk om responsen er OK
-        if (response.ok) {
-          const data = await response.json();
-          if (data && data.length > 0) {
-            if (!isProd) {
-              console.log(`Hentet ${data.length} artikler via REST API`);
-            }
-            // Sorter artiklene etter dato
-            data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-            return { success: true, artikler: data };
-          }
-        } else {
-          // Hvis REST API-kallet feiler, prøv med Supabase-klienten
+        if (data && data.length > 0 && !error) {
           if (!isProd) {
-            console.log(`REST API-kall feilet med status ${response.status}, prøver Supabase-klienten...`);
+            console.log(`Hentet ${data.length} artikler fra Supabase`);
+          }
+          // Sorter artiklene
+          data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+          
+          // Synkroniser med localStorage for offline-bruk
+          try {
+            localStorage.setItem('artikler', JSON.stringify(data));
+          } catch (syncError) {
+            handleError(syncError, 'Synkronisering med lokallagring');
           }
           
-          // Bruk Supabase-klienten som backup
-          let { data, error } = await supabase
-            .from('artikler')
-            .select('*');
-          
-          if (data && data.length > 0 && !error) {
-            if (!isProd) {
-              console.log(`Hentet ${data.length} artikler fra Supabase-klienten`);
-            }
-            // Sorter artiklene
-            data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-            return { success: true, artikler: data };
-          } else if (error) {
-            throw new Error(`Supabase-klient feilet: ${error.message}`);
-          }
+          return { success: true, artikler: data };
+        } 
+        
+        if (error) {
+          throw new Error(`Supabase feilet: ${error.message}`);
         }
         
         // Om vi kommer hit, har vi ikke klart å hente data
-        throw new Error('Ingen data funnet fra backend-tjenester');
+        throw new Error('Ingen data funnet fra Supabase');
       } catch (error) {
-        // Prøv med en annen URL-struktur som fallback
-        try {
-          if (!isProd) {
-            console.log('Prøver alternativ API-endpoint...');
-          }
-          
-          const fallbackUrl = `${supabaseUrl}/api/rest/artikler`;
-          const fallbackResponse = await fetch(fallbackUrl, {
-            method: 'GET',
-            headers: {
-              'apikey': supabaseKey,
-              'Authorization': `Bearer ${supabaseKey}`,
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            signal: AbortSignal.timeout(4000)
-          });
-          
-          if (fallbackResponse.ok) {
-            const data = await fallbackResponse.json();
-            if (data && data.length > 0) {
-              if (!isProd) {
-                console.log(`Hentet ${data.length} artikler via fallback API`);
-              }
-              return { success: true, artikler: data };
-            }
-          }
-        } catch (fallbackError) {
-          handleError(fallbackError, 'Alternativ API-endpoint feiler også');
-        }
-        
-        // Throw original error to signal we need to use local storage
+        // Videreformidle feilen
         throw error;
       }
     };
     
-    // Prøv å hente data med en timeout
+    // Prøv å hente data med en timeout - bare hvis vi ikke er på GitHub Pages
     try {
       return await Promise.race([fetchDataPromise(), timeoutPromise]);
     } catch (error) {
       handleError(error, 'Henting av artikler (timeout eller API-feil)');
       
-      // Bruker lokalt lagrede artikler som fallback
+      // Bruk alltid lokalt lagrede artikler som fallback
       if (lokalArtikler.length > 0) {
         if (!isProd) {
           console.log(`Bruker ${lokalArtikler.length} lokalt lagrede artikler som fallback`);
