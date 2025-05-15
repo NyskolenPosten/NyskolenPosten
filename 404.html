@@ -10,10 +10,44 @@
       var path = window.location.pathname;
       var pathSegments = path.split('/');
       
+      // Kjente ruter som trenger spesialhåndtering
+      var knownRoutes = [
+        '/register', 
+        '/registrer', 
+        '/login', 
+        '/logg-inn', 
+        '/ny-artikkel', 
+        '/mine-artikler', 
+        '/admin', 
+        '/profil',
+        '/website-panel',
+        '/data-panel'
+      ];
+      
+      // Uttrekksfunksjon for å finne en potensiell rute i hele stien
+      function extractRoute(fullPath) {
+        for (var i = 0; i < knownRoutes.length; i++) {
+          if (fullPath.indexOf(knownRoutes[i]) !== -1) {
+            return knownRoutes[i];
+          }
+        }
+        return null;
+      }
+      
+      // Finn en potensiell rute
+      var detectedRoute = extractRoute(path);
+      
       // Sjekk om vi allerede er i repoet
-      if (pathSegments.length >= 2 && pathSegments[1] === 'NyskolenPosten') {
+      if (pathSegments.length >= 2) {
         // Lagre hele stien for gjenoppretting i hovedapp
-        sessionStorage.setItem('redirectPath', path);
+        if (detectedRoute) {
+          // Hvis det er en kjent rute, forsøk direkte redirigering
+          sessionStorage.setItem('redirectPath', detectedRoute);
+          console.log('Detected route:', detectedRoute);
+        } else {
+          // Lagre hele stien for vanlig håndtering
+          sessionStorage.setItem('redirectPath', path);
+        }
         
         // Omdirigerer til hovedsiden med reponavnet
         window.location.href = '/NyskolenPosten/';
@@ -62,7 +96,7 @@
 <body>
   <div class="container">
     <h1>Nyskolen Posten</h1>
-    <p>Omdirigerer til hovedsiden...</p>
+    <p>Omdirigerer til riktig side...</p>
     <div class="loading"></div>
   </div>
 </body>
