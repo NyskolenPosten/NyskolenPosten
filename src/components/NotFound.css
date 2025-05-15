@@ -39,6 +39,44 @@
   color: #444;
 }
 
+/* Styling for direkte lenker */
+.direct-links-container {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background-color: #e3f2fd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.direct-links-container h3 {
+  color: #0d47a1;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.direct-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.direct-link {
+  background-color: #1976d2;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.direct-link:hover {
+  background-color: #1565c0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 .action-links {
   display: flex;
   justify-content: center;
@@ -81,6 +119,16 @@
   .not-found-container {
     padding: 1.5rem;
     margin: 1rem;
+  }
+  
+  .direct-links {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .direct-link {
+    width: 100%;
+    text-align: center;
   }
   
   .action-links {

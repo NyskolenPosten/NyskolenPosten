@@ -58,6 +58,48 @@ const getBasename = () => {
 // Oppretter en statisk 404.html fil for GitHub Pages som vil omdirigere til hovedappen
 const createGitHubPages404Fallback = () => {
   if (isGitHubPages) {
+    // Kjente ruter som kan være målene for direkte navigering
+    const knownRoutes = [
+      '/register', 
+      '/registrer', 
+      '/login', 
+      '/logg-inn', 
+      '/ny-artikkel', 
+      '/mine-artikler', 
+      '/admin', 
+      '/profil',
+      '/website-panel',
+      '/data-panel',
+      '/artikkel'
+    ];
+
+    // Sjekk om vi har en lagret omdirigering
+    const savedPath = sessionStorage.getItem('redirectPath');
+    
+    if (savedPath) {
+      console.log('Gjenoppretter navigasjon til:', savedPath);
+      
+      // Vent litt for å sikre at alle komponenter er lastet
+      setTimeout(() => {
+        // Fjern den lagrede stien for å unngå uendelig løkke
+        sessionStorage.removeItem('redirectPath');
+        
+        // Hvis det er en kjent rute, omdirigerer direkte
+        if (knownRoutes.some(route => savedPath.startsWith(route) || savedPath.includes(route))) {
+          console.log('Omdirigerer til kjent rute:', savedPath);
+          // Bruk window.location for robust omdirigering som unngår Router-problemer
+          window.location.href = getBasename() + savedPath;
+        } else if (savedPath.includes('/artikkel/')) {
+          // Spesialhåndtering for artikkelvisning
+          console.log('Omdirigerer til artikkelvisning:', savedPath);
+          const artikkelId = savedPath.split('/artikkel/')[1];
+          if (artikkelId) {
+            window.location.href = getBasename() + '/artikkel/' + artikkelId;
+          }
+        }
+      }, 500);
+    }
+    
     // Sjekk om vi trenger å håndtere en direkte URL-aksess
     const path = window.location.pathname;
     const pathSegments = path.split('/');
@@ -67,19 +109,7 @@ const createGitHubPages404Fallback = () => {
       console.log('Håndterer direkte URL-aksess på GitHub Pages:', path);
       
       // Lagre opprinnelig URL i sessionStorage for gjenoppretting
-      sessionStorage.setItem('redirectPath', path);
-      
-      // Fortsett normalt siden vi har håndtert eventuelle problemer
-      return;
-    }
-    
-    // Sjekk om vi har en lagret omdirigering
-    const savedPath = sessionStorage.getItem('redirectPath');
-    if (savedPath) {
-      console.log('Gjenoppretter navigasjon til:', savedPath);
-      // Fjern den lagrede stien for å unngå uendelig løkke
-      sessionStorage.removeItem('redirectPath');
-      // Dette vil håndteres av Router's Navigate
+      sessionStorage.setItem('redirectPath', path.replace('/NyskolenPosten', ''));
     }
   }
 };

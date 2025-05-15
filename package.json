@@ -31,7 +31,7 @@
     "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "npm run build",
+    "predeploy": "npm run build && cp public/404.html build/ && cp public/200.html build/",
     "deploy": "gh-pages -d build",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",

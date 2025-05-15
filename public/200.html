@@ -30,28 +30,6 @@
     <script type="text/javascript">
       // Denne koden håndterer rutingparametrene som kommer fra 404.html
       (function(l) {
-        // Sjekk om vi har en lagret sti å gjenopprette
-        var savedPath = sessionStorage.getItem('redirectPath');
-        if (savedPath) {
-          console.log('Gjenoppretter sti fra sessionStorage:', savedPath);
-          // Vent litt før vi gjør omdirigering
-          setTimeout(function() {
-            // Bruk history API for å forhindre at siden lastes på nytt
-            // Men legg også til en fallback til window.location hvis history ikke fungerer
-            try {
-              window.history.pushState({}, '', savedPath);
-              // Bare fjern fra sessionStorage hvis vi har lykkes med omdirigering
-              sessionStorage.removeItem('redirectPath');
-            } catch (e) {
-              console.error('Kunne ikke bruke history API, bruker window.location:', e);
-              // Fallback til window.location hvis history API ikke fungerer
-              var basePath = window.location.hostname.includes('github.io') ? '/NyskolenPosten' : '';
-              window.location.href = basePath + savedPath;
-            }
-          }, 200);
-        }
-        
-        // Original 404-håndtering
         if (l.search[1] === '/' ) {
           var decoded = l.search.slice(1).split('&').map(function(s) { 
             return s.replace(/~and~/g, '&')
