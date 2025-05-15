@@ -54,9 +54,18 @@ const createFallbackClient = () => {
       eq: () => Promise.resolve({ data: mockArticles[0], error: null }),
       single: () => Promise.resolve({ data: mockArticles[0], error: null }),
     }),
-    insert: () => Promise.resolve({ 
-      data: { ...mockArticles[0], id: 'new-' + Date.now().toString(36) }, 
-      error: null 
+    insert: () => ({
+      select: () => ({
+        single: () => Promise.resolve({ 
+          data: { ...mockArticles[0], id: 'new-' + Date.now().toString(36) }, 
+          error: null 
+        })
+      }),
+      // For bakoverkompatibilitet
+      then: (resolve) => resolve({ 
+        data: { ...mockArticles[0], id: 'new-' + Date.now().toString(36) }, 
+        error: null 
+      })
     }),
     update: () => Promise.resolve({ data: mockArticles[0], error: null }),
     delete: () => Promise.resolve({ error: null }),
@@ -74,9 +83,18 @@ const createFallbackClient = () => {
         error: null 
       }),
     }),
-    insert: () => Promise.resolve({ 
-      data: { id: 'new-user-' + Date.now().toString(36), navn: 'Ny Bruker', rolle: 'bruker' }, 
-      error: null 
+    insert: () => ({
+      select: () => ({
+        single: () => Promise.resolve({ 
+          data: { id: 'new-user-' + Date.now().toString(36), navn: 'Ny Bruker', rolle: 'bruker' }, 
+          error: null 
+        })
+      }),
+      // For bakoverkompatibilitet
+      then: (resolve) => resolve({ 
+        data: { id: 'new-user-' + Date.now().toString(36), navn: 'Ny Bruker', rolle: 'bruker' }, 
+        error: null 
+      })
     }),
     update: () => Promise.resolve({ data: { id: 'local-user', navn: 'Oppdatert Bruker' }, error: null }),
     delete: () => Promise.resolve({ error: null }),
@@ -89,7 +107,13 @@ const createFallbackClient = () => {
       single: () => Promise.resolve(mockResponse),
       order: () => Promise.resolve(emptyArrayResponse),
     }),
-    insert: () => Promise.resolve(mockResponse),
+    insert: () => ({
+      select: () => ({
+        single: () => Promise.resolve(mockResponse)
+      }),
+      // For bakoverkompatibilitet
+      then: (resolve) => resolve(mockResponse)
+    }),
     update: () => Promise.resolve(mockResponse),
     delete: () => Promise.resolve({ error: null }),
   };

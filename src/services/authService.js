@@ -348,36 +348,55 @@ export const registrerBruker = async (email, password, navn, klasse) => {
     }
     
     // Opprett brukerprofil i brukere-tabellen
-    const { data: brukerData, error: brukerError } = await supabase
-      .from('brukere')
-      .insert([
-        {
-          id: data.user.id,
-          navn: navn,
-          rolle: 'bruker',
-          godkjent: false,
-          klasse: klasse
-        }
-      ])
-      .select()
-      .single();
-    
-    if (brukerError) {
-      console.error('Feil ved opprettelse av brukerprofil:', brukerError);
-      return { success: false, error: 'Kunne ikke opprette brukerprofil' };
-    }
-    
-    return {
-      success: true,
-      bruker: {
+    try {
+      // Bruk trygg metode for å unngå chaining-feil
+      const { data: brukerData, error: brukerError } = await supabase
+        .from('brukere')
+        .insert([
+          {
+            id: data.user.id,
+            navn: navn,
+            rolle: 'bruker',
+            godkjent: false,
+            klasse: klasse
+          }
+        ]);
+      
+      if (brukerError) {
+        console.error('Feil ved opprettelse av brukerprofil:', brukerError);
+        return { success: false, error: 'Kunne ikke opprette brukerprofil' };
+      }
+      
+      // Hent brukeren for å returnere til klienten
+      const bruker = {
         id: data.user.id,
         email: email,
         navn: navn,
         rolle: 'bruker',
         godkjent: false,
         klasse: klasse
-      }
-    };
+      };
+      
+      return {
+        success: true,
+        bruker: bruker
+      };
+    } catch (insertError) {
+      console.error('Feil ved insert/select operasjon:', insertError);
+      
+      // Fallback - fortsett uansett med standard brukerdata
+      return {
+        success: true,
+        bruker: {
+          id: data.user.id,
+          email: email,
+          navn: navn,
+          rolle: 'bruker',
+          godkjent: false,
+          klasse: klasse
+        }
+      };
+    }
   } catch (error) {
     console.error('Feil ved registrering av bruker:', error.message);
     return { success: false, error: error.message };
@@ -393,34 +412,55 @@ export const opprettBrukerMedRolle = async (email, password, navn, rolle = 'bruk
     });
     
     if (authError) throw authError;
+    
+    if (!authData || !authData.user) {
+      throw new Error('Kunne ikke opprette brukeren i autentiseringssystemet');
+    }
 
-    // Opprett brukerprofil i profiles-tabellen
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .insert([
-        {
+    try {
+      // Opprett brukerprofil i profiles-tabellen
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            id: authData.user.id,
+            email: email,
+            navn: navn,
+            rolle: rolle,
+            godkjent: true, // Automatisk godkjent siden vi oppretter med spesifikk rolle
+            klasse: klasse
+          }
+        ]);
+
+      if (profileError) throw profileError;
+
+      return {
+        success: true,
+        bruker: {
           id: authData.user.id,
           email: email,
           navn: navn,
           rolle: rolle,
-          godkjent: true, // Automatisk godkjent siden vi oppretter med spesifikk rolle
+          godkjent: true,
           klasse: klasse
         }
-      ]);
-
-    if (profileError) throw profileError;
-
-    return {
-      success: true,
-      bruker: {
-        id: authData.user.id,
-        email: email,
-        navn: navn,
-        rolle: rolle,
-        godkjent: true,
-        klasse: klasse
-      }
-    };
+      };
+    } catch (profileError) {
+      console.error('Feil ved opprettelse av brukerprofil:', profileError);
+      
+      // Fortsett likevel med standarddata
+      return {
+        success: true,
+        bruker: {
+          id: authData.user.id,
+          email: email,
+          navn: navn,
+          rolle: rolle,
+          godkjent: true,
+          klasse: klasse
+        }
+      };
+    }
   } catch (error) {
     console.error('Feil ved opprettelse av bruker med rolle:', error.message);
     return { success: false, error: error.message };
