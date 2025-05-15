@@ -1,0 +1,94 @@
+.not-found-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.not-found-container h1 {
+  color: #e74c3c;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.not-found-container p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  color: #555;
+}
+
+.github-pages-info {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background-color: #f1f8e9;
+  border-left: 4px solid #8bc34a;
+  text-align: left;
+}
+
+.github-pages-info h2 {
+  color: #33691e;
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.github-pages-info p {
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.action-links {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.home-link, .reload-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: inline-block;
+}
+
+.home-link {
+  background-color: #2196f3;
+  color: white;
+}
+
+.home-link:hover {
+  background-color: #1976d2;
+  transform: translateY(-2px);
+}
+
+.reload-button {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.reload-button:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .not-found-container {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .action-links {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .home-link, .reload-button {
+    width: 100%;
+  }
+} 

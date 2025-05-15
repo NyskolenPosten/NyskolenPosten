@@ -54,19 +54,22 @@ const createFallbackClient = () => {
       eq: () => Promise.resolve({ data: mockArticles[0], error: null }),
       single: () => Promise.resolve({ data: mockArticles[0], error: null }),
     }),
-    insert: () => ({
-      select: () => ({
-        single: () => Promise.resolve({ 
-          data: { ...mockArticles[0], id: 'new-' + Date.now().toString(36) }, 
-          error: null 
-        })
-      }),
-      // For bakoverkompatibilitet
-      then: (resolve) => resolve({ 
-        data: { ...mockArticles[0], id: 'new-' + Date.now().toString(36) }, 
-        error: null 
-      })
-    }),
+    insert: (data) => {
+      // Forbedret insert med støtte for select() chaining
+      const insertResult = {
+        data: { ...mockArticles[0], ...data, id: 'new-' + Date.now().toString(36) },
+        error: null
+      };
+      
+      // Returnerer et objekt med select-metode for chaining
+      return {
+        select: (columns) => ({
+          single: () => Promise.resolve(insertResult)
+        }),
+        // For bakoverkompatibilitet
+        then: (resolve) => resolve(insertResult)
+      };
+    },
     update: () => Promise.resolve({ data: mockArticles[0], error: null }),
     delete: () => Promise.resolve({ error: null }),
   };
@@ -83,19 +86,26 @@ const createFallbackClient = () => {
         error: null 
       }),
     }),
-    insert: () => ({
-      select: () => ({
-        single: () => Promise.resolve({ 
-          data: { id: 'new-user-' + Date.now().toString(36), navn: 'Ny Bruker', rolle: 'bruker' }, 
-          error: null 
-        })
-      }),
-      // For bakoverkompatibilitet
-      then: (resolve) => resolve({ 
-        data: { id: 'new-user-' + Date.now().toString(36), navn: 'Ny Bruker', rolle: 'bruker' }, 
-        error: null 
-      })
-    }),
+    insert: (data) => {
+      // Forbedret insert med støtte for select() chaining
+      const insertResult = {
+        data: { 
+          id: 'new-user-' + Date.now().toString(36), 
+          ...data,
+          navn: data.navn || 'Ny Bruker', 
+          rolle: 'bruker' 
+        }, 
+        error: null
+      };
+      
+      return {
+        select: (columns) => ({
+          single: () => Promise.resolve(insertResult)
+        }),
+        // For bakoverkompatibilitet
+        then: (resolve) => resolve(insertResult)
+      };
+    },
     update: () => Promise.resolve({ data: { id: 'local-user', navn: 'Oppdatert Bruker' }, error: null }),
     delete: () => Promise.resolve({ error: null }),
   };
@@ -107,13 +117,18 @@ const createFallbackClient = () => {
       single: () => Promise.resolve(mockResponse),
       order: () => Promise.resolve(emptyArrayResponse),
     }),
-    insert: () => ({
-      select: () => ({
-        single: () => Promise.resolve(mockResponse)
-      }),
-      // For bakoverkompatibilitet
-      then: (resolve) => resolve(mockResponse)
-    }),
+    insert: (data) => {
+      // Forbedret insert med støtte for select() chaining
+      const insertResult = { data: { ...data, id: 'mock-' + Date.now().toString(36) }, error: null };
+      
+      return {
+        select: (columns) => ({
+          single: () => Promise.resolve(insertResult)
+        }),
+        // For bakoverkompatibilitet
+        then: (resolve) => resolve(insertResult)
+      };
+    },
     update: () => Promise.resolve(mockResponse),
     delete: () => Promise.resolve({ error: null }),
   };

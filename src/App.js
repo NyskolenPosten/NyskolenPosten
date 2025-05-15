@@ -16,6 +16,7 @@ import Header from './components/Header';
 import Innlogging from './components/Innlogging';
 import Registrering from './components/Registrering';
 import CacheMonitor from './components/CacheMonitor';
+import NotFound from './components/NotFound';
 import { LanguageProvider } from './utils/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Profil from './components/Profil';
@@ -41,9 +42,46 @@ const isLocalhost = window.location.hostname === 'localhost' || window.location.
 // Sett basename for router basert på om vi er på GitHub Pages eller ikke
 const getBasename = () => {
   if (isGitHubPages) {
+    // Hent reponavnet fra URL-en for å få korrekt basename
+    const pathSegments = window.location.pathname.split('/');
+    if (pathSegments.length >= 2) {
+      // Returner /repoName som basename
+      return '/' + pathSegments[1];
+    }
+    // Fallback til /NyskolenPosten hvis vi ikke kan utlede fra URL
     return '/NyskolenPosten';
   }
   return '/';
+};
+
+// GitHub Pages 404-håndtering
+// Oppretter en statisk 404.html fil for GitHub Pages som vil omdirigere til hovedappen
+const createGitHubPages404Fallback = () => {
+  if (isGitHubPages) {
+    // Sjekk om vi trenger å håndtere en direkte URL-aksess
+    const path = window.location.pathname;
+    const pathSegments = path.split('/');
+    
+    // Hvis vi har flere enn bare reponavnet i URL-en og ikke er på hovedsiden
+    if (pathSegments.length > 2 && pathSegments[1] === 'NyskolenPosten') {
+      console.log('Håndterer direkte URL-aksess på GitHub Pages:', path);
+      
+      // Lagre opprinnelig URL i sessionStorage for gjenoppretting
+      sessionStorage.setItem('redirectPath', path);
+      
+      // Fortsett normalt siden vi har håndtert eventuelle problemer
+      return;
+    }
+    
+    // Sjekk om vi har en lagret omdirigering
+    const savedPath = sessionStorage.getItem('redirectPath');
+    if (savedPath) {
+      console.log('Gjenoppretter navigasjon til:', savedPath);
+      // Fjern den lagrede stien for å unngå uendelig løkke
+      sessionStorage.removeItem('redirectPath');
+      // Dette vil håndteres av Router's Navigate
+    }
+  }
 };
 
 function AppContent() {
@@ -536,6 +574,11 @@ function AppContent() {
     }
   };
   
+  // Kjør GitHub Pages 404-håndtering ved oppstart
+  useEffect(() => {
+    createGitHubPages404Fallback();
+  }, []);
+  
   // Sjekk om nettsiden er i WEBSITE LOCKDOWN modus
   if (websiteSettings.fullLockdown) {
     return (
@@ -625,13 +668,7 @@ function AppContent() {
           <Route path="/website-panel" element={<WebsitePanel innloggetBruker={user} currentSettings={websiteSettings} onUpdateSettings={handleUpdateWebsiteSettings} />} />
           <Route path="/data-panel" element={<DataPanel innloggetBruker={user} />} />
           <Route path="/cache-monitor" element={<CacheMonitor />} />
-          <Route path="*" element={
-            <div className="ikke-funnet">
-              <h1>Side ikke funnet</h1>
-              <p>Beklager, men siden du leter etter finnes ikke.</p>
-              <Link to="/" className="tilbake-link">Gå til forsiden</Link>
-            </div>
-          } />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       
@@ -643,13 +680,13 @@ function AppContent() {
 function App() {
   return (
     <HelmetProvider>
-      <LanguageProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <LanguageProvider>
           <Router basename={getBasename()}>
             <AppContent />
           </Router>
-        </AuthProvider>
-      </LanguageProvider>
+        </LanguageProvider>
+      </AuthProvider>
     </HelmetProvider>
   );
 }

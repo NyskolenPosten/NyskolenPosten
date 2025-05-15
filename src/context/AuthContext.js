@@ -43,29 +43,34 @@ export function AuthProvider({ children }) {
         if (innloggetBruker) {
           const bruker = JSON.parse(innloggetBruker);
           // Valider at brukerobjektet inneholder nødvendige felter
-          if (bruker && bruker.id && bruker.email && bruker.navn) {
+          if (bruker && bruker.id && bruker.email && bruker.navn && typeof bruker === 'object') {
+            console.log('Lastet bruker fra innloggetBruker:', bruker.email);
             setUser(bruker);
             hasLoadedLocalUser = true;
           } else {
             // Fjern ugyldige brukerdata
+            console.warn('Ugyldige brukerdata funnet i innloggetBruker, fjerner data');
             localStorage.removeItem('innloggetBruker');
-            console.warn('Fjernet ugyldige brukerdata fra innloggetBruker');
           }
         } else if (currentUser) {
           const bruker = JSON.parse(currentUser);
           // Valider at brukerobjektet inneholder nødvendige felter
-          if (bruker && (bruker.id || bruker.uid) && (bruker.email || bruker.displayName || bruker.navn)) {
+          if (bruker && (bruker.id || bruker.uid) && (bruker.email || bruker.displayName || bruker.navn) && typeof bruker === 'object') {
             // Konverter til standard brukerformat
-            setUser({
+            const standardisertBruker = {
               id: bruker.id || bruker.uid,
               email: bruker.email || '',
               navn: bruker.navn || bruker.displayName || bruker.email?.split('@')[0] || 'Bruker'
-            });
+            };
+            console.log('Lastet bruker fra currentUser:', standardisertBruker.email);
+            setUser(standardisertBruker);
+            // Synkroniser til innloggetBruker-formatet for konsistens
+            localStorage.setItem('innloggetBruker', JSON.stringify(standardisertBruker));
             hasLoadedLocalUser = true;
           } else {
             // Fjern ugyldige brukerdata
+            console.warn('Ugyldige brukerdata funnet i currentUser, fjerner data');
             localStorage.removeItem('currentUser');
-            console.warn('Fjernet ugyldige brukerdata fra currentUser');
           }
         }
       } catch (err) {
@@ -80,15 +85,18 @@ export function AuthProvider({ children }) {
     if (!hasLoadedLocalUser) {
       // Hent gjeldende sesjon
       supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
+        if (session && session.user) {
           setUser(session.user);
         }
+        setLoading(false);
+      }).catch(error => {
+        console.error('Feil ved henting av Supabase sesjon:', error);
         setLoading(false);
       });
       
       // Lytt til endringer i autentisering
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (session) {
+        if (session && session.user) {
           setUser(session.user);
         } else {
           // Sjekk om vi fortsatt har en lokal bruker før vi setter user til null
@@ -111,16 +119,31 @@ export function AuthProvider({ children }) {
 
   // Funksjon for å manuelt sette bruker (for lokal fallback)
   const setAuthUser = (userData) => {
-    setUser(userData);
+    // Sikre at brukerdata er komplett og gyldig
+    if (!userData || !userData.id || !userData.email) {
+      console.error('Forsøk på å sette ugyldig bruker avbrutt:', userData);
+      setAuthError('Ugyldig brukerdata. Vennligst prøv på nytt.');
+      return false;
+    }
+    
+    // Sikre at vi har et navn
+    const validatedUserData = {
+      ...userData,
+      navn: userData.navn || userData.email.split('@')[0] || 'Bruker'
+    };
+    
+    setUser(validatedUserData);
     // Lagre brukeren i begge lagringsformater for å sikre kompatibilitet
-    if (userData) {
-      localStorage.setItem('innloggetBruker', JSON.stringify(userData));
+    if (validatedUserData) {
+      localStorage.setItem('innloggetBruker', JSON.stringify(validatedUserData));
       localStorage.setItem('currentUser', JSON.stringify({
-        uid: userData.id,
-        email: userData.email,
-        navn: userData.navn
+        uid: validatedUserData.id,
+        email: validatedUserData.email,
+        navn: validatedUserData.navn
       }));
     }
+    
+    return true;
   };
   
   // Lytt til storage-endringer for å synkronisere brukerstatusen på tvers av faner
