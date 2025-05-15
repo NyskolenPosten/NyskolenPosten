@@ -2,12 +2,26 @@
 
 import cacheManager, { invalidateArtikkelCache } from '../utils/cacheUtil';
 import { supabase, supabaseKey, supabaseUrl as configUrl } from '../config/supabase';
-import { createClient } from '@supabase/supabase-js';
 
 // Sjekk om vi kjører lokalt
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 // Hent supabase URL - bruk en sikker fallback
 const supabaseUrl = supabase.supabaseUrl || configUrl || (isLocalhost ? 'http://127.0.0.1:54321' : 'https://lucbodhuwimhqnvtmdzg.supabase.co');
+
+// Sjekk om vi er i produksjonsmiljø
+const isProd = process.env.NODE_ENV === 'production';
+
+// Feilhåndtering
+const handleError = (error, operation = 'API-operasjon') => {
+  // I produksjon, begrens logging
+  if (isProd) {
+    console.warn(`${operation} feilet. Bruker fallback.`);
+    return;
+  }
+  
+  // I utvikling, gi mer informasjon
+  console.error(`${operation} feilet:`, error);
+};
 
 // Cache-TTL-konstanter (i millisekunder)
 const CACHE_TTL = {
@@ -131,93 +145,127 @@ export const hentGodkjenteArtikler = async () => {
 // Hent alle artikler (for admin/redaktør og alle brukere)
 export const hentAlleArtikler = async () => {
   try {
-    console.log('Henter artikler fra Supabase...');
-    console.log('URL:', supabaseUrl);
+    // Reduser logging i produksjon
+    if (!isProd) {
+      console.log('Henter artikler fra Supabase...');
+      console.log('URL:', supabaseUrl);
+    }
     
-    // Sjekk først om det er lokalt lagrede artikler
+    // Hent lokalt lagrede artikler for fallback
     const lokaleLagrede = localStorage.getItem('artikler');
     let lokalArtikler = [];
     
     if (lokaleLagrede) {
       try {
         lokalArtikler = JSON.parse(lokaleLagrede);
-        console.log(`Fant ${lokalArtikler.length} lokalt lagrede artikler som kan brukes som fallback`);
-      } catch (parseError) {
-        console.error("Kunne ikke parse lokalt lagrede artikler:", parseError);
-      }
-    }
-    
-    // Prøv først med standardspørringen
-    let { data, error } = await supabase
-      .from('artikler')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    // Sjekk om vi fikk data og ingen feil
-    if (data && data.length > 0 && !error) {
-      console.log(`Hentet ${data.length} artikler fra Supabase`);
-      return { success: true, artikler: data };
-    }
-    
-    // Håndter skjema-feil
-    if (error && error.message && (error.message.includes('The schema must be one of the following: api') || error.status === 406)) {
-      console.log('Fikk skjema-feil, prøver direkte REST API-kall...');
-      
-      try {
-        // Bruk fetch API direkte mot REST-endepunktet
-        const apiUrl = `${supabaseUrl}/rest/v1/artikler?select=*`;
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        });
-        
-        // Sjekk om responsen er OK
-        if (response.ok) {
-          data = await response.json();
-          if (data && data.length > 0) {
-            console.log(`Hentet ${data.length} artikler via REST API`);
-            data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-            return { success: true, artikler: data };
-          }
-        } else {
-          console.error(`REST API-kall feilet med status ${response.status}`);
+        if (!isProd) {
+          console.log(`Fant ${lokalArtikler.length} lokalt lagrede artikler som kan brukes som fallback`);
         }
-      } catch (fetchError) {
-        console.error("Feil ved REST API-kall:", fetchError);
+      } catch (parseError) {
+        handleError(parseError, 'Parsing av lokalt lagrede artikler');
       }
     }
     
-    // Hvis vi ikke har fått data fra noen av metodene ovenfor, bruk lokalt lagrede artikler
-    if (lokalArtikler.length > 0) {
-      console.log(`Bruker ${lokalArtikler.length} lokalt lagrede artikler`);
-      return { success: true, artikler: lokalArtikler };
+    // Sett en timeout for Supabase-kallet
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Tidsavbrudd ved henting av artikler')), 8000)
+    );
+    
+    // Lag en funksjon for å hente data
+    const fetchDataPromise = async () => {
+      // Prøv først med standardspørringen
+      let { data, error } = await supabase
+        .from('artikler')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      // Sjekk om vi fikk data og ingen feil
+      if (data && data.length > 0 && !error) {
+        if (!isProd) {
+          console.log(`Hentet ${data.length} artikler fra Supabase`);
+        }
+        return { success: true, artikler: data };
+      }
+      
+      // Håndter skjema-feil med fallback til REST API
+      if (error) {
+        if (!isProd) {
+          console.log('Fikk API-feil, prøver direkte REST API-kall...');
+        }
+        
+        try {
+          // Bruk fetch API direkte mot REST-endepunktet
+          const apiUrl = `${supabaseUrl}/rest/v1/artikler?select=*`;
+          const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+              'apikey': supabaseKey,
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            // Sett en timeout for fetch-forespørselen
+            signal: AbortSignal.timeout(5000)
+          });
+          
+          // Sjekk om responsen er OK
+          if (response.ok) {
+            data = await response.json();
+            if (data && data.length > 0) {
+              if (!isProd) {
+                console.log(`Hentet ${data.length} artikler via REST API`);
+              }
+              data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+              return { success: true, artikler: data };
+            }
+          } else {
+            throw new Error(`REST API-kall feilet med status ${response.status}`);
+          }
+        } catch (fetchError) {
+          handleError(fetchError, 'REST API-kall for artikler');
+          // Fortsett til fallback
+        }
+      }
+      
+      // Fallback til lokalt lagrede artikler om alt annet feiler
+      throw new Error('Kunne ikke hente artikler fra backend');
+    };
+    
+    // Prøv å hente data med en timeout
+    try {
+      return await Promise.race([fetchDataPromise(), timeoutPromise]);
+    } catch (error) {
+      handleError(error, 'Henting av artikler (timeout eller API-feil)');
+      
+      // Bruk lokalt lagrede artikler som fallback
+      if (lokalArtikler.length > 0) {
+        if (!isProd) {
+          console.log(`Bruker ${lokalArtikler.length} lokalt lagrede artikler som fallback`);
+        }
+        return { success: true, artikler: lokalArtikler };
+      }
+      
+      // Siste utvei - returner tom array
+      return { success: true, artikler: [] };
     }
-    
-    // Hvis ingen data er funnet, returner en tom array
-    console.log("Ingen data funnet, returnerer tom array");
-    return { success: true, artikler: [] };
-    
   } catch (error) {
-    console.error('Uventet feil ved henting av artikler:', error);
+    handleError(error, 'Uventet feil ved henting av artikler');
     
     // Prøv å bruke lokalt lagrede artikler som siste utvei
     try {
       const lokaleLagrede = localStorage.getItem('artikler');
       if (lokaleLagrede) {
         const artikler = JSON.parse(lokaleLagrede);
-        console.log(`Bruker ${artikler.length} lokalt lagrede artikler (etter feil)`);
+        if (!isProd) {
+          console.log(`Bruker ${artikler.length} lokalt lagrede artikler (etter feil)`);
+        }
         return { success: true, artikler };
       }
     } catch (localError) {
-      console.error("Kunne ikke bruke lokalt lagrede artikler:", localError);
+      handleError(localError, 'Fallback til lokalt lagrede artikler');
     }
     
-    return { success: false, error: error.message || 'Kunne ikke hente artikler' };
+    return { success: true, artikler: [] };
   }
 };
 
