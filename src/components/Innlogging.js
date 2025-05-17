@@ -15,6 +15,21 @@ function Innlogging({ onLogin }) {
   const [feilmelding, setFeilmelding] = useState('');
   const [suksessmelding, setSuksessmelding] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  
+  // Lytter for online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
   
   // Redirect hvis brukeren allerede er logget inn
   useEffect(() => {
@@ -38,6 +53,12 @@ function Innlogging({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setFeilmelding('');
+    
+    // Sjekk om vi er offline
+    if (isOffline) {
+      console.log('Bruker er offline, bruker lokal innlogging');
+    }
     
     // Valider input
     if (!formData.email || !formData.password) {
@@ -71,7 +92,18 @@ function Innlogging({ onLogin }) {
       }, 1000);
       
     } catch (error) {
-      setFeilmelding(error.message || translations.login.loginFailed);
+      console.error('Innloggingsfeil:', error);
+      
+      // Spesifikk feilmelding for nettverksproblemer
+      if (error.message && (
+          error.message.includes('fetch') || 
+          error.message.includes('network') || 
+          error.message.includes('timeout') ||
+          error.message.includes('connection'))) {
+        setFeilmelding('Nettverksfeil: Kunne ikke koble til serveren. Sjekk internettforbindelsen.');
+      } else {
+        setFeilmelding(error.message || translations.login.loginFailed);
+      }
     } finally {
       setLoading(false);
     }
@@ -81,12 +113,23 @@ function Innlogging({ onLogin }) {
     <div className="innlogging-container">
       <h2>{translations.login.title}</h2>
       
+      {isOffline && (
+        <div className="offline-notice">
+          <strong>Du er offline.</strong> Innlogging vil prøve å bruke lokalt lagrede data.
+        </div>
+      )}
+      
       {(authError || feilmelding) && (
         <div className="feilmelding" role="alert">
           {authError || feilmelding}
           <div className="teknisk-stotte">
-            <p>Fant du en feil/bug? Kontakt teknisk leder i NyskolenPosten: <a href="mailto:mattis.tollefsen@nionett.no">mattis.tollefsen@nionett.no</a></p>
-            <p>Jeg fikser det så fort som mulig!</p>
+            <p>Opplever du problemer med innloggingen?</p>
+            <ul>
+              <li>Sjekk at du har internettforbindelse</li>
+              <li>Prøv å oppdatere siden</li>
+              <li>Tøm nettleserens hurtigbuffer (cache)</li>
+              <li>Kontakt teknisk leder i NyskolenPosten: <a href="mailto:mattis.tollefsen@nionett.no">mattis.tollefsen@nionett.no</a></li>
+            </ul>
           </div>
         </div>
       )}

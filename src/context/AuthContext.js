@@ -6,11 +6,15 @@ const AuthContext = createContext();
 function oversettFeilmelding(feil) {
   if (!feil) return '';
   if (feil.includes('Failed to fetch')) return 'Kunne ikke koble til serveren. Sjekk internettforbindelsen.';
+  if (feil.includes('network error')) return 'Nettverksfeil. Sjekk internettforbindelsen og prøv igjen.';
+  if (feil.includes('timeout') || feil.includes('timed out')) return 'Forespørselen tok for lang tid. Sjekk internettforbindelsen.';
+  if (feil.includes('No connection to server')) return 'Ingen tilkobling til serveren. Sjekk internettforbindelsen.';
+  if (feil.includes('Tilkoblingen tok for lang tid')) return 'Tilkoblingen tok for lang tid. Sjekk internettforbindelsen.';
+  if (feil.includes('Ingen internettforbindelse')) return 'Ingen internettforbindelse. Sjekk nettverkstilkoblingen.';
   if (feil.includes('Invalid login credentials')) return 'Feil e-post eller passord.';
   if (feil.includes('User already registered')) return 'Brukeren er allerede registrert.';
   if (feil.includes('Email not confirmed')) return 'E-posten er ikke bekreftet. Sjekk innboksen din.';
   if (feil.includes('Password should be at least')) return 'Passordet er for kort.';
-  if (feil.includes('network error')) return 'Nettverksfeil. Prøv igjen.';
   if (feil.includes('No user found')) return 'Ingen bruker funnet med denne e-posten.';
   if (feil.includes('Email is invalid')) return 'E-postadressen er ugyldig.';
   if (feil.includes('Password is required')) return 'Passord må fylles ut.';
