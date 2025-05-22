@@ -330,7 +330,7 @@ function AdminPanel({
             <h4>Om jobblisten</h4>
             <p>Jobblisten viser hvem som er redaktør/administrator og journalister i Nyskolen Posten.</p>
             <p>Når en bruker godkjennes, legges de automatisk til i jobblisten som journalist.</p>
-            <p>Visse brukere får automatisk redaktør/administrator-rolle basert på interne regler.</p>
+            <p>Alle nye brukere må godkjennes manuelt av en administrator før de får rettigheter.</p>
             <p>Som redaktør kan du gi andre brukere redaktørrolle eller endre tilbake til journalist.</p>
           </div>
         </div>

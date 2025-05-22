@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 const isGithubPages = window.location.hostname.includes('github.io');
 // Bestem URL basert på miljø - lokal eller produksjon
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-export const supabaseUrl = isLocalhost ? 'http://127.0.0.1:54321' : 'https://lucbodhuwimhqnvtmdzg.supabase.co';
+export const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'http://127.0.0.1:54321';
 export const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 
 // Lag en singleton-instans for å unngå "Multiple GoTrueClient instances" advarsel
@@ -232,7 +232,7 @@ const createFallbackClient = () => {
         const brukere = JSON.parse(localStorage.getItem('brukere') || '[]');
         const bruker = brukere.find(b => b.email === credentials.email);
         
-        if (bruker && (bruker.password === credentials.password || credentials.password === 'admin123')) {
+        if (bruker && bruker.password === credentials.password) {
           localStorage.setItem('innloggetBruker', JSON.stringify(bruker));
           return Promise.resolve({ 
             data: { 
@@ -671,5 +671,25 @@ export const db = {
       handleSupabaseError(error, 'Oppdatering av bruker');
       return { data: null, error: { message: 'Kunne ikke oppdatere bruker' } };
     }
+  }
+};
+
+// Funksjon for å fikse lockdown
+const fixLockdown = () => {
+  const passord = prompt('Skriv inn passordet for å fikse lockdown:');
+  if (passord === process.env.REACT_APP_FIX_LOCKDOWN_PASSWORD) {
+    setWebsiteSettings({
+      lockdown: false,
+      fullLockdown: false,
+      note: ""
+    });
+    localStorage.setItem('websiteSettings', JSON.stringify({
+      lockdown: false,
+      fullLockdown: false,
+      note: ""
+    }));
+    alert('Lockdown er nå deaktivert!');
+  } else {
+    alert('Feil passord!');
   }
 }; 

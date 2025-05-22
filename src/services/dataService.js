@@ -28,16 +28,7 @@ export const lastStartdata = (datatype) => {
     case 'artikler':
       return [];
     case 'brukere':
-      const adminBruker = {
-        id: 'admin-' + Date.now(),
-        navn: 'Administrator',
-        email: 'admin@nyskolen.no',
-        password: 'admin123',
-        rolle: 'admin',
-        godkjent: true,
-        opprettet: new Date().toISOString()
-      };
-      return [adminBruker];
+      return [];
     case 'jobbliste':
       return [
         {

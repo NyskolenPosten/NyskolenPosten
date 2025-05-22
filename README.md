@@ -31,3 +31,16 @@ Prosjektet kan enkelt kjøres i en isolert container med Docker og Docker Compos
 - Kun nødvendige filer kopieres inn i produksjonscontaineren for å holde imaget slankt.
 
 Se `Dockerfile` og `docker-compose.yml` for flere detaljer om oppsettet.
+
+## Sikkerhet og miljøvariabler
+
+For sikker utvikling, må du opprette en `.env.local` fil i rot-mappen med følgende innhold:
+
+```
+REACT_APP_SUPABASE_ANON_KEY=din_supabase_nøkkel
+REACT_APP_ADMIN_PASSWORD=ditt_admin_passord
+```
+
+Merk at `.env.local` ikke skal sjekkes inn i versjonskontroll - det er allerede lagt til i `.gitignore`.
+
+For produksjon, sett miljøvariablene direkte i hosting-miljøet.

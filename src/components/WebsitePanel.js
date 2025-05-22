@@ -61,7 +61,7 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
   // Passordsjekk
   const handlePassordSubmit = (e) => {
     e.preventDefault();
-    if (passordInput === 'Tveita16') {
+    if (passordInput === process.env.REACT_APP_FIX_LOCKDOWN_PASSWORD) {
       setErAutentisert(true);
       setFeilmelding('');
     } else {
@@ -148,6 +148,23 @@ function WebsitePanel({ innloggetBruker, currentSettings, onUpdateSettings }) {
     
     updateSettings(newSettings);
     setMelding('NOTE er fjernet fra forsiden');
+  };
+  
+  // Funksjon for å bekrefte sletting
+  const bekreftSletting = () => {
+    const passordInput = prompt('Skriv inn administratorpassordet for å bekrefte:');
+    
+    if (passordInput === process.env.REACT_APP_FIX_LOCKDOWN_PASSWORD) {
+      // Fortsett med sletting
+      updateSettings({
+        ...localSettings,
+        lockdown: false,
+        fullLockdown: false,
+        note: ""
+      });
+    } else {
+      alert('Feil passord. Operasjonen ble avbrutt.');
+    }
   };
   
   // Passordsjekk før tilgang til panel

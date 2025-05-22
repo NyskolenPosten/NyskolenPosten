@@ -12,56 +12,13 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 
-CREATE EXTENSION IF NOT EXISTS "pg_net" WITH SCHEMA "extensions";
+CREATE SCHEMA IF NOT EXISTS "public";
 
 
-
-
+ALTER SCHEMA "public" OWNER TO "pg_database_owner";
 
 
 COMMENT ON SCHEMA "public" IS 'standard public schema';
-
-
-
-CREATE EXTENSION IF NOT EXISTS "pg_graphql" WITH SCHEMA "graphql";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "pgjwt" WITH SCHEMA "extensions";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
-
-
-
 
 
 
@@ -82,7 +39,7 @@ SET default_tablespace = '';
 SET default_table_access_method = "heap";
 
 
-CREATE TABLE IF NOT EXISTS "public"."artikler" (
+CREATE TABLE IF NOT EXISTS "public"."artikel_service" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "tittel" "text" NOT NULL,
     "ingress" "text",
@@ -97,7 +54,7 @@ CREATE TABLE IF NOT EXISTS "public"."artikler" (
 );
 
 
-ALTER TABLE "public"."artikler" OWNER TO "postgres";
+ALTER TABLE "public"."artikel_service" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."brukere" (
@@ -126,7 +83,7 @@ CREATE TABLE IF NOT EXISTS "public"."website_settings" (
 ALTER TABLE "public"."website_settings" OWNER TO "postgres";
 
 
-ALTER TABLE ONLY "public"."artikler"
+ALTER TABLE ONLY "public"."artikel_service"
     ADD CONSTRAINT "artikler_pkey" PRIMARY KEY ("id");
 
 
@@ -141,7 +98,7 @@ ALTER TABLE ONLY "public"."website_settings"
 
 
 
-CREATE OR REPLACE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."artikler" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+CREATE OR REPLACE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."artikel_service" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
@@ -149,7 +106,7 @@ CREATE OR REPLACE TRIGGER "update_website_settings_updated_at" BEFORE UPDATE ON 
 
 
 
-ALTER TABLE ONLY "public"."artikler"
+ALTER TABLE ONLY "public"."artikel_service"
     ADD CONSTRAINT "artikler_forfatterid_fkey" FOREIGN KEY ("forfatterid") REFERENCES "auth"."users"("id");
 
 
@@ -171,23 +128,23 @@ CREATE POLICY "Allow technical leader to update settings" ON "public"."website_s
 
 
 
-CREATE POLICY "Forfattere kan oppdatere sine egne ikke-godkjente artikler" ON "public"."artikler" FOR UPDATE TO "authenticated" USING ((("forfatterid" = "auth"."uid"()) AND ("godkjent" = false))) WITH CHECK ((("forfatterid" = "auth"."uid"()) AND ("godkjent" = false)));
+CREATE POLICY "Forfattere kan oppdatere sine egne ikke-godkjente artikler" ON "public"."artikel_service" FOR UPDATE TO "authenticated" USING ((("forfatterid" = "auth"."uid"()) AND ("godkjent" = false))) WITH CHECK ((("forfatterid" = "auth"."uid"()) AND ("godkjent" = false)));
 
 
 
-CREATE POLICY "Forfattere kan se sine egne artikler" ON "public"."artikler" FOR SELECT TO "authenticated" USING (("forfatterid" = "auth"."uid"()));
+CREATE POLICY "Forfattere kan se sine egne artikler" ON "public"."artikel_service" FOR SELECT TO "authenticated" USING (("forfatterid" = "auth"."uid"()));
 
 
 
-CREATE POLICY "Godkjente artikler er synlige for alle" ON "public"."artikler" FOR SELECT USING (("godkjent" = true));
+CREATE POLICY "Godkjente artikler er synlige for alle" ON "public"."artikel_service" FOR SELECT USING (("godkjent" = true));
 
 
 
-CREATE POLICY "Innlogget bruker kan opprette artikler" ON "public"."artikler" FOR INSERT TO "authenticated" WITH CHECK (("forfatterid" = "auth"."uid"()));
+CREATE POLICY "Innlogget bruker kan opprette artikler" ON "public"."artikel_service" FOR INSERT TO "authenticated" WITH CHECK (("forfatterid" = "auth"."uid"()));
 
 
 
-CREATE POLICY "Redaktører og admin kan oppdatere alle artikler" ON "public"."artikler" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
+CREATE POLICY "Redaktører og admin kan oppdatere alle artikler" ON "public"."artikel_service" FOR UPDATE TO "authenticated" USING ((EXISTS ( SELECT 1
    FROM "public"."brukere"
   WHERE (("brukere"."id" = "auth"."uid"()) AND (("brukere"."rolle" = 'admin'::"text") OR ("brukere"."rolle" = 'redaktør'::"text") OR ("brukere"."rolle" = 'teknisk_leder'::"text")))))) WITH CHECK ((EXISTS ( SELECT 1
    FROM "public"."brukere"
@@ -195,21 +152,13 @@ CREATE POLICY "Redaktører og admin kan oppdatere alle artikler" ON "public"."ar
 
 
 
-CREATE POLICY "Redaktører og admin kan se alle artikler" ON "public"."artikler" FOR SELECT TO "authenticated" USING ((EXISTS ( SELECT 1
+CREATE POLICY "Redaktører og admin kan se alle artikler" ON "public"."artikel_service" FOR SELECT TO "authenticated" USING ((EXISTS ( SELECT 1
    FROM "public"."brukere"
   WHERE (("brukere"."id" = "auth"."uid"()) AND (("brukere"."rolle" = 'admin'::"text") OR ("brukere"."rolle" = 'redaktør'::"text") OR ("brukere"."rolle" = 'teknisk_leder'::"text"))))));
 
 
 
 ALTER TABLE "public"."website_settings" ENABLE ROW LEVEL SECURITY;
-
-
-
-
-ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
-
-
-
 
 
 GRANT USAGE ON SCHEMA "public" TO "postgres";
@@ -219,204 +168,15 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "anon";
 GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-GRANT ALL ON TABLE "public"."artikler" TO "anon";
-GRANT ALL ON TABLE "public"."artikler" TO "authenticated";
-GRANT ALL ON TABLE "public"."artikler" TO "service_role";
+GRANT ALL ON TABLE "public"."artikel_service" TO "anon";
+GRANT ALL ON TABLE "public"."artikel_service" TO "authenticated";
+GRANT ALL ON TABLE "public"."artikel_service" TO "service_role";
 
 
 
@@ -429,12 +189,6 @@ GRANT ALL ON TABLE "public"."brukere" TO "service_role";
 GRANT ALL ON TABLE "public"."website_settings" TO "anon";
 GRANT ALL ON TABLE "public"."website_settings" TO "authenticated";
 GRANT ALL ON TABLE "public"."website_settings" TO "service_role";
-
-
-
-
-
-
 
 
 
@@ -468,33 +222,4 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 RESET ALL;
-
---
--- Dumped schema changes for auth and storage
---
-

@@ -82,7 +82,7 @@ Artikkelen din blir sendt til redaktørene for godkjenning. Når den godkjennes,
 
 Hvis e-post matcher en e-post i redaktør/administrator-listen, vil du få konto som er redaktør/administrator.
 
-i jobblisten kan du se hvem som er redaktør/administrator, og journalister. i kategorilisten kan du se hvem som er ansvarlig for hvilke kategorier. og hvem som har fått jobb legges til i jobblisten. hvis det er en ny bruker som matcher e-post addresse: mattis.tollefsen@nionett.no, så går brukeren rett til rolle redaktør. Redaktører kan gi roller til andre brukere i jobblisten
+i jobblisten kan du se hvem som er redaktør/administrator, og journalister. i kategorilisten kan du se hvem som er ansvarlig for hvilke kategorier. og hvem som har fått jobb legges til i jobblisten.
 
 For redaktører og administratorer:
 
@@ -114,3 +114,11 @@ Hvis du vil bidra til utvikling av Nyskolen Posten, Eller har spørsmål Kan du 
 4. Alle elever oppfordres til å bidra til videreutvikling av nettavisen
 
 Dette er en app som virkelig setter Nyskolens verdier i praksis - elevdrevet, demokratisk, og med rom for alles stemme!
+
+## Brukeradministrasjon
+
+Alle nye brukere som registrerer seg må godkjennes manuelt av en administrator før de får rettigheter i systemet. Dette gjøres i admin-panelet under "Brukere"-fanen.
+
+Når en bruker godkjennes, får de automatisk bruker-rettigheter og blir lagt til i jobblisten som journalist.
+
+Administratorer kan endre brukerroller i admin-panelet for å gi andre brukere høyere rettigheter som redaktør eller teknisk leder.

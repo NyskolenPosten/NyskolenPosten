@@ -127,9 +127,6 @@ function AppContent() {
     note: ""
   });
   
-  // Admin e-postliste for automatisk godkjenning og admin-rolle
-  const adminEpostliste = ['mattis.tollefsen@nionett.no', 'admin@nyskolen.no'];
-  
   // Rens potensielt korrupte brukerdata ved oppstart
   useEffect(() => {
     const cleanupLocalStorage = () => {
@@ -268,22 +265,14 @@ function AppContent() {
     // Last inn brukere og kategoriliste
     const lastInnData = () => {
       // Last inn brukere
-      const lagredeBrukere = localStorage.getItem('brukere');
-      if (lagredeBrukere) {
-        setBrukere(JSON.parse(lagredeBrukere));
+      const lagretBrukere = localStorage.getItem('brukere');
+      if (lagretBrukere) {
+        setBrukere(JSON.parse(lagretBrukere));
       } else {
-        // Opprett admin-bruker hvis ingen finnes
-        const adminBruker = {
-          id: 'admin-' + Date.now(),
-          navn: 'Administrator',
-          email: 'admin@nyskolen.no',
-          password: 'admin123',
-          rolle: 'admin',
-          godkjent: true,
-          opprettet: new Date().toISOString()
-        };
-        setBrukere([adminBruker]);
-        localStorage.setItem('brukere', JSON.stringify([adminBruker]));
+        // Initialiser med tom array - admin provisjoneres i Supabase
+        const tomBrukerliste = [];
+        setBrukere(tomBrukerliste);
+        localStorage.setItem('brukere', JSON.stringify(tomBrukerliste));
       }
 
       // Last inn kategoriliste
@@ -587,7 +576,7 @@ function AppContent() {
   // Funksjon for å fikse lockdown
   const fixLockdown = () => {
     const passord = prompt('Skriv inn passordet for å fikse lockdown:');
-    if (passord === 'Tveita16') {
+    if (passord === process.env.REACT_APP_ADMIN_PASSWORD) {
       setWebsiteSettings({
         lockdown: false,
         fullLockdown: false,

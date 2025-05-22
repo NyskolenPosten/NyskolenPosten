@@ -75,14 +75,6 @@ function Login({ onLogin, melding, brukere = [] }) {
       <p className="register-link">
         Har du ikke en konto? <Link to="/register">Registrer deg her</Link>
       </p>
-      
-      <div className="info-boks">
-        <p>
-          <strong>For testing:</strong> Du kan logge inn som administrator med:
-        </p>
-        <p>E-post: admin@nyskolen.no</p>
-        <p>Passord: admin</p>
-      </div>
     </div>
   );
 }
