@@ -345,7 +345,8 @@ const getSupabase = () => {
       'Accept': '*/*',
       'Prefer': 'return=representation',
       'Accept-Profile': 'public',
-      'Accept-Encoding': 'gzip, deflate, br'
+      'Accept-Encoding': 'gzip, deflate, br',
+      'apikey': supabaseKey
     };
     
     supabaseInstance = createClient(supabaseUrl, supabaseKey, {
