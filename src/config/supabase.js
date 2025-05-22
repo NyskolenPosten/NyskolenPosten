@@ -675,20 +675,36 @@ export const db = {
 };
 
 // Funksjon for å fikse lockdown
-const fixLockdown = () => {
+const fixLockdown = async () => {
   const passord = prompt('Skriv inn passordet for å fikse lockdown:');
+  if (!passord) return; // Bruker avbrøt
+
   if (passord === process.env.REACT_APP_FIX_LOCKDOWN_PASSWORD) {
-    setWebsiteSettings({
-      lockdown: false,
-      fullLockdown: false,
-      note: ""
-    });
-    localStorage.setItem('websiteSettings', JSON.stringify({
-      lockdown: false,
-      fullLockdown: false,
-      note: ""
-    }));
-    alert('Lockdown er nå deaktivert!');
+    try {
+      const { error } = await supabase
+        .from('website_settings')
+        .update({
+          lockdown: false,
+          full_lockdown: false,
+          note: "",
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', 1);
+
+      if (error) throw error;
+
+      // Oppdater lokal lagring
+      localStorage.setItem('websiteSettings', JSON.stringify({
+        lockdown: false,
+        fullLockdown: false,
+        note: ""
+      }));
+
+      alert('Lockdown er nå deaktivert!');
+    } catch (error) {
+      handleSupabaseError(error, 'Fikse lockdown');
+      alert('Kunne ikke fikse lockdown. Vennligst prøv igjen senere.');
+    }
   } else {
     alert('Feil passord!');
   }
