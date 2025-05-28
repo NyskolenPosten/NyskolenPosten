@@ -3,6 +3,62 @@
 
 import { supabaseUrl } from '../config/supabase';
 
+// Sjekk om vi er på GitHub Pages eller offline
+const isGitHubPages = window.location.hostname.includes('github.io');
+const isOffline = !navigator.onLine;
+
+// Fallback-data for når Supabase ikke er tilgjengelig
+const getFallbackData = (tabellNavn) => {
+  if (tabellNavn === 'artikler') {
+    // Hent artikler fra localStorage
+    const lokalArtikler = localStorage.getItem('artikler');
+    if (lokalArtikler) {
+      try {
+        return { success: true, data: JSON.parse(lokalArtikler) };
+      } catch (e) {
+        console.warn('Kunne ikke parse lokale artikler');
+      }
+    }
+    
+    // Hvis ingen artikler finnes, opprett noen test-artikler
+    const testArtikler = [
+      {
+        id: 'test-1',
+        artikkelID: 'test-1',
+        tittel: 'Velkommen til NyskolenPosten!',
+        innhold: 'Dette er en test-artikkel som vises når appen kjører i offline-modus. Du kan legge til dine egne artikler ved å registrere deg og logge inn.',
+        forfatter: 'Systemet',
+        forfatterID: 'system',
+        forfatterNavn: 'Systemet',
+        kategori: 'Velkommen',
+        dato: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        godkjent: true
+      }
+    ];
+    
+    // Lagre test-artiklene
+    localStorage.setItem('artikler', JSON.stringify(testArtikler));
+    return { success: true, data: testArtikler };
+  }
+  
+  if (tabellNavn === 'brukere') {
+    // Hent brukere fra localStorage
+    const lokalBrukere = localStorage.getItem('brukere');
+    if (lokalBrukere) {
+      try {
+        return { success: true, data: JSON.parse(lokalBrukere) };
+      } catch (e) {
+        console.warn('Kunne ikke parse lokale brukere');
+      }
+    }
+    return { success: true, data: [] };
+  }
+  
+  // Standard fallback
+  return { success: true, data: [] };
+};
+
 class DirectCache {
   constructor() {
     this.tabellData = {};
@@ -133,6 +189,42 @@ class DirectCache {
       return cachedData;
     }
     
+    // Hvis vi er på GitHub Pages eller offline, bruk fallback
+    if (isGitHubPages || isOffline || !supabaseUrl || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
+      console.log(`Bruker fallback-data for tabell: ${tabellNavn}`);
+      const fallbackData = getFallbackData(tabellNavn);
+      
+      // Filtrer data hvis nødvendig
+      if (filter && fallbackData.success && fallbackData.data) {
+        let filteredData = fallbackData.data;
+        
+        // Anvend filter
+        Object.entries(filter).forEach(([key, value]) => {
+          if (key === 'order') {
+            // Håndter sortering
+            if (value === 'created_at.desc') {
+              filteredData = filteredData.sort((a, b) => 
+                new Date(b.created_at || b.dato) - new Date(a.created_at || a.dato)
+              );
+            }
+          } else if (key === 'godkjent') {
+            filteredData = filteredData.filter(item => item.godkjent === value);
+          } else if (key === 'forfatter_id' || key === 'forfatterID') {
+            filteredData = filteredData.filter(item => 
+              item.forfatter_id === value || item.forfatterID === value
+            );
+          }
+        });
+        
+        const result = { success: true, data: filteredData };
+        this.lagreTabell(cacheKey, result);
+        return result;
+      }
+      
+      this.lagreTabell(cacheKey, fallbackData);
+      return fallbackData;
+    }
+    
     try {
       // Bygg URL basert på filter
       let url = `${supabaseUrl}/rest/v1/${tabellNavn}`;
@@ -174,7 +266,12 @@ class DirectCache {
       return result;
     } catch (error) {
       console.error(`Feil ved henting fra tabell ${tabellNavn}:`, error);
-      return { success: false, error: error.message };
+      
+      // Ved feil, prøv fallback
+      console.log(`Prøver fallback for tabell: ${tabellNavn}`);
+      const fallbackData = getFallbackData(tabellNavn);
+      this.lagreTabell(cacheKey, fallbackData);
+      return fallbackData;
     }
   }
   
@@ -186,6 +283,29 @@ class DirectCache {
     const cachedData = this.hentTabell(cacheKey);
     if (cachedData !== null) {
       return cachedData;
+    }
+    
+    // Hvis vi er på GitHub Pages eller offline, bruk fallback
+    if (isGitHubPages || isOffline || !supabaseUrl || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
+      console.log(`Bruker fallback-data for enkelt rad: ${tabellNavn}:${id}`);
+      const fallbackData = getFallbackData(tabellNavn);
+      
+      if (fallbackData.success && fallbackData.data) {
+        // Finn spesifikk rad basert på ID
+        const item = fallbackData.data.find(row => 
+          row.id === id || row.artikkelID === id
+        );
+        
+        const result = { 
+          success: true, 
+          data: item || null 
+        };
+        
+        this.lagreTabell(cacheKey, result);
+        return result;
+      }
+      
+      return { success: false, error: 'Ingen data funnet' };
     }
     
     try {
@@ -214,6 +334,25 @@ class DirectCache {
       return result;
     } catch (error) {
       console.error(`Feil ved henting av rad fra ${tabellNavn}:`, error);
+      
+      // Ved feil, prøv fallback
+      console.log(`Prøver fallback for enkelt rad: ${tabellNavn}:${id}`);
+      const fallbackData = getFallbackData(tabellNavn);
+      
+      if (fallbackData.success && fallbackData.data) {
+        const item = fallbackData.data.find(row => 
+          row.id === id || row.artikkelID === id
+        );
+        
+        const result = { 
+          success: true, 
+          data: item || null 
+        };
+        
+        this.lagreTabell(cacheKey, result);
+        return result;
+      }
+      
       return { success: false, error: error.message };
     }
   }

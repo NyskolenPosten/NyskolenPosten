@@ -222,39 +222,11 @@ function AppContent() {
     }
   };
 
-  // Last inn all data ved oppstart
-  useEffect(() => {
-    const lastInnData = () => {
-      // Kjør preloadAlleData for å fylle directCache med data
-      preloadAlleData();
-      
-      // Last artikler, brukere, etc.
-      lastArtikler();
-      hentBrukere();
-      hentWebsiteInnstillinger();
-    };
-    
-    lastInnData();
-    
-    // Autokorrigering av passord-oppgraderinger
-    autoMigratePasswords();
-    
-    // Sett opp lyttere for online/offline status
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    // Sett opp lytter for localStorage-endringer
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-
   // Effekt for å laste inn data ved oppstart
   useEffect(() => {
+    // Kjør preloadAlleData for å fylle directCache med data
+    preloadAlleData();
+    
     // Kjør migrering av passord til kryptert format
     autoMigratePasswords();
     
@@ -329,6 +301,9 @@ function AppContent() {
       }
     };
     lastBrukere();
+    
+    // Hent website-innstillinger
+    hentWebsiteInnstillinger();
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Effekt for å hente website-innstillinger når brukeren endres
@@ -728,16 +703,69 @@ function AppContent() {
   );
 }
 
+// Error Boundary komponent for å fange opp auth-feil
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Auth Error Boundary fanget en feil:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ 
+          padding: '20px', 
+          textAlign: 'center',
+          backgroundColor: '#f8f9fa',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <h1>Noe gikk galt med autentiseringen</h1>
+          <p>Appen kjører i fallback-modus. Du kan fortsatt bruke grunnleggende funksjoner.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            Last inn siden på nytt
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 function App() {
   return (
     <HelmetProvider>
-      <AuthProvider>
-        <LanguageProvider>
-          <Router basename={getBasename()}>
-            <AppContent />
-          </Router>
-        </LanguageProvider>
-      </AuthProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <LanguageProvider>
+            <Router basename={getBasename()}>
+              <AppContent />
+            </Router>
+          </LanguageProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     </HelmetProvider>
   );
 }

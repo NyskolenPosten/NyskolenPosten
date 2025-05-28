@@ -87,6 +87,13 @@ export function AuthProvider({ children }) {
     
     // Kun fortsett med Supabase-autentisering hvis vi ikke har en lokal bruker
     if (!hasLoadedLocalUser) {
+      // Sjekk om Supabase-klienten er gyldig
+      if (!supabase || !supabase.auth) {
+        console.warn('Supabase-klient er ikke tilgjengelig, bruker kun lokal autentisering');
+        setLoading(false);
+        return () => {};
+      }
+      
       // Hent gjeldende sesjon
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session && session.user) {
@@ -99,21 +106,33 @@ export function AuthProvider({ children }) {
       });
       
       // Lytt til endringer i autentisering
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (session && session.user) {
-          setUser(session.user);
-        } else {
-          // Sjekk om vi fortsatt har en lokal bruker før vi setter user til null
-          const localUser = localStorage.getItem('innloggetBruker') || localStorage.getItem('currentUser');
-          if (!localUser) {
-            setUser(null);
+      let subscription = null;
+      try {
+        const authListener = supabase.auth.onAuthStateChange((event, session) => {
+          if (session && session.user) {
+            setUser(session.user);
+          } else {
+            // Sjekk om vi fortsatt har en lokal bruker før vi setter user til null
+            const localUser = localStorage.getItem('innloggetBruker') || localStorage.getItem('currentUser');
+            if (!localUser) {
+              setUser(null);
+            }
           }
-        }
+          setLoading(false);
+        });
+        
+        subscription = authListener?.data?.subscription;
+      } catch (error) {
+        console.warn('Kunne ikke sette opp auth state listener:', error);
         setLoading(false);
-      });
+      }
 
       return () => {
-        subscription?.unsubscribe();
+        try {
+          subscription?.unsubscribe();
+        } catch (error) {
+          console.warn('Feil ved unsubscribe:', error);
+        }
       };
     } else {
       setLoading(false);

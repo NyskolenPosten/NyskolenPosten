@@ -72,33 +72,20 @@ const createFallbackClient = () => {
   const mockResponse = { data: null, error: null };
   const emptyArrayResponse = { data: [], error: null };
   
-  // Simulerer en ekte returverdi for artikler
-  const mockArticles = [
-    {
-      id: 'fallback-1',
-      artikkelID: 'local-' + Date.now().toString(36),
-      tittel: 'Feilsikker fallback-artikkel',
-      innhold: 'Denne artikkelen vises når vi ikke kan koble til Supabase.',
-      forfatter: 'Systemet',
-      forfatterID: 'system',
-      kategori: 'system',
-      dato: new Date().toISOString(),
-      godkjent: true,
-      created_at: new Date().toISOString()
-    }
-  ];
+  // Simulerer en ekte returverdi for artikler - bruk kun tomme arrays
+  const mockArticles = [];
   
   // Funksjon for å returnere mock-artikler
   const artikkelTabell = {
     select: () => ({
       order: () => Promise.resolve({ data: mockArticles, error: null }),
-      eq: () => Promise.resolve({ data: mockArticles[0], error: null }),
-      single: () => Promise.resolve({ data: mockArticles[0], error: null }),
+      eq: () => Promise.resolve({ data: null, error: null }),
+      single: () => Promise.resolve({ data: null, error: null }),
     }),
     insert: (data) => {
       // Forbedret insert med støtte for select() chaining
       const insertResult = {
-        data: { ...mockArticles[0], ...data, id: 'new-' + Date.now().toString(36) },
+        data: { ...data, id: 'new-' + Date.now().toString(36) },
         error: null
       };
       
@@ -111,7 +98,7 @@ const createFallbackClient = () => {
         then: (resolve) => resolve(insertResult)
       };
     },
-    update: () => Promise.resolve({ data: mockArticles[0], error: null }),
+    update: () => Promise.resolve({ data: null, error: null }),
     delete: () => Promise.resolve({ error: null }),
   };
   
@@ -301,8 +288,8 @@ const createFallbackClient = () => {
       }, 10);
       
       // Returner et fiktivt abonnement
-      return { 
-        data: { 
+      return {
+        data: {
           subscription: {
             unsubscribe: () => {
               window._nyskolenAuthCallbacks = null;
@@ -481,7 +468,38 @@ const getSupabase = () => {
         }
       },
       
-      onAuthStateChange: originalAuth.onAuthStateChange
+      onAuthStateChange: (callback) => {
+        try {
+          if (!isOnline()) {
+            // For offline-modus, returner en mock subscription
+            return {
+              data: {
+                subscription: {
+                  unsubscribe: () => {}
+                }
+              }
+            };
+          }
+          
+          // Wrap originalAuth.onAuthStateChange med error handling
+          try {
+            return originalAuth.onAuthStateChange(callback);
+          } catch (error) {
+            console.warn('onAuthStateChange feilet på original auth, bruker fallback:', error);
+            return createFallbackClient().auth.onAuthStateChange(callback);
+          }
+        } catch (error) {
+          console.warn('onAuthStateChange feilet helt, bruker mock subscription:', error);
+          // Returner en mock subscription som ikke gjør noe
+          return {
+            data: {
+              subscription: {
+                unsubscribe: () => {}
+              }
+            }
+          };
+        }
+      }
     };
     
     return supabaseInstance;

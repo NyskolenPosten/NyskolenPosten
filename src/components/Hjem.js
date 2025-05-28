@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Hjem.css';
-import { hentGodkjenteArtikler, brukere } from '../utils/directCache';
+import { hentGodkjenteArtikler } from '../utils/directCache';
 
 function Hjem({ artikler = [] }) {
   const [cachedArtikler, setCachedArtikler] = useState([]);
