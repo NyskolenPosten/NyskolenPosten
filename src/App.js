@@ -32,6 +32,7 @@ import {
 import logo from './assets/images/logo.svg';
 import LeggTilTekniskLeder from './components/LeggTilTekniskLeder';
 import { supabase } from './config/supabase';
+import { preloadAlleData } from './utils/directCache';
 
 // Hjelpefunksjon for å sjekke om vi er på GitHub Pages
 const isGitHubPages = window.location.hostname.includes('github.io');
@@ -221,6 +222,37 @@ function AppContent() {
     }
   };
 
+  // Last inn all data ved oppstart
+  useEffect(() => {
+    const lastInnData = () => {
+      // Kjør preloadAlleData for å fylle directCache med data
+      preloadAlleData();
+      
+      // Last artikler, brukere, etc.
+      lastArtikler();
+      hentBrukere();
+      hentWebsiteInnstillinger();
+    };
+    
+    lastInnData();
+    
+    // Autokorrigering av passord-oppgraderinger
+    autoMigratePasswords();
+    
+    // Sett opp lyttere for online/offline status
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    // Sett opp lytter for localStorage-endringer
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   // Effekt for å laste inn data ved oppstart
   useEffect(() => {
     // Kjør migrering av passord til kryptert format
@@ -263,7 +295,7 @@ function AppContent() {
     lastArtikler();
     
     // Last inn brukere og kategoriliste
-    const lastInnData = () => {
+    const lastBrukere = () => {
       // Last inn brukere
       const lagretBrukere = localStorage.getItem('brukere');
       if (lagretBrukere) {
@@ -296,7 +328,7 @@ function AppContent() {
         localStorage.setItem('kategoriliste', JSON.stringify(standardKategoriliste));
       }
     };
-    lastInnData();
+    lastBrukere();
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Effekt for å hente website-innstillinger når brukeren endres

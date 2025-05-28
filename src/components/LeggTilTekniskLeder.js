@@ -14,7 +14,7 @@ function LeggTilTekniskLeder() {
     try {
       const resultat = await opprettBrukerMedRolle(
         'mattis.tollefsen@nionett.no',
-        'et-sikkert-passord-123', // Dette bør endres ved første innlogging
+        process.env.REACT_APP_ADMIN_PASSWORD, // Bruk miljøvariabel i stedet for hardkodet passord
         'Mattis B Tøllefsen',
         'teknisk_leder'
       );

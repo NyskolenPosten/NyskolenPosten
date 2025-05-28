@@ -8,9 +8,10 @@ const isLocalhost = window.location.hostname === 'localhost' || window.location.
 // Bruk riktig URL basert på miljø
 export const supabaseUrl = isLocalhost 
   ? 'http://127.0.0.1:54321'
-  : 'https://lucbodhuwimhqnvtmdzg.supabase.co';
+  : process.env.REACT_APP_SUPABASE_URL;
 
-export const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+// Bruk riktig API-nøkkel
+export const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY
 
 // Lag en singleton-instans for å unngå "Multiple GoTrueClient instances" advarsel
 let supabaseInstance = null;
@@ -346,6 +347,7 @@ const getSupabase = () => {
       'Prefer': 'return=representation',
       'Accept-Profile': 'public',
       'Accept-Encoding': 'gzip, deflate, br',
+      'Authorization': `Bearer ${supabaseKey}`,
       'apikey': supabaseKey
     };
     

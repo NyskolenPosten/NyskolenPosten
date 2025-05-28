@@ -37,8 +37,10 @@ Se `Dockerfile` og `docker-compose.yml` for flere detaljer om oppsettet.
 For sikker utvikling, må du opprette en `.env.local` fil i rot-mappen med følgende innhold:
 
 ```
+REACT_APP_SUPABASE_URL=din_supabase_url
 REACT_APP_SUPABASE_ANON_KEY=din_supabase_nøkkel
 REACT_APP_ADMIN_PASSWORD=ditt_admin_passord
+REACT_APP_FIX_LOCKDOWN_PASSWORD=ditt_lockdown_passord
 ```
 
 Merk at `.env.local` ikke skal sjekkes inn i versjonskontroll - det er allerede lagt til i `.gitignore`.

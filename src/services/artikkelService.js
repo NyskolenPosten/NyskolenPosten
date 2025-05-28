@@ -1,17 +1,16 @@
 // services/artikkelService.js - Håndter artikler med lokal lagring
 
 import cacheManager, { invalidateArtikkelCache } from '../utils/cacheUtil';
+import tabellCache, { TABELL } from '../utils/directCache';
 import { supabase, supabaseKey, supabaseUrl as configUrl } from '../config/supabase';
 
 // Sjekk om vi kjører lokalt
 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 // Hent supabase URL - bruk en sikker fallback
-const supabaseUrl = supabase.supabaseUrl || configUrl || (isLocalhost ? 'http://127.0.0.1:54321' : 'https://lucbodhuwimhqnvtmdzg.supabase.co');
+const supabaseUrl = supabase.supabaseUrl || configUrl || (isLocalhost ? 'http://127.0.0.1:54321' : process.env.REACT_APP_SUPABASE_URL);
 
 // Sjekk om vi er i produksjonsmiljø
 const isProd = process.env.NODE_ENV === 'production';
-// Sjekk om vi kjører på github.io
-const isGithubPages = window.location.hostname.includes('github.io');
 
 // Feilhåndtering
 const handleError = (error, operation = 'API-operasjon') => {
@@ -27,8 +26,19 @@ const handleError = (error, operation = 'API-operasjon') => {
 
 // Cache-TTL-konstanter (i millisekunder)
 const CACHE_TTL = {
-  ARTICLES_LIST: 5 * 60 * 1000, // 5 minutter for artikkel-lister
-  ARTICLE_DETAIL: 10 * 60 * 1000 // 10 minutter for artikkeldetaljer
+  ARTICLES_LIST: 3 * 60 * 1000,    // 3 minutter for artikkel-lister
+  ARTICLE_DETAIL: 10 * 60 * 1000,  // 10 minutter for artikkeldetaljer
+  USER_ARTICLES: 2 * 60 * 1000,    // 2 minutter for bruker-spesifikke artikler
+  CATEGORY_LIST: 30 * 60 * 1000    // 30 minutter for kategorilister
+};
+
+// Cache-nøkler
+const CACHE_KEYS = {
+  ALL_ARTICLES: 'artikler:alle',
+  APPROVED_ARTICLES: 'artikler:godkjente',
+  USER_ARTICLES: (userId) => `artikler:bruker:${userId}`,
+  ARTICLE_DETAIL: (id) => `artikkel:${id}`,
+  CATEGORIES: 'kategorier'
 };
 
 // Konstanter for bildehåndtering
@@ -129,168 +139,133 @@ const komprimerBilde = async (base64Image) => {
 
 // Hent alle godkjente artikler
 export const hentGodkjenteArtikler = async () => {
-  // Bruk cachen hvis tilgjengelig
-  const cacheKey = 'artikkel:godkjente';
-  return cacheManager.getOrFetch(cacheKey, async () => {
-    try {
-      const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
-      const godkjenteArtikler = artikler.filter(artikkel => artikkel.godkjent === true)
-        .sort((a, b) => new Date(b.dato) - new Date(a.dato));
-      
-      return { success: true, artikler: godkjenteArtikler };
-    } catch (error) {
-      return { success: false, error: error.message || 'Kunne ikke hente artikler' };
-    }
-  }, CACHE_TTL.ARTICLES_LIST);
-};
-
-// Hent alle artikler (for admin/redaktør og alle brukere)
-export const hentAlleArtikler = async () => {
-  try {
-    // Reduser logging i produksjon
-    if (!isProd) {
-      console.log('Henter artikler...');
-    }
+  // Prøv først å hente fra tabellCache for umiddelbar respons
+  const cachedData = tabellCache.hentTabell(TABELL.GODKJENTE_ARTIKLER);
+  if (cachedData) {
+    return cachedData;
+  }
+  
+  // Hvis ikke i tabellCache, hent via vanlig cache eller fra server
+  return tabellCache.hentEllerLastTabell(
+    TABELL.GODKJENTE_ARTIKLER,
+    async () => {
+      return cacheManager.getOrFetch(CACHE_KEYS.APPROVED_ARTICLES, async () => {
+        try {
+          const { data, error } = await supabase
+            .from('artikler')
+            .select('*')
+            .eq('godkjent', true)
+            .order('created_at', { ascending: false });
     
-    // Hent lokalt lagrede artikler - vi vil alltid ha disse klare uansett hva
-    const lokaleLagrede = localStorage.getItem('artikler');
-    let lokalArtikler = [];
-    
-    if (lokaleLagrede) {
-      try {
-        lokalArtikler = JSON.parse(lokaleLagrede);
-        if (!isProd) {
-          console.log(`Fant ${lokalArtikler.length} lokalt lagrede artikler`);
-        }
-      } catch (parseError) {
-        handleError(parseError, 'Parsing av lokalt lagrede artikler');
-      }
-    }
-    
-    // Hvis vi kjører på github.io, bruk bare localStorage - ikke forsøk å kalle API-er som vil feile med CORS
-    // Dette løser CORS-feilene én gang for alle på github.io
-    if (isGithubPages) {
-      if (!isProd) {
-        console.log('Kjører på GitHub Pages - bruker bare lokale data');
-      }
-      return { success: true, artikler: lokalArtikler };
-    }
-    
-    // Sett en timeout for Supabase-kallet
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Tidsavbrudd ved henting av artikler')), 5000)
-    );
-    
-    // Lag en funksjon for å hente data - forenklet for å redusere feilkilder
-    const fetchDataPromise = async () => {
-      try {
-        // Bruk Supabase-klienten direkte - unngå direkte fetch-kall som gir 404/406
-        let { data, error } = await supabase
-          .from('artikler')
-          .select('*');
-        
-        if (data && data.length > 0 && !error) {
-          if (!isProd) {
-            console.log(`Hentet ${data.length} artikler fra Supabase`);
-          }
-          // Sorter artiklene
-          data.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-          
-          // Synkroniser med localStorage for offline-bruk
-          try {
-            localStorage.setItem('artikler', JSON.stringify(data));
-          } catch (syncError) {
-            handleError(syncError, 'Synkronisering med lokallagring');
-          }
+          if (error) throw error;
           
           return { success: true, artikler: data };
-        } 
-        
-        if (error) {
-          throw new Error(`Supabase feilet: ${error.message}`);
+        } catch (error) {
+          handleError(error, 'Henting av godkjente artikler');
+          return { success: false, error: error.message };
         }
-        
-        // Om vi kommer hit, har vi ikke klart å hente data
-        throw new Error('Ingen data funnet fra Supabase');
-      } catch (error) {
-        // Videreformidle feilen
-        throw error;
-      }
-    };
-    
-    // Prøv å hente data med en timeout - bare hvis vi ikke er på GitHub Pages
-    try {
-      return await Promise.race([fetchDataPromise(), timeoutPromise]);
-    } catch (error) {
-      handleError(error, 'Henting av artikler (timeout eller API-feil)');
-      
-      // Bruk alltid lokalt lagrede artikler som fallback
-      if (lokalArtikler.length > 0) {
-        if (!isProd) {
-          console.log(`Bruker ${lokalArtikler.length} lokalt lagrede artikler som fallback`);
-        }
-        return { success: true, artikler: lokalArtikler };
-      }
-      
-      // Siste utvei - returner tom array
-      return { success: true, artikler: [] };
-    }
-  } catch (error) {
-    handleError(error, 'Uventet feil ved henting av artikler');
-    
-    // Prøv å bruke lokalt lagrede artikler som siste utvei
-    try {
-      const lokaleLagrede = localStorage.getItem('artikler');
-      if (lokaleLagrede) {
-        const artikler = JSON.parse(lokaleLagrede);
-        if (!isProd) {
-          console.log(`Bruker ${artikler.length} lokalt lagrede artikler (etter feil)`);
-        }
-        return { success: true, artikler };
-      }
-    } catch (localError) {
-      handleError(localError, 'Fallback til lokalt lagrede artikler');
-    }
-    
-    return { success: true, artikler: [] };
+      }, CACHE_TTL.ARTICLES_LIST);
+    },
+    CACHE_TTL.ARTICLES_LIST
+  );
+};
+
+// Hent alle artikler (for admin/redaktør)
+export const hentAlleArtikler = async () => {
+  // Prøv først å hente fra tabellCache for umiddelbar respons
+  const cachedData = tabellCache.hentTabell(TABELL.ALLE_ARTIKLER);
+  if (cachedData) {
+    return cachedData;
   }
+  
+  // Hvis ikke i tabellCache, hent via vanlig cache eller fra server
+  return tabellCache.hentEllerLastTabell(
+    TABELL.ALLE_ARTIKLER,
+    async () => {
+      return cacheManager.getOrFetch(CACHE_KEYS.ALL_ARTICLES, async () => {
+        try {
+          const { data, error } = await supabase
+            .from('artikler')
+            .select('*')
+            .order('created_at', { ascending: false });
+    
+          if (error) throw error;
+          
+          return { success: true, artikler: data };
+        } catch (error) {
+          handleError(error, 'Henting av alle artikler');
+          return { success: false, error: error.message };
+        }
+      }, CACHE_TTL.ARTICLES_LIST);
+    },
+    CACHE_TTL.ARTICLES_LIST
+  );
 };
 
-// Hent artikler for en bestemt bruker
+// Hent brukers artikler
 export const hentBrukersArtikler = async (brukerId) => {
-  // Bruk cachen hvis tilgjengelig
-  const cacheKey = `artikkel:bruker:${brukerId}`;
-  return cacheManager.getOrFetch(cacheKey, async () => {
-    try {
-      const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
-      const brukersArtikler = artikler.filter(artikkel => artikkel.forfatterID === brukerId)
-        .sort((a, b) => new Date(b.dato) - new Date(a.dato));
-      
-      return { success: true, artikler: brukersArtikler };
-    } catch (error) {
-      return { success: false, error: error.message || 'Kunne ikke hente brukerens artikler' };
-    }
-  }, CACHE_TTL.ARTICLES_LIST);
+  // Prøv først å hente fra tabellCache for umiddelbar respons
+  const cachedData = tabellCache.hentTabell(TABELL.BRUKER_ARTIKLER(brukerId));
+  if (cachedData) {
+    return cachedData;
+  }
+  
+  // Hvis ikke i tabellCache, hent via vanlig cache eller fra server
+  return tabellCache.hentEllerLastTabell(
+    TABELL.BRUKER_ARTIKLER(brukerId),
+    async () => {
+      return cacheManager.getOrFetch(CACHE_KEYS.USER_ARTICLES(brukerId), async () => {
+        try {
+          const { data, error } = await supabase
+            .from('artikler')
+            .select('*')
+            .eq('forfatter_id', brukerId)
+            .order('created_at', { ascending: false });
+    
+          if (error) throw error;
+          
+          return { success: true, artikler: data };
+        } catch (error) {
+          handleError(error, 'Henting av brukers artikler');
+          return { success: false, error: error.message };
+        }
+      }, CACHE_TTL.USER_ARTICLES);
+    },
+    CACHE_TTL.USER_ARTICLES
+  );
 };
 
-// Hent en enkelt artikkel basert på ID
+// Hent en spesifikk artikkel
 export const hentArtikkel = async (artikkelID) => {
-  // Bruk cachen hvis tilgjengelig
-  const cacheKey = `artikkel:detalj:${artikkelID}`;
-  return cacheManager.getOrFetch(cacheKey, async () => {
-    try {
-      const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
-      const artikkel = artikler.find(a => a.artikkelID === artikkelID);
-      
-      if (!artikkel) {
-        return { success: false, error: 'Artikkelen ble ikke funnet' };
-      }
-      
-      return { success: true, artikkel };
-    } catch (error) {
-      return { success: false, error: error.message || 'Kunne ikke hente artikkelen' };
-    }
-  }, CACHE_TTL.ARTICLE_DETAIL);
+  // Prøv først å hente fra tabellCache for umiddelbar respons
+  const cachedData = tabellCache.hentTabell(TABELL.ARTIKKEL(artikkelID));
+  if (cachedData) {
+    return cachedData;
+  }
+  
+  // Hvis ikke i tabellCache, hent via vanlig cache eller fra server
+  return tabellCache.hentEllerLastTabell(
+    TABELL.ARTIKKEL(artikkelID),
+    async () => {
+      return cacheManager.getOrFetch(CACHE_KEYS.ARTICLE_DETAIL(artikkelID), async () => {
+        try {
+          const { data, error } = await supabase
+            .from('artikler')
+            .select('*')
+            .eq('id', artikkelID)
+            .single();
+    
+          if (error) throw error;
+          
+          return { success: true, artikkel: data };
+        } catch (error) {
+          handleError(error, 'Henting av artikkel');
+          return { success: false, error: error.message };
+        }
+      }, CACHE_TTL.ARTICLE_DETAIL);
+    },
+    CACHE_TTL.ARTICLE_DETAIL
+  );
 };
 
 // Legg til ny artikkel
@@ -327,12 +302,14 @@ export const leggTilArtikkel = async (artikkelData, bilde) => {
     artikler.push(nyArtikkel);
     localStorage.setItem('artikler', JSON.stringify(artikler));
     
-    // Invalider cache for artikler
-    invalidateArtikkelCache();
-    
+    // Invalider relevante cache-nøkler
+    cacheManager.invalidatePattern('artikler:*');
+    cacheManager.invalidatePattern(`artikler:bruker:${artikkelData.forfatter_id}`);
+
     return { success: true, artikkelID };
   } catch (error) {
-    return { success: false, error: error.message || 'Kunne ikke legge til artikkelen' };
+    handleError(error, 'Legge til artikkel');
+    return { success: false, error: error.message };
   }
 };
 
@@ -374,76 +351,130 @@ export const oppdaterArtikkel = async (artikkelID, oppdatertData, nyttBilde) => 
     
     localStorage.setItem('artikler', JSON.stringify(artikler));
     
-    // Invalider cache for denne artikkelen og relevante lister
-    cacheManager.remove(`artikkel:detalj:${artikkelID}`);
-    invalidateArtikkelCache();
+    // Invalider både vanlig cache og tabellCache
+    cacheManager.invalidatePattern('artikler:*');
+    cacheManager.invalidatePattern(`artikler:bruker:${oppdatertData.forfatter_id}`);
+    cacheManager.remove(CACHE_KEYS.ARTICLE_DETAIL(artikkelID));
     
+    // Invalider tabellCache
+    tabellCache.fjernTabell(TABELL.ALLE_ARTIKLER);
+    tabellCache.fjernTabell(TABELL.GODKJENTE_ARTIKLER);
+    tabellCache.fjernTabell(TABELL.BRUKER_ARTIKLER(oppdatertData.forfatter_id));
+    tabellCache.fjernTabell(TABELL.ARTIKKEL(artikkelID));
+
     return { success: true };
   } catch (error) {
-    return { success: false, error: error.message || 'Kunne ikke oppdatere artikkelen' };
+    handleError(error, 'Oppdatere artikkel');
+    return { success: false, error: error.message };
   }
 };
 
 // Slett artikkel
 export const slettArtikkel = async (artikkelID) => {
   try {
-    const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
-    const oppdaterteArtikler = artikler.filter(a => a.artikkelID !== artikkelID);
+    const { error } = await supabase
+      .from('artikler')
+      .delete()
+      .eq('id', artikkelID);
+
+    if (error) throw error;
+
+    // Invalider både vanlig cache og tabellCache
+    cacheManager.invalidatePattern('artikler:*');
+    cacheManager.remove(CACHE_KEYS.ARTICLE_DETAIL(artikkelID));
     
-    localStorage.setItem('artikler', JSON.stringify(oppdaterteArtikler));
-    
-    // Invalider cache for denne artikkelen og relevante lister
-    cacheManager.remove(`artikkel:detalj:${artikkelID}`);
-    invalidateArtikkelCache();
-    
+    // Invalider tabellCache
+    tabellCache.fjernTabell(TABELL.ALLE_ARTIKLER);
+    tabellCache.fjernTabell(TABELL.GODKJENTE_ARTIKLER);
+    // Siden vi ikke vet forfatter-ID her, må vi fjerne alle brukerartikler
+    Object.keys(tabellCache.tabellData).forEach(key => {
+      if (key.startsWith('artikler:bruker:')) {
+        tabellCache.fjernTabell(key);
+      }
+    });
+    tabellCache.fjernTabell(TABELL.ARTIKKEL(artikkelID));
+
     return { success: true };
   } catch (error) {
-    return { success: false, error: error.message || 'Kunne ikke slette artikkelen' };
+    handleError(error, 'Slette artikkel');
+    return { success: false, error: error.message };
   }
 };
 
 // Godkjenn artikkel
 export const godkjennArtikkel = async (artikkelID) => {
   try {
-    const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
-    const artikkelIndex = artikler.findIndex(a => a.artikkelID === artikkelID);
+    const { data, error } = await supabase
+      .from('artikler')
+      .update({ godkjent: true })
+      .eq('id', artikkelID)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Invalider både vanlig cache og tabellCache
+    cacheManager.invalidatePattern('artikler:*');
+    cacheManager.remove(CACHE_KEYS.ARTICLE_DETAIL(artikkelID));
     
-    if (artikkelIndex === -1) {
-      return { success: false, error: 'Artikkelen ble ikke funnet' };
+    // Invalider tabellCache
+    tabellCache.fjernTabell(TABELL.ALLE_ARTIKLER);
+    tabellCache.fjernTabell(TABELL.GODKJENTE_ARTIKLER);
+    // Hvis vi har data, kan vi være mer presis med bruker-cachen
+    if (data && data.forfatter_id) {
+      tabellCache.fjernTabell(TABELL.BRUKER_ARTIKLER(data.forfatter_id));
+    } else {
+      // Ellers fjern alle brukerartikler
+      Object.keys(tabellCache.tabellData).forEach(key => {
+        if (key.startsWith('artikler:bruker:')) {
+          tabellCache.fjernTabell(key);
+        }
+      });
     }
-    
-    artikler[artikkelIndex].godkjent = true;
-    localStorage.setItem('artikler', JSON.stringify(artikler));
-    
-    // Invalider cache for denne artikkelen og relevante lister
-    cacheManager.remove(`artikkel:detalj:${artikkelID}`);
-    invalidateArtikkelCache();
-    
-    return { success: true };
+    tabellCache.fjernTabell(TABELL.ARTIKKEL(artikkelID));
+
+    return { success: true, artikkel: data };
   } catch (error) {
-    return { success: false, error: error.message || 'Kunne ikke godkjenne artikkelen' };
+    handleError(error, 'Godkjenne artikkel');
+    return { success: false, error: error.message };
   }
 };
 
 // Avvis artikkel
 export const avvisArtikkel = async (artikkelID) => {
   try {
-    const artikler = JSON.parse(localStorage.getItem('artikler')) || [];
-    const artikkelIndex = artikler.findIndex(a => a.artikkelID === artikkelID);
+    const { data, error } = await supabase
+      .from('artikler')
+      .update({ godkjent: false })
+      .eq('id', artikkelID)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Invalider både vanlig cache og tabellCache
+    cacheManager.invalidatePattern('artikler:*');
+    cacheManager.remove(CACHE_KEYS.ARTICLE_DETAIL(artikkelID));
     
-    if (artikkelIndex === -1) {
-      return { success: false, error: 'Artikkelen ble ikke funnet' };
+    // Invalider tabellCache
+    tabellCache.fjernTabell(TABELL.ALLE_ARTIKLER);
+    tabellCache.fjernTabell(TABELL.GODKJENTE_ARTIKLER);
+    // Hvis vi har data, kan vi være mer presis med bruker-cachen
+    if (data && data.forfatter_id) {
+      tabellCache.fjernTabell(TABELL.BRUKER_ARTIKLER(data.forfatter_id));
+    } else {
+      // Ellers fjern alle brukerartikler
+      Object.keys(tabellCache.tabellData).forEach(key => {
+        if (key.startsWith('artikler:bruker:')) {
+          tabellCache.fjernTabell(key);
+        }
+      });
     }
-    
-    artikler[artikkelIndex].godkjent = false;
-    localStorage.setItem('artikler', JSON.stringify(artikler));
-    
-    // Invalider cache for denne artikkelen og relevante lister
-    cacheManager.remove(`artikkel:detalj:${artikkelID}`);
-    invalidateArtikkelCache();
-    
-    return { success: true };
+    tabellCache.fjernTabell(TABELL.ARTIKKEL(artikkelID));
+
+    return { success: true, artikkel: data };
   } catch (error) {
-    return { success: false, error: error.message || 'Kunne ikke avvise artikkelen' };
+    handleError(error, 'Avvise artikkel');
+    return { success: false, error: error.message };
   }
 }; 

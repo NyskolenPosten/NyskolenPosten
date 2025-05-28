@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import './ArtikkelVisning.css';
 import { hentArtikkel } from '../services/artikkelService';
+import { tabellCache, TABELL } from '../utils/directCache';
 
 // Enkel funksjon for å konvertere markdown til HTML
 const konverterMarkdown = (tekst) => {
@@ -49,12 +50,18 @@ function ArtikkelVisning({ artikler = [], innloggetBruker, onSlettArtikkel, onRe
         if (artikkelFraProps) {
           setArtikkel(artikkelFraProps);
         } else {
-          // Hvis ikke i props, last fra service
-          const resultat = await hentArtikkel(id);
-          if (resultat.success) {
-            setArtikkel(resultat.artikkel);
+          // Sjekk først om artikkelen finnes i direktecache for umiddelbar respons
+          const cachedArtikkel = tabellCache.hentTabell(TABELL.ARTIKKEL(id));
+          if (cachedArtikkel && cachedArtikkel.success && cachedArtikkel.artikkel) {
+            setArtikkel(cachedArtikkel.artikkel);
           } else {
-            setFeilmelding('Kunne ikke finne artikkelen');
+            // Hvis ikke i cache, last fra service
+            const resultat = await hentArtikkel(id);
+            if (resultat.success) {
+              setArtikkel(resultat.artikkel);
+            } else {
+              setFeilmelding('Kunne ikke finne artikkelen');
+            }
           }
         }
       } catch (error) {
